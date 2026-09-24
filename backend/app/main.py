@@ -406,7 +406,8 @@ def settings(user=Depends(admin)):
         "google_ads": bool(s.google_ads_customer_id and s.google_refresh_token),
         "analytics": bool(s.ga4_property_id and s.google_refresh_token),
         "linkedin": bool(
-            s.linkedin_ad_account_id and (s.linkedin_access_token or s.linkedin_refresh_token)
+            s.linkedin_ad_account_id
+            and (s.linkedin_ads_access_token or s.linkedin_ads_refresh_token)
         ),
         "linkedin_organic": bool(
             s.linkedin_organization_id and (s.linkedin_access_token or s.linkedin_refresh_token)
@@ -544,3 +545,10 @@ def linkedin_audience(month=Depends(month_param), user=Depends(current_user), db
     from .linkedin_audience import audience_response
 
     return audience_response(db, month, s)
+
+
+@app.get("/api/linkedin/ads/campaigns")
+def ads_campaigns(user=Depends(current_user), db=Depends(get_db)):
+    from .linkedin_ads import campaign_summary
+
+    return campaign_summary(db, s, datetime.now(ZoneInfo(s.report_timezone)).date())

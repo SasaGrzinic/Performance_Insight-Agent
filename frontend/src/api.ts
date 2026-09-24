@@ -1,3 +1,4 @@
+import { STATIC_DEMO, staticDemoResponse } from "./staticDemo.ts";
 export class ApiError extends Error {
   status: number;
 
@@ -31,6 +32,13 @@ export async function api<T>(
   path: string,
   options: RequestInit = {},
 ): Promise<T> {
+  if (STATIC_DEMO) {
+    if (options.method && options.method !== "GET")
+      throw new Error(
+        "In der öffentlichen Demo werden keine Daten gespeichert.",
+      );
+    return staticDemoResponse(path) as T;
+  }
   const isForm = options.body instanceof FormData;
   const response = await fetch("/api" + path, {
     ...options,

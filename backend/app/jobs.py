@@ -44,7 +44,24 @@ def sync_channel(db, channel, start, end):
         state = ChannelState(channel=channel)
         db.add(state)
     try:
-        records = fetch_channel(channel, start, end)
+        if channel == "linkedin":
+            from .linkedin_ads import fetch
+            from .models import LinkedInCampaign
+
+            records, account, campaign_items = fetch(
+                start, end, get_settings(), include_campaigns=True
+            )
+            account_urn = f"urn:li:sponsoredAccount:{account['id']}"
+            db.execute(delete(LinkedInCampaign).where(LinkedInCampaign.account == account_urn))
+            for urn, campaign in campaign_items.items():
+                metadata = {
+                    key: campaign.get(key)
+                    for key in ("name", "status", "objectiveType", "runSchedule")
+                }
+                metadata["currency"] = account["currency"]
+                db.add(LinkedInCampaign(id=urn, account=account_urn, data=metadata))
+        else:
+            records = fetch_channel(channel, start, end)
         query = delete(Metric).where(
             Metric.channel == channel,
             Metric.date >= str(start),
@@ -97,7 +114,12 @@ def synchronize(db, month, channel=None):
     start = month_bounds(previous_month(month))[0]
     end = min(month_bounds(month)[1], today)
     results = {
-        c["id"]: sync_channel(db, c["id"], start, end)
+        c["id"]: sync_channel(
+            db,
+            c["id"],
+            today - timedelta(days=364) if c["id"] == "linkedin" else start,
+            today if c["id"] == "linkedin" else end,
+        )
         for c in CHANNELS
         if not channel or c["id"] == channel
     }

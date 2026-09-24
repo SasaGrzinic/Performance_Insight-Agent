@@ -1,7 +1,9 @@
 import {
-  comparisonSeries,
+  multiMetricSeries,
+  relativeSeries,
   averageWatchSeconds,
   postsOnDay,
+  readablePostTitle,
 } from "../comparison";
 import { useState } from "react";
 import { useQueries, useQuery } from "@tanstack/react-query";
@@ -15,12 +17,30 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from "recharts";
-import { ExternalLink, Play, Plus, X } from "lucide-react";
+import { ArrowRight, ExternalLink, Play, Plus, X } from "lucide-react";
 import { api, monthName, number } from "../api";
 import type { Dashboard } from "../types";
-import { Empty, Loading } from "./ui";
+import { ChannelIcon, Empty, Loading } from "./ui";
 
-const colors = ["#0075d9", "#9164b7", "#23846b", "#ae642b"];
+const colors = [
+  "#0075d9",
+  "#ae5421",
+  "#23846b",
+  "#8854ac",
+  "#bb3f67",
+  "#546481",
+  "#087d8b",
+  "#75680a",
+];
+const displayUnit = (unit?: string) =>
+  !unit || unit === "count"
+    ? ""
+    : unit === "minutes"
+      ? "Min."
+      : unit === "seconds"
+        ? "Sek."
+        : unit;
+const dashes = [undefined, "8 4", "3 4", "10 3 2 3"];
 export type Post = {
   id: string;
   title: string;
@@ -96,7 +116,7 @@ export function PostCollection({
   if (demo)
     return (
       <section className="panel post-section">
-        <h2>LinkedIn Posts & Videos</h2>
+        <h2>{videosOnly ? "LinkedIn Videos" : "LinkedIn Posts & Videos"}</h2>
         <p>
           Beitragsdetails werden nur aus der verbundenen Unternehmensseite
           geladen. Diese Demo enthält keine echten Posts.
@@ -113,7 +133,9 @@ export function PostCollection({
     }))
     .filter(
       (p) =>
-        (filter === "all" || p.kind === filter) &&
+        (videosOnly
+          ? p.kind === "video"
+          : filter === "all" || p.kind === filter) &&
         (!day || Number(p.published_at.slice(8, 10)) === day),
     )
     .sort((a, b) =>
@@ -127,7 +149,7 @@ export function PostCollection({
     <section className="panel post-section">
       <div className="panel-heading">
         <div>
-          <h2>LinkedIn Posts & Videos</h2>
+          <h2>{videosOnly ? "LinkedIn Videos" : "LinkedIn Posts & Videos"}</h2>
           <p>
             Veröffentlicht {day ? `am ${day}.` : "im"} {monthName(month)} ·
             Sonio-Unternehmensseite
@@ -135,33 +157,39 @@ export function PostCollection({
         </div>
         <span className="post-count">
           {posts.length} von {q.data?.posts.length ?? "—"} Beiträgen ·{" "}
-          {videoCount} Videos im Monat
+          {videoCount} {videoCount === 1 ? "Video" : "Videos"} im Monat
         </span>
       </div>
       <div className="post-controls">
-        <div className="channel-tabs" role="group" aria-label="Beitragsformat">
-          <button
-            aria-pressed={filter === "all"}
-            className={filter === "all" ? "selected" : ""}
-            onClick={() => setFilter("all")}
+        {!videosOnly && (
+          <div
+            className="channel-tabs"
+            role="group"
+            aria-label="Beitragsformat"
           >
-            Alle Posts
-          </button>
-          <button
-            aria-pressed={filter === "video"}
-            className={filter === "video" ? "selected" : ""}
-            onClick={() => setFilter("video")}
-          >
-            <Play size={14} /> Videos ({videoCount})
-          </button>
-          <button
-            aria-pressed={filter === "article"}
-            className={filter === "article" ? "selected" : ""}
-            onClick={() => setFilter("article")}
-          >
-            Link-Beiträge
-          </button>
-        </div>
+            <button
+              aria-pressed={filter === "all"}
+              className={filter === "all" ? "selected" : ""}
+              onClick={() => setFilter("all")}
+            >
+              Alle Posts
+            </button>
+            <button
+              aria-pressed={filter === "video"}
+              className={filter === "video" ? "selected" : ""}
+              onClick={() => setFilter("video")}
+            >
+              <Play size={14} /> Videos ({videoCount})
+            </button>
+            <button
+              aria-pressed={filter === "article"}
+              className={filter === "article" ? "selected" : ""}
+              onClick={() => setFilter("article")}
+            >
+              Link-Beiträge
+            </button>
+          </div>
+        )}
         <label>
           Sortieren nach
           <select value={sort} onChange={(e) => setSort(e.target.value)}>
@@ -202,7 +230,11 @@ export function PostCollection({
         <>
           {q.data?.status !== "connected" && (
             <p className="form-error" role="status">
-              {q.data?.message} Bereits geladene Beiträge bleiben sichtbar.
+              {q.data?.message?.includes("429")
+                ? "LinkedIn begrenzt derzeit die Abfragen. Die zuletzt geladenen Beiträge bleiben sichtbar."
+                : `${q.data?.message || "Verbindung vorübergehend eingeschränkt."} Bereits geladene Beiträge bleiben sichtbar.`}
+              {q.data?.last_success &&
+                ` Letzter erfolgreicher Abruf: ${dateLabel(q.data.last_success)}.`}
             </p>
           )}
           {!posts.length ? (
@@ -234,7 +266,7 @@ export function PostCollection({
                         setExpanded(expanded === p.id ? null : p.id)
                       }
                     >
-                      {p.title}
+                      {readablePostTitle(p.title)}
                     </button>
                   </h3>
                   {expanded === p.id && <p className="post-copy">{p.text}</p>}
@@ -290,22 +322,33 @@ export function PerformanceExplorer({
   onChannel,
   demo,
   showPosts = true,
+  onOpenPosts,
 }: {
   data: Dashboard;
   channel: string;
   onChannel: (channel: string) => void;
   demo: boolean;
   showPosts?: boolean;
+  onOpenPosts?: () => void;
 }) {
   const c = data.channels.find((c) => c.id === channel) || data.channels[0];
-  const [selectedMetric, setMetric] = useState("");
-  const metric =
-    selectedMetric === "website_clicks" || c?.fields[selectedMetric]
-      ? selectedMetric
-      : c?.primary || "impressions";
+  const [selectedMetrics, setMetrics] = useState<string[]>([]);
+  const validMetrics = selectedMetrics.filter((key) => c.fields[key]);
+  const metrics = validMetrics.length ? validMetrics : [c.primary];
+  const metric = metrics[0];
+  const [scale, setScale] = useState("absolute");
+  const metricColor = (key: string) =>
+    colors[Object.keys(c.fields).indexOf(key) % colors.length];
+  const metricLabel = (key: string) =>
+    c.id === "linkedin_organic" && key === "clicks"
+      ? "LinkedIn-Klicks"
+      : c.fields[key];
+  const metricUnit = (key: string) => displayUnit(c.units[key]) || "Anzahl";
+  const units = [...new Set(metrics.map(metricUnit))];
   const [comparisons, setComparisons] = useState<string[]>([]);
   const [candidate, setCandidate] = useState(data.comparison_month);
   const [day, setDay] = useState<number | null>(null);
+  const [postMonth, setPostMonth] = useState(data.month);
   const months = [data.month, ...comparisons.filter((m) => m !== data.month)];
   const queries = useQueries({
     queries: months.slice(1).map((month) => ({
@@ -324,310 +367,606 @@ export function PerformanceExplorer({
     })),
   });
   const datasets = [data, ...queries.map((q) => q.data)];
-  const key = `${c.id}.${metric}`;
-  const points = comparisonSeries(months, datasets, key);
-  const hasData = points.some((p) => months.some((m) => p[m] != null));
+  const points = multiMetricSeries(months, datasets, c.id, metrics);
+  const lineKeys = months.flatMap((m) => metrics.map((key) => `${m}|${key}`));
+  const chartPoints =
+    scale === "relative" ? relativeSeries(points, lineKeys) : points;
+  const hasData = points.some((p) => lineKeys.some((key) => p[key] != null));
+  const activePostMonth = months.includes(postMonth) ? postMonth : data.month;
+  const activePostQuery = postQueries[months.indexOf(activePostMonth)];
+  const monthPosts = activePostQuery?.data?.posts || [];
+  const publicationDays = [
+    ...new Set(monthPosts.map((p) => Number(p.published_at.slice(8, 10)))),
+  ].sort((a, b) => a - b);
+  const activePosts = day ? postsOnDay(monthPosts, activePostMonth, day) : [];
+  const activePoint = points.find((p) => p.day === day);
+
   return (
     <div className="performance-explorer">
       <section className="panel performance-panel">
         <div className="panel-heading">
           <div>
             <h2>Performance im Vergleich</h2>
-            <p>Tageswerte übereinanderlegen und Beiträge zuordnen.</p>
+            <p>
+              Vergleiche Kennzahlen und Monate. Wähle einen Tag für die
+              Beitragsdetails.
+            </p>
           </div>
         </div>
-        <div className="explorer-controls">
-          <label>
-            Kanal
-            <select
-              aria-label="Kanal für Zeitverlauf"
-              value={c.id}
-              onChange={(e) => {
-                onChannel(e.target.value);
-                setMetric("");
-                setDay(null);
-              }}
-            >
-              {data.channels.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Kennzahl
-            <select
-              aria-label="Kennzahl im Verlauf"
-              value={metric}
-              onChange={(e) => setMetric(e.target.value)}
-            >
-              {Object.entries(c.fields).map(([k, v]) => (
-                <option key={k} value={k}>
-                  {c.id === "linkedin_organic" && k === "clicks"
-                    ? "LinkedIn-Klicks"
-                    : v}
-                </option>
-              ))}
-              {c.id === "linkedin_organic" && (
-                <option value="website_clicks">
-                  Website-Klicks (nicht separat verfügbar)
-                </option>
-              )}
-            </select>
-          </label>
-          <label>
-            Vergleichsmonat
-            <input
-              type="month"
-              value={candidate}
-              max={new Date().toISOString().slice(0, 7)}
-              onChange={(e) => setCandidate(e.target.value)}
-            />
-          </label>
-          <button
-            className="button compare-add"
-            disabled={
-              !/^\d{4}-\d{2}$/.test(candidate) ||
-              months.includes(candidate) ||
-              months.length >= 4
-            }
-            onClick={() => setComparisons([...comparisons, candidate])}
-          >
-            <Plus size={15} /> Vergleichen
-          </button>
-        </div>
-        <div className="month-legend">
-          {months.map((m, i) => (
-            <span key={m}>
-              <i style={{ background: colors[i] }} />
-              {monthName(m)}
-              {i > 0 && (
-                <button
-                  className="icon-button"
-                  aria-label={`${monthName(m)} aus Vergleich entfernen`}
-                  onClick={() =>
-                    setComparisons(comparisons.filter((v) => v !== m))
-                  }
-                >
-                  <X size={13} />
-                </button>
-              )}
-            </span>
-          ))}
-        </div>
-        {metric === "website_clicks" ? (
-          <Empty title="Website-Klicks werden nicht separat geliefert">
-            Die LinkedIn-Schnittstelle liefert allgemeine Klicks. Für
-            tatsächliche Website-Besuche braucht es verknüpfte UTM-Links und
-            Webanalyse-Daten.
-          </Empty>
-        ) : (
-          <>
-            {queries.some((q) => q.isPending) && (
-              <p role="status">Vergleichsmonate werden geladen …</p>
-            )}
-            {queries.some((q) => q.isError) && (
-              <p className="form-error" role="alert">
-                Ein Vergleichsmonat konnte nicht geladen werden.{" "}
-                <button
-                  onClick={() =>
-                    queries.forEach((q) => q.isError && q.refetch())
-                  }
-                >
-                  Erneut laden
-                </button>
-              </p>
-            )}
-            <div className="chart-container">
-              {!hasData ? (
-                <Empty title="Keine Tageswerte für diese Auswahl">
-                  Wähle eine andere Kennzahl oder aktualisiere die Daten des
-                  gewählten Monats.
-                </Empty>
-              ) : (
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart
-                    data={points}
-                    margin={{ top: 15, right: 15, bottom: 5, left: -10 }}
-                    onClick={(state) => {
-                      if (state?.activeLabel) setDay(Number(state.activeLabel));
-                    }}
-                  >
-                    <CartesianGrid stroke="#e6eaf0" vertical={false} />
-                    <XAxis
-                      dataKey="day"
-                      tickLine={false}
-                      axisLine={false}
-                      minTickGap={25}
-                      tickFormatter={(v) => `${v}.`}
-                    />
-                    <YAxis
-                      tickLine={false}
-                      axisLine={false}
-                      tickFormatter={(v) =>
-                        Math.abs(v) >= 1000 ? `${v / 1000}k` : String(v)
-                      }
-                    />
-                    <Tooltip
-                      content={({ active, label }) => {
-                        if (!active || label == null) return null;
-                        const hoveredDay = Number(label);
-                        const point = points.find((p) => p.day === hoveredDay);
-                        return (
-                          <div className="performance-tooltip" role="status">
-                            {months.map((month, i) => {
-                              const q = postQueries[i];
-                              const posts = postsOnDay(
-                                q.data?.posts || [],
-                                month,
-                                hoveredDay,
-                              );
-                              return (
-                                <section key={month}>
-                                  <div className="tooltip-heading">
-                                    <span style={{ color: colors[i] }}>
-                                      {hoveredDay}. {monthName(month)}
-                                    </span>
-                                    <strong>
-                                      {number(
-                                        point?.[month] as number | undefined,
-                                      )}{" "}
-                                      {c.fields[metric]}
-                                    </strong>
-                                  </div>
-                                  {!demo &&
-                                    c.id === "linkedin_organic" &&
-                                    (q.isPending ? (
-                                      <p>Beiträge werden geladen …</p>
-                                    ) : q.isError ? (
-                                      <p>
-                                        Beiträge konnten nicht geladen werden.
-                                      </p>
-                                    ) : (
-                                      posts.map((post) => (
-                                        <p
-                                          className="tooltip-post-title"
-                                          key={post.id}
-                                        >
-                                          {post.title}
-                                        </p>
-                                      ))
-                                    ))}
-                                </section>
-                              );
-                            })}
-                          </div>
-                        );
-                      }}
-                    />
-                    {!demo &&
-                      c.id === "linkedin_organic" &&
-                      [
-                        ...new Set(
-                          postQueries.flatMap((q) =>
-                            (q.data?.posts || []).map((p) =>
-                              Number(p.published_at.slice(8, 10)),
-                            ),
-                          ),
-                        ),
-                      ].map((day) => (
-                        <ReferenceLine
-                          key={day}
-                          x={day}
-                          stroke="#b4d7f5"
-                          strokeDasharray="2 4"
-                          label={{
-                            value: "•",
-                            position: "insideTop",
-                            fill: "#0075d9",
-                          }}
-                        />
-                      ))}
-                    {months.map((m, i) => (
-                      <Line
-                        key={m}
-                        dataKey={m}
-                        name={m}
-                        stroke={colors[i]}
-                        strokeWidth={2.5}
-                        strokeDasharray={i ? `${8 - i * 2} 3` : undefined}
-                        dot={false}
-                        activeDot={{ r: 5 }}
-                        connectNulls={false}
-                        isAnimationActive={false}
-                      />
-                    ))}
-                  </LineChart>
-                </ResponsiveContainer>
-              )}
+        <div className="performance-body">
+          <div className="channel-context">
+            <ChannelIcon id={c.id} size={28} />
+            <div>
+              <strong>{c.name}</strong>
+              <span>Sonio AG</span>
             </div>
-            <div className="comparison-totals">
-              {months.map((m, i) => {
-                const d = datasets[i],
-                  ch = d?.channels.find((ch) => ch.id === c.id);
-                return (
-                  <div key={m}>
-                    <span>{monthName(m)}</span>
-                    <strong>
-                      {number(ch?.values[metric], ch?.units[metric])}
-                    </strong>
-                    <small>
-                      {d?.partial
-                        ? `Bis Tag ${d.period_end.slice(8)}`
-                        : d
-                          ? "Gesamter Monat"
-                          : "Noch nicht geladen"}
-                    </small>
-                  </div>
-                );
-              })}
-            </div>
-            <p className="data-explanation">
-              Vergleich nach Kalendertag. Fehlende Werte bleiben Lücken;
-              laufende Monate sind unvollständig.
-              {c.id === "linkedin_organic" && metric === "clicks"
-                ? " LinkedIn-Klicks umfassen auch Interaktionen innerhalb von LinkedIn."
-                : ""}
-              {demo ? " Illustrative Beispieldaten." : ""}
-            </p>
-          </>
-        )}
-        {showPosts && c.id === "linkedin_organic" && (
-          <div className="publication-filter">
+          </div>
+          <div className="explorer-controls">
             <label>
-              Posts vom Tag anzeigen
+              Kanal
               <select
-                aria-label="Posts nach Veröffentlichungstag"
-                value={day || ""}
-                onChange={(e) =>
-                  setDay(e.target.value ? Number(e.target.value) : null)
-                }
+                aria-label="Kanal für Zeitverlauf"
+                value={c.id}
+                onChange={(e) => {
+                  onChannel(e.target.value);
+                  setMetrics([]);
+                  setDay(null);
+                }}
               >
-                <option value="">Alle Tage</option>
-                {data.series.map((p) => (
-                  <option key={p.day} value={p.day}>
-                    {p.day}. {monthName(data.month)}
-                  </option>
-                ))}
+                {[...data.channels]
+                  .sort(
+                    (a, b) =>
+                      Number(!!b.last_success || b.status === "connected") -
+                      Number(!!a.last_success || a.status === "connected"),
+                  )
+                  .map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
               </select>
             </label>
-            {day && (
-              <button className="button" onClick={() => setDay(null)}>
-                Alle Posts zeigen
-              </button>
-            )}
-            <p>
-              Ein Klick im Diagramm filtert Posts nach Veröffentlichungstag. Er
-              ordnet die Tageswerte keinem einzelnen Post zu.
-            </p>
+            <label>
+              Darstellung
+              <select
+                aria-label="Skalierung im Verlauf"
+                value={scale}
+                onChange={(e) => setScale(e.target.value)}
+              >
+                <option value="absolute">Absolute Werte</option>
+                <option value="relative">Verlauf relativ zum Höchstwert</option>
+              </select>
+            </label>
+            <label>
+              Vergleichsmonat
+              <input
+                type="month"
+                value={candidate}
+                max={new Date().toISOString().slice(0, 7)}
+                onChange={(e) => setCandidate(e.target.value)}
+              />
+            </label>
+            <button
+              className="button compare-add"
+              disabled={
+                !/^\d{4}-\d{2}$/.test(candidate) ||
+                months.includes(candidate) ||
+                months.length >= 4
+              }
+              onClick={() => setComparisons([...comparisons, candidate])}
+            >
+              <Plus size={15} /> Vergleichen
+            </button>
           </div>
-        )}
+          <fieldset className="metric-picker">
+            <legend>
+              Kennzahlen gemeinsam anzeigen <span>Bis zu 4 auswählen</span>
+            </legend>
+            <div>
+              {Object.keys(c.fields).map((key) => (
+                <label
+                  key={key}
+                  className={metrics.includes(key) ? "is-selected" : ""}
+                >
+                  <input
+                    type="checkbox"
+                    checked={metrics.includes(key)}
+                    disabled={
+                      metrics.includes(key)
+                        ? metrics.length === 1
+                        : metrics.length >= 4
+                    }
+                    onChange={() =>
+                      setMetrics(
+                        metrics.includes(key)
+                          ? metrics.filter((m) => m !== key)
+                          : [...metrics, key],
+                      )
+                    }
+                  />
+                  <i style={{ background: metricColor(key) }} />
+                  {metricLabel(key)}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+          <div className="month-legend">
+            {months.map((m, i) => (
+              <span key={m}>
+                <svg width="30" height="12" aria-hidden="true">
+                  <line
+                    x1="0"
+                    x2="30"
+                    y1="6"
+                    y2="6"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeDasharray={dashes[i]}
+                  />
+                </svg>
+                {monthName(m)}
+                {i > 0 && (
+                  <button
+                    className="icon-button"
+                    aria-label={`${monthName(m)} aus Vergleich entfernen`}
+                    onClick={() =>
+                      setComparisons(comparisons.filter((v) => v !== m))
+                    }
+                  >
+                    <X size={13} />
+                  </button>
+                )}
+              </span>
+            ))}
+          </div>
+          {metric === "website_clicks" ? (
+            <Empty title="Website-Klicks werden nicht separat geliefert">
+              Die LinkedIn-Schnittstelle liefert allgemeine Klicks. Für
+              tatsächliche Website-Besuche braucht es verknüpfte UTM-Links und
+              Webanalyse-Daten.
+            </Empty>
+          ) : (
+            <>
+              {queries.some((q) => q.isPending) && (
+                <p role="status">Vergleichsmonate werden geladen …</p>
+              )}
+              {queries.some((q) => q.isError) && (
+                <p className="form-error" role="alert">
+                  Ein Vergleichsmonat konnte nicht geladen werden.{" "}
+                  <button
+                    onClick={() =>
+                      queries.forEach((q) => q.isError && q.refetch())
+                    }
+                  >
+                    Erneut laden
+                  </button>
+                </p>
+              )}
+              <div className="chart-container">
+                {!hasData ? (
+                  <Empty title="Keine Tageswerte für diese Auswahl">
+                    Wähle eine andere Kennzahl oder aktualisiere die Daten des
+                    gewählten Monats.
+                  </Empty>
+                ) : (
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart
+                      data={chartPoints}
+                      margin={{ top: 15, right: 15, bottom: 5, left: -10 }}
+                      onClick={(state) => {
+                        if (state?.activeLabel)
+                          setDay(Number(state.activeLabel));
+                      }}
+                    >
+                      <CartesianGrid stroke="#e6eaf0" vertical={false} />
+                      <XAxis
+                        dataKey="day"
+                        tickLine={false}
+                        axisLine={false}
+                        minTickGap={25}
+                        tickFormatter={(v) => `${v}.`}
+                      />
+                      {(scale === "relative"
+                        ? ["% des Höchstwerts"]
+                        : units
+                      ).map((unit, i) => (
+                        <YAxis
+                          key={unit}
+                          yAxisId={i}
+                          orientation={i ? "right" : "left"}
+                          width={62}
+                          tickLine={false}
+                          axisLine={false}
+                          domain={scale === "relative" ? [0, 100] : [0, "auto"]}
+                          tickFormatter={(v) =>
+                            scale === "relative" ? `${number(v)}%` : number(v)
+                          }
+                        />
+                      ))}
+                      <Tooltip
+                        content={({ active, label }) => {
+                          if (!active || label == null) return null;
+                          const hoveredDay = Number(label);
+                          const point = points.find(
+                            (p) => p.day === hoveredDay,
+                          );
+                          return (
+                            <div className="performance-tooltip" role="status">
+                              {months.map((month, i) => {
+                                const q = postQueries[i];
+                                const posts = postsOnDay(
+                                  q.data?.posts || [],
+                                  month,
+                                  hoveredDay,
+                                );
+                                return (
+                                  <section key={month}>
+                                    <div className="tooltip-heading">
+                                      <span>
+                                        {hoveredDay}. {monthName(month)}
+                                      </span>
+                                    </div>
+                                    {metrics.map((key) => (
+                                      <div className="tooltip-metric" key={key}>
+                                        <span>
+                                          <i
+                                            style={{
+                                              background: metricColor(key),
+                                            }}
+                                          />
+                                          {metricLabel(key)}
+                                        </span>
+                                        <strong>
+                                          {number(
+                                            point?.[`${month}|${key}`] as
+                                              number | undefined,
+                                            c.units[key],
+                                          )}
+                                          {displayUnit(c.units[key])
+                                            ? ` ${displayUnit(c.units[key])}`
+                                            : ""}
+                                        </strong>
+                                      </div>
+                                    ))}
+                                    {!demo &&
+                                      c.id === "linkedin_organic" &&
+                                      (q.isPending ? (
+                                        <p>Beiträge werden geladen …</p>
+                                      ) : q.isError ? (
+                                        <p>
+                                          Beiträge konnten nicht geladen werden.
+                                        </p>
+                                      ) : (
+                                        posts.map((post) => (
+                                          <p
+                                            className="tooltip-post-title"
+                                            key={post.id}
+                                          >
+                                            {readablePostTitle(post.title)}
+                                          </p>
+                                        ))
+                                      ))}
+                                  </section>
+                                );
+                              })}
+                            </div>
+                          );
+                        }}
+                      />
+                      {!demo &&
+                        c.id === "linkedin_organic" &&
+                        [
+                          ...new Set(
+                            postQueries.flatMap((q) =>
+                              (q.data?.posts || []).map((p) =>
+                                Number(p.published_at.slice(8, 10)),
+                              ),
+                            ),
+                          ),
+                        ].map((day) => (
+                          <ReferenceLine
+                            key={day}
+                            x={day}
+                            stroke="#b4d7f5"
+                            strokeDasharray="2 4"
+                            label={{
+                              value: "•",
+                              position: "insideTop",
+                              fill: "#0075d9",
+                            }}
+                          />
+                        ))}
+                      {months.flatMap((m, i) =>
+                        metrics.map((key) => (
+                          <Line
+                            key={`${m}|${key}`}
+                            dataKey={`${m}|${key}`}
+                            yAxisId={
+                              scale === "relative"
+                                ? 0
+                                : units.indexOf(metricUnit(key))
+                            }
+                            name={`${metricLabel(key)} · ${monthName(m)}`}
+                            stroke={metricColor(key)}
+                            strokeWidth={2.5}
+                            strokeDasharray={dashes[i]}
+                            dot={false}
+                            activeDot={{ r: 5 }}
+                            connectNulls={false}
+                            isAnimationActive={false}
+                          />
+                        )),
+                      )}
+                    </LineChart>
+                  </ResponsiveContainer>
+                )}
+              </div>
+              <div className="comparison-totals">
+                {months.map((m, i) => {
+                  const d = datasets[i],
+                    ch = d?.channels.find((ch) => ch.id === c.id);
+                  return (
+                    <div key={m}>
+                      <span>{monthName(m)}</span>
+                      {metrics.map((key) => (
+                        <div className="comparison-metric" key={key}>
+                          <span>
+                            <i style={{ background: metricColor(key) }} />
+                            {metricLabel(key)}
+                          </span>
+                          <strong>
+                            {number(ch?.values[key], ch?.units[key])}
+                            {displayUnit(ch?.units[key])
+                              ? ` ${displayUnit(ch?.units[key])}`
+                              : ""}
+                          </strong>
+                        </div>
+                      ))}
+                      <small>
+                        {d?.partial
+                          ? `Bis Tag ${d.period_end.slice(8)}`
+                          : d
+                            ? "Gesamter Monat"
+                            : "Noch nicht geladen"}
+                      </small>
+                    </div>
+                  );
+                })}
+              </div>
+              <p className="data-explanation">
+                {scale === "relative"
+                  ? "Jede Linie ist auf ihren eigenen Höchstwert im jeweiligen Monat skaliert (100 %). Die Originalwerte stehen in den Details. "
+                  : `Skala: ${units.map((u, i) => `${u}${units.length > 1 ? (i ? " rechts" : " links") : ""}`).join(" · ")}. `}
+                Farben kennzeichnen Kennzahlen, Linienarten die Monate.
+                Vergleich nach Kalendertag. Fehlende Werte bleiben Lücken;
+                laufende Monate sind unvollständig.
+                {c.id === "linkedin_organic" && metrics.includes("clicks")
+                  ? " LinkedIn-Klicks umfassen auch Interaktionen innerhalb von LinkedIn."
+                  : ""}
+                {demo ? " Illustrative Beispieldaten." : ""}
+              </p>
+            </>
+          )}
+          {!demo && c.id === "linkedin_organic" && (
+            <section
+              className="day-inspector"
+              aria-label="Beiträge zum ausgewählten Tag"
+            >
+              <div className="inspector-heading">
+                <div>
+                  <h3>Beiträge zum Verlauf</h3>
+                  <p>
+                    Veröffentlichungsdatum und Beitragsleistung getrennt
+                    betrachten.
+                  </p>
+                </div>
+                {onOpenPosts && (
+                  <button className="text-button" onClick={onOpenPosts}>
+                    Alle Posts & Videos <ArrowRight size={16} />
+                  </button>
+                )}
+              </div>
+              <div className="inspector-controls">
+                <label>
+                  Monat der Beiträge
+                  <select
+                    aria-label="Monat der Beiträge"
+                    value={activePostMonth}
+                    onChange={(e) => {
+                      setPostMonth(e.target.value);
+                      setDay(null);
+                    }}
+                  >
+                    {months.map((m) => (
+                      <option key={m} value={m}>
+                        {monthName(m)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  Tag auswählen
+                  <select
+                    aria-label="Posts nach Veröffentlichungstag"
+                    value={day || ""}
+                    onChange={(e) =>
+                      setDay(e.target.value ? Number(e.target.value) : null)
+                    }
+                  >
+                    <option value="">Tag auswählen</option>
+                    {Array.from(
+                      {
+                        length: new Date(
+                          Number(activePostMonth.slice(0, 4)),
+                          Number(activePostMonth.slice(5)),
+                          0,
+                        ).getDate(),
+                      },
+                      (_, i) => i + 1,
+                    ).map((d) => (
+                      <option key={d} value={d}>
+                        {d}. {monthName(activePostMonth)}
+                        {publicationDays.includes(d)
+                          ? ` · ${postsOnDay(monthPosts, activePostMonth, d).length} Posts`
+                          : ""}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                {day && (
+                  <button className="text-button" onClick={() => setDay(null)}>
+                    Auswahl aufheben
+                  </button>
+                )}
+              </div>
+              {activePostQuery?.isPending ? (
+                <Loading />
+              ) : activePostQuery?.isError ? (
+                <div role="alert">
+                  <p>Beiträge konnten nicht geladen werden.</p>
+                  <button
+                    className="button"
+                    onClick={() => activePostQuery.refetch()}
+                  >
+                    Erneut laden
+                  </button>
+                </div>
+              ) : (
+                <>
+                  {activePostQuery?.data?.status !== "connected" && (
+                    <p className="inspector-notice" role="status">
+                      {activePostQuery?.data?.message?.includes("429")
+                        ? "LinkedIn begrenzt derzeit die Abfragen."
+                        : activePostQuery?.data?.message}{" "}
+                      Zuletzt geladener Stand
+                      {activePostQuery?.data?.last_success
+                        ? `: ${dateLabel(activePostQuery.data.last_success)}`
+                        : ""}
+                      .
+                    </p>
+                  )}
+                  <div
+                    className="publication-days"
+                    aria-label="Tage mit Beiträgen"
+                  >
+                    <span>
+                      {monthPosts.length} Beiträge im{" "}
+                      {monthName(activePostMonth)}
+                    </span>
+                    {publicationDays.map((d) => (
+                      <button
+                        key={d}
+                        aria-pressed={day === d}
+                        aria-label={`${d}. ${monthName(activePostMonth)}: ${postsOnDay(monthPosts, activePostMonth, d).length} Beiträge`}
+                        onClick={() => setDay(d)}
+                      >
+                        {d}.
+                        <small>
+                          {postsOnDay(monthPosts, activePostMonth, d).length}
+                        </small>
+                      </button>
+                    ))}
+                  </div>
+                  {day ? (
+                    <div className="selected-day" aria-live="polite">
+                      <div className="selected-day-summary">
+                        <h4>
+                          {day}. {monthName(activePostMonth)}
+                        </h4>
+                        <div className="selected-day-values">
+                          {metrics.map((key) => (
+                            <span key={key}>
+                              {metricLabel(key)}:{" "}
+                              <strong>
+                                {number(
+                                  activePoint?.[`${activePostMonth}|${key}`] as
+                                    number | undefined,
+                                  c.units[key],
+                                )}
+                                {displayUnit(c.units[key])
+                                  ? ` ${displayUnit(c.units[key])}`
+                                  : ""}
+                              </strong>
+                            </span>
+                          ))}
+                          <small>Kanal gesamt</small>
+                        </div>
+                      </div>
+                      <p className="inspector-definition">
+                        Beitragswerte seit Veröffentlichung. Die Tagesleistung
+                        des Kanals kann auch ältere Posts enthalten.
+                      </p>
+                      {activePosts.length ? (
+                        <div className="selected-posts">
+                          {activePosts.map((post) => (
+                            <article key={post.id}>
+                              <div>
+                                <span className="selected-post-kind">
+                                  {types[post.kind] || "Beitrag"} · Stand{" "}
+                                  {dateLabel(post.updated_at)}
+                                </span>
+                                <a
+                                  href={post.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  {readablePostTitle(post.title)}{" "}
+                                  <ExternalLink size={14} />
+                                </a>
+                              </div>
+                              <dl>
+                                {[
+                                  ...new Set([
+                                    ...metrics.filter(
+                                      (key) => postMetricLabels[key],
+                                    ),
+                                    "impressions",
+                                    "clicks",
+                                    ...(post.kind === "video"
+                                      ? ["average_watch_seconds"]
+                                      : []),
+                                  ]),
+                                ].map((key) => (
+                                  <div key={key}>
+                                    <dt>{postMetricLabels[key]}</dt>
+                                    <dd>
+                                      {metricValue(
+                                        key === "average_watch_seconds"
+                                          ? averageWatchSeconds(post.metrics)
+                                          : post.metrics[key],
+                                        key,
+                                      )}
+                                    </dd>
+                                  </div>
+                                ))}
+                              </dl>
+                            </article>
+                          ))}
+                        </div>
+                      ) : (
+                        <p>
+                          Für diese Auswahl sind im geladenen Stand keine
+                          Beiträge vorhanden.
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="inspector-definition">
+                      Wähle einen Veröffentlichungstag oben oder tippe auf einen
+                      Tag im Diagramm. Alle geladenen Beiträge dieses Tages
+                      erscheinen hier.
+                    </p>
+                  )}
+                </>
+              )}
+            </section>
+          )}
+        </div>
       </section>
       {showPosts && c.id === "linkedin_organic" && (
         <PostCollection
-          key={data.month}
-          month={data.month}
+          key={activePostMonth}
+          month={activePostMonth}
           demo={demo}
           highlight={metric}
           day={day}

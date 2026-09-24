@@ -1,5 +1,8 @@
+import { STATIC_DEMO, asset } from "./staticDemo";
+import { AdsCampaigns } from "./components/AdsCampaigns";
+import { VideoPerformance } from "./components/VideoPerformance";
 import { CSVExport } from "./components/CSVExport";
-import { shiftMonth } from "./comparison";
+import { shiftMonth, currentReportingMonth } from "./comparison";
 import { Audience } from "./components/Audience";
 import { useState, useEffect } from "react";
 import {
@@ -11,6 +14,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { LineChart, Line } from "recharts";
 import {
   LayoutDashboard,
+  Play,
   ChartNoAxesCombined,
   Lightbulb,
   FileText,
@@ -42,7 +46,7 @@ import {
   Copy,
 } from "lucide-react";
 import * as Tabs from "@radix-ui/react-tabs";
-import { api, number, monthName, previousMonth } from "./api";
+import { api, number, monthName } from "./api";
 import type {
   Dashboard,
   Analysis,
@@ -56,6 +60,7 @@ import type {
 import { Modal, ChannelIcon, Change, Loading, Empty } from "./components/ui";
 
 type View =
+  | "videos"
   | "audience"
   | "posts"
   | "overview"
@@ -68,10 +73,9 @@ type View =
 const navigation: { id: View; label: string; icon: typeof LayoutDashboard }[] =
   [
     { id: "overview", label: "Übersicht", icon: LayoutDashboard },
-    { id: "audience", label: "Follower-Entwicklung", icon: Users },
-    { id: "posts", label: "LinkedIn Posts & Videos", icon: FileText },
     { id: "channels", label: "Kanäle", icon: ChartNoAxesCombined },
     { id: "insights", label: "Insights & Empfehlungen", icon: Lightbulb },
+    { id: "videos", label: "Video Performance", icon: Play },
     { id: "reports", label: "Reports", icon: FileText },
   ];
 const adminNav: { id: View; label: string; icon: typeof Plug }[] = [
@@ -80,9 +84,10 @@ const adminNav: { id: View; label: string; icon: typeof Plug }[] = [
   { id: "settings", label: "Einstellungen", icon: Settings2 },
 ];
 const titles: Record<View, string> = {
+  videos: "Video Performance",
   audience: "Wie deine Community wächst.",
   posts: "Die Wirkung deiner Beiträge.",
-  overview: "Dein Marketing. Klar im Blick.",
+  overview: "Marketing-Überblick",
   channels: "Jeder Kanal. Seine Wirkung.",
   insights: "Aus Zahlen werden nächste Schritte.",
   reports: "Deine Performance, Monat für Monat.",
@@ -91,9 +96,15 @@ const titles: Record<View, string> = {
   settings: "So arbeitet dein Dashboard.",
 };
 function App() {
-  const initialDemo = new URLSearchParams(location.search).get("demo") === "1";
+  const initialDemo =
+    STATIC_DEMO || new URLSearchParams(location.search).get("demo") === "1";
   const [demo, setDemo] = useState(initialDemo);
-  const [month, setMonth] = useState(previousMonth());
+  const [selectedMonth, setMonth] = useState(() => currentReportingMonth());
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 60000);
+    return () => window.clearInterval(timer);
+  }, []);
   const [view, setView] = useState<View>(
     (new URLSearchParams(location.search).get("view") as View) || "overview",
   );
@@ -121,6 +132,13 @@ function App() {
         sync_interval_minutes: number;
       }>("/config/public"),
   });
+  const month =
+    view === "overview"
+      ? currentReportingMonth(
+          now,
+          publicConfig.data?.timezone || "Europe/Zurich",
+        )
+      : selectedMonth;
   const data = useQuery({
     queryKey: ["dashboard", demo, month],
     refetchInterval: demo ? false : 60000,
@@ -215,9 +233,11 @@ function App() {
       client.invalidateQueries({ queryKey: ["reports"] });
       client.invalidateQueries({ queryKey: ["linkedin-posts"] });
       client.invalidateQueries({ queryKey: ["linkedin-audience"] });
+      client.invalidateQueries({ queryKey: ["linkedin-ads-campaigns"] });
     }
   }, [progress.data, client]);
   function changeView(v: View) {
+    if (view === "overview") setMonth(month);
     if (!isAdmin && ["team", "settings"].includes(v)) return;
     setView(v);
     setMobile(false);
@@ -236,7 +256,10 @@ function App() {
     try {
       const r = await api<{ id: string }>(kind, {
         method: "POST",
-        body: JSON.stringify({ month }),
+        body: JSON.stringify({
+          month,
+          ...(view === "channels" ? { channel } : {}),
+        }),
       });
       setJob(r.id);
       setJobKind(kind);
@@ -259,6 +282,12 @@ function App() {
     history.replaceState(null, "", "/?demo=1");
   }
   function leaveDemo() {
+    if (STATIC_DEMO) {
+      setNotice(
+        "Öffentliche Hackathon-Demo mit Beispieldaten. Die Vollversion ist separat geschützt.",
+      );
+      return;
+    }
     setDemo(false);
     history.replaceState(null, "", "/");
     client.invalidateQueries({ queryKey: ["me"] });
@@ -301,6 +330,68 @@ function App() {
   const selected = d?.channels.find((c) => c.id === channel) || d?.channels[0];
   const connected =
     d?.channels.filter((c) => c.status === "connected").length || 0;
+  const isAds = view === "channels" && channel === "linkedin";
+  const periodControls = (
+    <div className="intro-actions">
+      {[
+        "overview",
+        "videos",
+        "posts",
+        "channels",
+        "insights",
+        "reports",
+        "audience",
+      ].includes(view) &&
+        !isAds && (
+          <>
+            <button
+              className="icon-button"
+              aria-label="Vorheriger Monat"
+              onClick={() => setMonth(shiftMonth(month, -1))}
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <label className="month-picker">
+              <CalendarDays size={16} />
+              <span className="sr-only">Berichtsmonat</span>
+              <input
+                type="month"
+                aria-label="Berichtsmonat"
+                value={month}
+                min="2020-01"
+                max="2099-12"
+                onChange={(e) => {
+                  if (/^20\d{2}-(0[1-9]|1[0-2])$/.test(e.target.value))
+                    setMonth(e.target.value);
+                }}
+              />
+            </label>
+            <button
+              className="icon-button"
+              aria-label="Nächster Monat"
+              onClick={() => setMonth(shiftMonth(month, 1))}
+            >
+              <ChevronRight size={18} />
+            </button>
+          </>
+        )}
+      {["overview", "posts", "channels", "audience", "videos"].includes(
+        view,
+      ) && (
+        <button
+          className="button primary"
+          disabled={!!job || !isAdmin}
+          onClick={() => startJob("/sync")}
+        >
+          <RefreshCw
+            size={16}
+            className={job && jobKind === "/sync" ? "spin" : ""}
+          />
+          {job ? "Wird aktualisiert" : "Daten aktualisieren"}
+        </button>
+      )}
+    </div>
+  );
   return (
     <div className="app-shell">
       <a href="#main" className="skip-link">
@@ -317,8 +408,8 @@ function App() {
         aria-label="Workspace-Navigation"
         className={"sidebar " + (mobile ? "open" : "")}
       >
-        <a className="brand" href={demo ? "/?demo=1" : "/"}>
-          <img src="/brand/sonio.svg" alt="Sonio" />
+        <a className="brand" href={asset(demo ? "?demo=1" : "")}>
+          <img src={asset("brand/sonio.svg")} alt="Sonio" />
           <span>insights</span>
         </a>
         <button
@@ -336,6 +427,7 @@ function App() {
           {navigation.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
+              aria-current={view === id ? "page" : undefined}
               className={"nav-item " + (view === id ? "active" : "")}
               onClick={() => changeView(id)}
             >
@@ -352,6 +444,7 @@ function App() {
             .map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
+                aria-current={view === id ? "page" : undefined}
                 className={"nav-item " + (view === id ? "active" : "")}
                 onClick={() => changeView(id)}
               >
@@ -428,88 +521,86 @@ function App() {
             </span>
           </div>
         </header>
-        <main id="main">
-          <div className="page-intro">
-            <div>
-              <h1>{titles[view] || titles.overview}</h1>
+        <main id="main" className={`analysis-workspace view-${view}`}>
+          <div className="page-intro photographic-intro">
+            <img
+              className="header-photo"
+              src={asset("brand/sonio-blog-header.jpg")}
+              alt=""
+              width="1600"
+              height="900"
+              fetchPriority="high"
+            />
+            <div className="intro-copy">
+              <h1>
+                {view === "overview"
+                  ? "MARKETING PERFORMANCE & INSIGHT"
+                  : view === "channels"
+                    ? selected?.name || "Kanal im Detail"
+                    : titles[view] || titles.overview}
+              </h1>
+              {["channels", "posts", "audience"].includes(view) && (
+                <div className="header-channel">
+                  <ChannelIcon
+                    id={
+                      view === "channels"
+                        ? selected?.id || channel
+                        : "linkedin_organic"
+                    }
+                    size={24}
+                  />
+                  <span>
+                    {view === "channels" ? selected?.name : "LinkedIn"} · Sonio
+                    AG
+                  </span>
+                </div>
+              )}
               <p>
                 {view === "overview"
-                  ? "Deine Performance, die wichtigsten Erkenntnisse und was als Nächstes zählt."
-                  : view === "audience"
-                    ? "Neue Follower pro Monat und dokumentierte Gesamtstände deiner Unternehmensseite."
-                    : view === "posts"
-                      ? "Videos, Beiträge und ihre Ergebnisse seit Veröffentlichung."
-                      : view === "channels"
-                        ? "Verstehe, wie sich deine einzelnen Kanäle entwickeln."
-                        : view === "sources"
-                          ? "Verbindungen verwalten, Daten prüfen und Anmeldelisten importieren."
-                          : view === "insights"
-                            ? "Nachvollziehbare Interpretationen. Konkrete Handlungsempfehlungen."
-                            : view === "reports"
-                              ? "Alle Kennzahlen und Empfehlungen als nachvollziehbarer Monatsstand."
-                              : view === "team"
-                                ? "Lade dein Team ein und verwalte den Zugriff auf eure Kennzahlen."
-                                : "Kennzahlen, Datenaktualisierung und automatisches Reporting."}
+                  ? "Alle Kanäle. Ein Überblick. Entdecke, was dein Marketing bewegt."
+                  : view === "videos"
+                    ? "LinkedIn und YouTube: Video-Ergebnisse getrennt nach Plattform verstehen."
+                    : view === "audience"
+                      ? "Neue Follower pro Monat und dokumentierte Gesamtstände deiner Unternehmensseite."
+                      : view === "posts"
+                        ? "Videos, Beiträge und ihre Ergebnisse seit Veröffentlichung."
+                        : view === "channels"
+                          ? "Verstehe, wie sich deine einzelnen Kanäle entwickeln."
+                          : view === "sources"
+                            ? "Verbindungen verwalten, Daten prüfen und Anmeldelisten importieren."
+                            : view === "insights"
+                              ? "Nachvollziehbare Interpretationen. Konkrete Handlungsempfehlungen."
+                              : view === "reports"
+                                ? "Alle Kennzahlen und Empfehlungen als nachvollziehbarer Monatsstand."
+                                : view === "team"
+                                  ? "Lade dein Team ein und verwalte den Zugriff auf eure Kennzahlen."
+                                  : "Kennzahlen, Datenaktualisierung und automatisches Reporting."}
               </p>
             </div>
-            <div className="intro-actions">
-              {[
-                "overview",
-                "posts",
-                "channels",
-                "insights",
-                "reports",
-                "audience",
-              ].includes(view) && (
-                <>
-                  <button
-                    className="icon-button"
-                    aria-label="Vorheriger Monat"
-                    onClick={() => setMonth(shiftMonth(month, -1))}
-                  >
-                    <ChevronLeft size={18} />
-                  </button>
-                  <label className="month-picker">
-                    <CalendarDays size={16} />
-                    <span className="sr-only">Berichtsmonat</span>
-                    <input
-                      type="month"
-                      aria-label="Berichtsmonat"
-                      value={month}
-                      min="2020-01"
-                      max="2099-12"
-                      onChange={(e) => {
-                        if (/^20\d{2}-(0[1-9]|1[0-2])$/.test(e.target.value))
-                          setMonth(e.target.value);
-                      }}
-                    />
-                  </label>
-                  <button
-                    className="icon-button"
-                    aria-label="Nächster Monat"
-                    onClick={() => setMonth(shiftMonth(month, 1))}
-                  >
-                    <ChevronRight size={18} />
-                  </button>
-                </>
-              )}
-              {["overview", "posts", "channels", "audience"].includes(view) && (
-                <button
-                  className="button primary"
-                  disabled={!!job || !isAdmin}
-                  onClick={() => startJob("/sync")}
-                >
-                  <RefreshCw
-                    size={16}
-                    className={job && jobKind === "/sync" ? "spin" : ""}
-                  />
-                  {job ? "Wird aktualisiert" : "Daten aktualisieren"}
-                </button>
-              )}
-            </div>
           </div>
+          {view !== "overview" && (
+            <div className="detail-toolbar">{periodControls}</div>
+          )}
+          {view === "overview" && (
+            <section
+              className="agent-introduction"
+              aria-label="Über den Marketing-Agenten"
+            >
+              <h2>Aus Zahlen werden nächste Schritte.</h2>
+              <p>
+                Dein Marketing Performance & Insight Agent führt die Kennzahlen
+                deiner verbundenen Kanäle an einem Ort zusammen. Er macht
+                Entwicklungen sichtbar und unterstützt dich dabei, Ergebnisse
+                einzuordnen und die nächsten Massnahmen zu priorisieren – für
+                einen klaren Überblick über die Wirkung deines Marketings.
+              </p>
+            </section>
+          )}
           {data.data &&
-            ["overview", "posts", "channels", "audience"].includes(view) && (
+            !isAds &&
+            ["overview", "posts", "channels", "audience", "videos"].includes(
+              view,
+            ) && (
               <CSVExport
                 key={`${month}-${demo}`}
                 data={data.data}
@@ -523,9 +614,11 @@ function App() {
                 <strong>Ein Blick auf die Möglichkeiten.</strong> Du siehst
                 Beispieldaten. Noch keine echten Kanäle verbunden.
               </span>
-              <button onClick={leaveDemo}>
-                Mit eigenen Daten starten <ArrowRight size={15} />
-              </button>
+              {!STATIC_DEMO && (
+                <button onClick={leaveDemo}>
+                  Mit eigenen Daten starten <ArrowRight size={15} />
+                </button>
+              )}
             </div>
           )}
           {analysis.isError && (
@@ -561,16 +654,22 @@ function App() {
                       <div className="context-label">
                         <CalendarDays size={13} />
                         <strong>{monthName(month)}</strong>
-                        <span>
-                          {d.partial
-                            ? "Laufender Monat"
-                            : "Abgeschlossener Monat"}
-                        </span>
                       </div>
                       <div>
                         {demo
                           ? "8 Kanäle in der Demo"
                           : `${connected} von ${d.channels.length} Kanälen verbunden`}
+                        <button
+                          className="button primary"
+                          disabled={!!job || !isAdmin}
+                          onClick={() => startJob("/sync")}
+                        >
+                          <RefreshCw
+                            size={16}
+                            className={job && jobKind === "/sync" ? "spin" : ""}
+                          />
+                          {job ? "Wird aktualisiert" : "Daten aktualisieren"}
+                        </button>
                         <span className="context-divider" />
                         {d.definitions_confirmed
                           ? "Eigene Kennzahlen"
@@ -585,97 +684,30 @@ function App() {
                         </button>
                       </div>
                     </div>
-                    <div className="kpi-grid">
-                      {d.kpis.map((k) => (
-                        <KPICard
-                          key={k.channel + k.key}
-                          kpi={k}
-                          onClick={() => {
-                            setChannel(k.channel);
-                            changeView("channels");
-                          }}
-                        />
-                      ))}
-                    </div>
-                    <div className="chart-insights-grid">
-                      <PerformanceExplorer
-                        data={d}
-                        channel={channel}
-                        onChannel={setChannel}
-                        demo={demo}
-                      />
-                      <section className="insight-spotlight">
-                        <div className="spotlight-head">
-                          <span className="insight-symbol">
-                            <Lightbulb size={22} />
-                          </span>
-                          <span>
-                            {demo
-                              ? "Insights-Vorschau"
-                              : "Dein Performance-Briefing"}
-                          </span>
-                          <span className="spotlight-tag">
-                            {demo ? "Demo" : "KI"}
-                          </span>
-                        </div>
-                        <h2>
-                          {a?.status === "demo"
-                            ? "Die Richtung stimmt.\nHier liegt dein Potenzial."
-                            : a?.status === "ready"
-                              ? "Was deine Zahlen erzählen."
-                              : "Bereit für mehr Klarheit."}
-                        </h2>
-                        <p>
-                          {a?.summary ||
-                            "Lade deine Daten und erstelle eine erste Interpretation für diesen Monat."}
-                        </p>
-                        <div className="spotlight-separator" />
-                        <div className="spotlight-stat">
-                          <span>
-                            <strong>{a?.recommendations.length || 0}</strong>{" "}
-                            nächste Schritte
-                          </span>
-                          <span>Für deinen Fokus</span>
-                        </div>
-                        <button onClick={() => changeView("insights")}>
-                          Insights entdecken{" "}
-                          <img src="/brand/arrow.svg" alt="" />
-                        </button>
-                        <span className="spotlight-note">
-                          {demo
-                            ? "Illustrative Interpretation, keine echte KI-Auswertung."
-                            : "KI-Empfehlungen vor der Umsetzung prüfen."}
-                        </span>
-                      </section>
-                    </div>
-                    <section className="panel channel-panel">
-                      <div className="panel-heading">
-                        <div>
-                          <h2>Deine Kanäle auf einen Blick</h2>
-                          <p>Unterschiedliche Stärken. Ein gemeinsames Bild.</p>
-                        </div>
-                        <button
-                          className="text-button"
-                          onClick={() => changeView("channels")}
-                        >
-                          Alle Kanäle <ArrowRight size={16} />
-                        </button>
-                      </div>
-                      <ChannelTable
-                        channels={d.channels.slice(0, 6)}
-                        onSelect={(c) => {
-                          setChannel(c.id);
-                          changeView("channels");
-                        }}
-                      />
-                    </section>
-                    <section className="recommendations-section">
+                    <p className="overview-freshness">
+                      {demo ? "Illustrative Monatswerte für die Präsentation. Keine Live-Aktualisierung." : "Aktueller Monat · Anzeige wird jede Minute neu geladen."}
+                      Datenstand je Kanal gemäss letztem erfolgreichen Abruf;
+                      die Schnittstellen können verzögert liefern.
+                    </p>
+                    <ChannelOverview
+                      channels={d.channels}
+                      demo={demo}
+                      month={month}
+                      onSelect={(c) => {
+                        setChannel(c.id);
+                        changeView("channels");
+                      }}
+                    />
+                    <section
+                      className="overview-actions top-recommendations"
+                      aria-label="Top 3 Empfehlungen"
+                    >
                       <div className="section-heading">
                         <div>
-                          <h2>Das solltest du als Nächstes angehen</h2>
+                          <h2>Top 3 Empfehlungen</h2>
                           <p>
-                            Die wichtigsten Empfehlungen für deinen nächsten
-                            Schritt.
+                            Die wichtigsten nächsten Schritte für{" "}
+                            {monthName(month)}.
                           </p>
                         </div>
                         <button
@@ -687,29 +719,83 @@ function App() {
                       </div>
                       {a?.recommendations.length ? (
                         <div className="recommendation-grid">
-                          {a.recommendations.slice(0, 3).map((r, i) => (
-                            <RecommendationCard
-                              key={i}
-                              r={r}
-                              onClick={() => setRec(r)}
-                            />
-                          ))}
+                          {[...a.recommendations]
+                            .sort(
+                              (x, y) =>
+                                ({ high: 0, medium: 1, low: 2 })[x.priority] -
+                                { high: 0, medium: 1, low: 2 }[y.priority],
+                            )
+                            .slice(0, 3)
+                            .map((r, i) => (
+                              <RecommendationCard
+                                key={i}
+                                r={r}
+                                onClick={() => setRec(r)}
+                              />
+                            ))}
                         </div>
                       ) : (
-                        <Empty title="Noch keine Empfehlungen">
-                          Verbinde deine Datenquellen und erstelle anschliessend
-                          die erste Analyse.
-                        </Empty>
+                        <div className="recommendations-preview">
+                          <p className="preview-caption">
+                            Grafische Vorschau · Noch keine datenbasierte
+                            Auswertung
+                          </p>
+                          <div className="recommendation-grid">
+                            {[
+                              {
+                                title: "Dein stärkster Hebel",
+                                icon: ChartNoAxesCombined,
+                                description:
+                                  "Die wichtigste Entwicklung deiner Kanäle – mit einer konkreten Massnahme für mehr Wirkung.",
+                              },
+                              {
+                                title: "Deine nächste Chance",
+                                icon: Lightbulb,
+                                description:
+                                  "Ein Potenzial aus deinen Kennzahlen – mit einer Empfehlung, wo sich genaueres Hinsehen lohnt.",
+                              },
+                              {
+                                title: "Dein nächster Test",
+                                icon: ArrowUpRight,
+                                description:
+                                  "Eine überprüfbare Idee – mit einem klaren nächsten Schritt und der passenden Erfolgskennzahl.",
+                              },
+                            ].map(({ title, icon: Icon, description }, i) => (
+                              <article
+                                className="recommendation-preview"
+                                key={title}
+                              >
+                                <div className="preview-card-heading">
+                                  <Icon size={42} />
+                                  <span>Empfehlung {i + 1}</span>
+                                </div>
+                                <h3>{title}</h3>
+                                <p>{description}</p>
+                                <footer>
+                                  <span>Konkreter nächster Schritt</span>
+                                  <ArrowRight size={18} />
+                                </footer>
+                              </article>
+                            ))}
+                          </div>
+                        </div>
                       )}
                     </section>
                   </>
                 )}
+                {view === "videos" && <VideoPerformance data={d} demo={demo} />}
                 {view === "audience" && <Audience month={month} demo={demo} />}
                 {view === "posts" && (
                   <PostCollection key={month} month={month} demo={demo} />
                 )}
                 {view === "channels" && (
                   <>
+                    <button
+                      className="text-button back-to-overview"
+                      onClick={() => changeView("overview")}
+                    >
+                      <ChevronLeft size={16} /> Alle Kanäle im Überblick
+                    </button>
                     <div className="channel-selector">
                       {d.channels.map((c) => (
                         <button
@@ -723,7 +809,8 @@ function App() {
                         </button>
                       ))}
                     </div>
-                    {selected && (
+                    {isAds && <AdsCampaigns demo={demo} />}
+                    {selected && !isAds && (
                       <>
                         <div className="section-heading">
                           <div className="channel-title">
@@ -759,11 +846,28 @@ function App() {
                           )}
                         </div>
                         <PerformanceExplorer
+                          key={`channel-${d.month}-${channel}`}
                           data={d}
                           channel={channel}
                           onChannel={setChannel}
                           demo={demo}
                         />
+                        {selected.id === "linkedin_organic" && (
+                          <div className="channel-detail-links">
+                            <button
+                              className="button"
+                              onClick={() => changeView("audience")}
+                            >
+                              <Users size={18} /> Follower-Entwicklung
+                            </button>
+                            <button
+                              className="button"
+                              onClick={() => changeView("posts")}
+                            >
+                              <FileText size={18} /> Alle Posts & Videos
+                            </button>
+                          </div>
+                        )}
                         <section className="panel detail-definitions">
                           <h2>So liest du diese Zahlen</h2>
                           <p>
@@ -968,17 +1072,33 @@ function download(name: string, content: string, type: string) {
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
-function KPICard({ kpi: k, onClick }: { kpi: KPI; onClick?: () => void }) {
+function KPICard({
+  kpi: k,
+  onClick,
+  comparisonMonth,
+  comparisonEnd,
+}: {
+  kpi: KPI;
+  onClick?: () => void;
+  comparisonMonth?: string;
+  comparisonEnd?: string;
+}) {
   const body = (
     <>
       <div className="kpi-top">
         <span>{k.label}</span>
-        <ChannelIcon id={k.channel} size={16} />
       </div>
       <strong className="kpi-value">{number(k.value, k.unit)}</strong>
       <div className="kpi-comparison">
         <Change value={k.change} />
-        <span>zum Vergleichszeitraum</span>
+        <span>
+          {comparisonMonth
+            ? `gegenüber ${monthName(comparisonMonth)}${comparisonEnd ? ` bis ${Number(comparisonEnd.slice(8))}.` : ""}`
+            : "zum Vergleichszeitraum"}
+        </span>
+        <span className="kpi-previous">
+          Vorperiode: {number(k.previous, k.unit)}
+        </span>
       </div>
       {k.target !== null && (
         <span className="small muted">Ziel: {number(k.target, k.unit)}</span>
@@ -993,84 +1113,107 @@ function KPICard({ kpi: k, onClick }: { kpi: KPI; onClick?: () => void }) {
     <article className="kpi-card">{body}</article>
   );
 }
-function ChannelTable({
+function ChannelOverview({
   channels,
+  demo,
+  month,
   onSelect,
 }: {
   channels: Channel[];
-  onSelect: (c: Channel) => void;
+  demo: boolean;
+  month: string;
+  onSelect: (channel: Channel) => void;
 }) {
   return (
-    <div className="table-scroll">
-      <table className="channel-table">
-        <thead>
-          <tr>
-            <th>Kanal</th>
-            <th>Kernkennzahl</th>
-            <th>Ergebnis</th>
-            <th>Zum Vormonat</th>
-            <th>Datenstatus</th>
-            <th>
-              <span className="sr-only">Details</span>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {channels.map((c) => (
-            <tr key={c.id}>
-              <td>
-                <button className="channel-name" onClick={() => onSelect(c)}>
-                  <ChannelIcon id={c.id} />
-                  <span>
-                    <strong>{c.name}</strong>
-                    <small>{c.type}</small>
-                  </span>
-                </button>
-              </td>
-              <td>{c.fields[c.primary]}</td>
-              <td className="table-number">{number(c.values[c.primary])}</td>
-              <td>
-                <Change
-                  value={change(c.values[c.primary], c.previous[c.primary])}
-                />
-              </td>
-              <td>
+    <section className="channel-overview" aria-label="Alle Marketingkanäle">
+      <div className="section-heading">
+        <div>
+          <h2>Deine Kanäle</h2>
+          <p>Wähle einen Kanal für Kennzahlen, Verläufe und Inhalte.</p>
+        </div>
+      </div>
+      <div className="channel-overview-grid">
+        {[...channels]
+          .sort(
+            (a, b) =>
+              Number(!!b.last_success || b.status === "connected") -
+              Number(!!a.last_success || a.status === "connected"),
+          )
+          .map((c) => {
+            const hasValues = Object.values(c.values).some(
+              (value) => value != null,
+            );
+            const status = demo
+              ? "Beispieldaten"
+              : c.status === "connected"
+                ? "Verbunden"
+                : c.last_success
+                  ? "Gespeicherter Datenstand"
+                  : c.status === "error"
+                    ? "Verbindung prüfen"
+                    : "Noch nicht verbunden";
+            const keys = [
+              ...new Set([c.primary, ...Object.keys(c.fields)]),
+            ].slice(0, 3);
+            return (
+              <button
+                key={c.id}
+                className={`channel-entry ${hasValues ? "has-data" : ""}`}
+                onClick={() => onSelect(c)}
+                aria-label={`${c.name} öffnen`}
+              >
+                <div className="channel-entry-heading">
+                  <ChannelIcon id={c.id} size={44} />
+                  <div>
+                    <h3>{c.name}</h3>
+                    <span>{c.type}</span>
+                  </div>
+                  <ArrowRight className="channel-entry-arrow" size={20} />
+                </div>
                 <span
-                  className={
-                    "data-status " +
-                    (c.status === "connected"
-                      ? "good"
-                      : c.status === "error"
-                        ? "bad"
-                        : "")
-                  }
+                  className={`channel-entry-status ${c.status === "connected" && !demo ? "is-connected" : ""}`}
                 >
-                  <span />
-                  {c.status === "demo"
-                    ? "Beispieldaten"
-                    : c.status === "connected"
-                      ? "Aktualisiert"
-                      : c.status === "error"
-                        ? "Prüfung nötig"
-                        : "Nicht verbunden"}
+                  {status}
                 </span>
-              </td>
-              <td>
-                <button
-                  className="icon-button"
-                  aria-label={c.name + " öffnen"}
-                  onClick={() => onSelect(c)}
-                >
-                  <ChevronRight size={16} />
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+                {hasValues ? (
+                  <dl className="channel-entry-values">
+                    {keys.map((key) => (
+                      <div key={key}>
+                        <dt>{c.fields[key]}</dt>
+                        <dd>
+                          {number(c.values[key], c.units[key])}
+                          {c.units[key] && c.units[key] !== "count"
+                            ? ` ${c.units[key]}`
+                            : ""}
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                ) : (
+                  <p className="channel-entry-empty">
+                    {c.last_success || c.status === "connected"
+                      ? `Keine Kennzahlen für ${monthName(month)} vorhanden.`
+                      : "Nach der Anbindung erscheinen hier deine Kennzahlen."}
+                  </p>
+                )}
+                <div className="channel-entry-footer">
+                  <span>
+                    {c.last_success && !demo
+                      ? `Datenstand ${new Date(c.last_success).toLocaleString("de-CH", { timeZone: "Europe/Zurich", dateStyle: "short", timeStyle: "short" })}`
+                      : demo || c.status === "connected"
+                        ? monthName(month)
+                        : "Einrichtung ausstehend"}
+                  </span>
+                  <strong>Kanal ansehen</strong>
+                </div>
+              </button>
+            );
+          })}
+      </div>
+    </section>
   );
 }
+
 function RecommendationCard({
   r,
   onClick,
@@ -1148,7 +1291,7 @@ function Login({
   return (
     <div className="login-layout">
       <section className="login-brand">
-        <img src="/brand/sonio-light.svg" alt="Sonio" />
+        <img src={asset("brand/sonio-light.svg")} alt="Sonio" />
         <div>
           <h1>
             Aus vielen Kanälen
@@ -1778,8 +1921,10 @@ function Team({
           <div>
             <h2>Dein Team</h2>
             <p>
-              Ein Master-Admin verwaltet Zugänge. Eingeladene Mitglieder können
-              Kennzahlen und Reports lesen.
+              Du entscheidest als Master-Admin, wer Zugang erhält. Neue Nutzer
+              können nur über deinen persönlichen Einladungslink beitreten. Es
+              gibt keine offene Registrierung; eingeladene Mitglieder erhalten
+              Lesezugriff.
             </p>
           </div>
           <button

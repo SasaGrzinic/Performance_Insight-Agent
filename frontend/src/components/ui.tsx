@@ -1,3 +1,4 @@
+import { asset } from "../staticDemo";
 import type { ReactNode } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
@@ -65,11 +66,28 @@ const icons: Record<string, typeof Search> = {
   events: CalendarDays,
   qr: QrCode,
 };
+const channelLogos: Record<string, string> = {
+  linkedin: "linkedin",
+  linkedin_organic: "linkedin",
+  youtube: "youtube",
+  google_ads: "googleads",
+  analytics: "googleanalytics",
+  mailchimp: "mailchimp",
+};
 export function ChannelIcon({ id, size = 18 }: { id: string; size?: number }) {
   const Icon = icons[id] || ChartNoAxesColumnIncreasing;
   return (
-    <span className={"channel-icon " + id}>
-      <Icon size={size} strokeWidth={1.8} />
+    <span className={"channel-icon " + id} aria-hidden="true">
+      {channelLogos[id] ? (
+        <img
+          src={asset(`brand/channels/${channelLogos[id]}.svg`)}
+          width={size}
+          height={size}
+          alt=""
+        />
+      ) : (
+        <Icon size={size} strokeWidth={1.8} />
+      )}
     </span>
   );
 }
@@ -86,7 +104,7 @@ export function Change({ value }: { value: number | null }) {
 }
 export function Loading() {
   return (
-    <div className="empty">
+    <div className="empty" role="status" aria-live="polite">
       <LoaderCircle className="spin" size={24} />
       <h3>Daten werden geladen</h3>
       <p>Einen Moment bitte.</p>

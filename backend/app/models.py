@@ -118,3 +118,11 @@ class LinkedInPost(Base):
     published_at: Mapped[str] = mapped_column(String(40), index=True)
     data: Mapped[dict] = mapped_column(JSON)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+
+
+class LinkedInCampaign(Base):
+    __tablename__ = "linkedin_campaigns"
+    id: Mapped[str] = mapped_column(String(100), primary_key=True)
+    account: Mapped[str] = mapped_column(String(100), index=True)
+    data: Mapped[dict] = mapped_column(JSON)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)

@@ -3,7 +3,7 @@
 import io
 import re
 import zipfile
-from datetime import date, datetime, timezone
+from datetime import datetime, timezone
 from urllib.parse import quote
 
 import httpx
@@ -164,18 +164,23 @@ def google_ads(start, end, s):
     return result
 
 
-def linkedin_headers(s):
-    token = s.linkedin_access_token
-    if s.linkedin_refresh_token:
-        require(s.linkedin_client_id, s.linkedin_client_secret)
+def linkedin_headers(s, *, ads=False):
+    # Ads belongs to a separate app. Never fall back to the Community token.
+    prefix = "linkedin_ads_" if ads else "linkedin_"
+    token = getattr(s, prefix + "access_token", "")
+    refresh_token = getattr(s, prefix + "refresh_token", "")
+    if refresh_token:
+        client_id = getattr(s, prefix + "client_id", "")
+        client_secret = getattr(s, prefix + "client_secret", "")
+        require(client_id, client_secret)
         token = request(
             "POST",
             "https://www.linkedin.com/oauth/v2/accessToken",
             data={
                 "grant_type": "refresh_token",
-                "refresh_token": s.linkedin_refresh_token,
-                "client_id": s.linkedin_client_id,
-                "client_secret": s.linkedin_client_secret,
+                "refresh_token": refresh_token,
+                "client_id": client_id,
+                "client_secret": client_secret,
             },
         ).json()["access_token"]
     require(token)
@@ -198,49 +203,17 @@ def linkedin_url(endpoint, params):
             return "List(" + ",".join(encode(v) for v in value) + ")"
         return quote(str(value), safe="")
 
-    query = "&".join(f"{quote(k, safe='')}={encode(v)}" for k, v in params.items())
+    query = "&".join(
+        f"{quote(k, safe='')}={quote(str(v), safe=',') if k == 'fields' else encode(v)}"
+        for k, v in params.items()
+    )
     return f"https://api.linkedin.com/rest/{endpoint}?{query}"
 
 
 def linkedin(start, end, s):
-    require(s.linkedin_ad_account_id)
-    params = {
-        "q": "analytics",
-        "pivot": "ACCOUNT",
-        "timeGranularity": "DAILY",
-        "dateRange": {
-            "start": {"year": start.year, "month": start.month, "day": start.day},
-            "end": {"year": end.year, "month": end.month, "day": end.day},
-        },
-        "accounts": [f"urn:li:sponsoredAccount:{number_id(s.linkedin_ad_account_id)}"],
-        "fields": "dateRange,impressions,clicks,externalWebsiteConversions,costInLocalCurrency",
-    }
-    data = request(
-        "GET",
-        linkedin_url("adAnalytics", params),
-        headers=linkedin_headers(s),
-    ).json()
-    out = []
-    for r in data.get("elements", []):
-        d = r["dateRange"]["start"]
-        day = date(d["year"], d["month"], d["day"])
-        for raw, key in [
-            ("impressions", "impressions"),
-            ("clicks", "clicks"),
-            ("externalWebsiteConversions", "conversions"),
-            ("costInLocalCurrency", "spend"),
-        ]:
-            if raw in r:
-                out.append(
-                    row(
-                        "linkedin",
-                        day,
-                        key,
-                        r[raw],
-                        unit=s.linkedin_currency if key == "spend" else "count",
-                    )
-                )
-    return out
+    from .linkedin_ads import fetch
+
+    return fetch(start, end, s)
 
 
 def linkedin_organic(start, end, s):

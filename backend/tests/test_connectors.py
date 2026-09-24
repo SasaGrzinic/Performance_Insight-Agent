@@ -185,21 +185,66 @@ def test_linkedin_uses_company_statistics_and_preserves_provenance():
 def test_linkedin_ads_preserves_restli_structure_and_fractional_conversions():
     settings = linkedin_settings()
     settings.linkedin_ad_account_id = "67890"
+    settings.linkedin_ads_access_token = "test-ads-only-token"
     settings.linkedin_currency = "CHF"
     payload = {
         "elements": [
             {
                 "dateRange": {"start": {"year": 2026, "month": 8, "day": 1}},
                 "externalWebsiteConversions": 0.5,
+                "pivotValues": ["urn:li:sponsoredCampaign:123"],
             }
         ]
     }
-    with patch("app.connectors.request", return_value=response(payload)) as req:
+    with patch(
+        "app.linkedin_ads.request",
+        side_effect=[
+            response({"id": 67890, "reference": "urn:li:organization:12345", "currency": "CHF"}),
+            response({"elements": [{"id": 123, "account": "urn:li:sponsoredAccount:67890"}]}),
+            response(payload),
+        ],
+    ) as req:
         rows = linkedin(START, END, settings)
     wire_query = httpx.Request("GET", req.call_args.args[1]).url.query.decode()
     assert "dateRange=(start:(year:2026,month:8,day:1)" in wire_query
     assert "accounts=List(urn%3Ali%3AsponsoredAccount%3A67890)" in wire_query
+    assert "fields=dateRange,pivotValues,impressions,clicks" in wire_query
+    assert rows[0]["source_id"] == "urn:li:sponsoredCampaign:123"
     assert rows[0]["value"] == 0.5
+    assert req.call_args.kwargs["headers"]["Authorization"] == "Bearer test-ads-only-token"
+
+
+def test_linkedin_ads_never_uses_organic_token():
+    from app.connectors import NotConfigured
+
+    settings = linkedin_settings()
+    settings.linkedin_ad_account_id = "67890"
+    with patch("app.connectors.request") as req, pytest.raises(NotConfigured):
+        linkedin(START, END, settings)
+    req.assert_not_called()
+
+
+def test_linkedin_ads_refresh_uses_only_ads_app_credentials():
+    from app.connectors import linkedin_headers
+
+    settings = linkedin_settings()
+    settings.linkedin_ads_refresh_token = "ads-refresh"
+    settings.linkedin_ads_client_id = "ads-client"
+    settings.linkedin_ads_client_secret = "ads-secret"
+    settings.linkedin_refresh_token = "organic-refresh"
+    with patch(
+        "app.connectors.request", return_value=response({"access_token": "ads-access"})
+    ) as req:
+        headers = linkedin_headers(settings, ads=True)
+    assert headers["Authorization"] == "Bearer ads-access"
+    assert req.call_args.kwargs["data"] == {
+        "grant_type": "refresh_token",
+        "refresh_token": "ads-refresh",
+        "client_id": "ads-client",
+        "client_secret": "ads-secret",
+    }
+    assert settings.linkedin_access_token == "test-only-token"
+    assert settings.linkedin_refresh_token == "organic-refresh"
 
 
 @pytest.mark.parametrize(
