@@ -1,0 +1,288 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-16T09:57:31.313537+00:00",
+  "title": "Design System: Sonio Insights",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Sonio blue"
+      },
+      "primary-hover": {
+        "role": "primary",
+        "displayName": "Primary hover blue"
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink"
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted text"
+      },
+      "canvas": {
+        "role": "neutral",
+        "displayName": "Application canvas"
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "White surface"
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Panel border"
+      },
+      "focus": {
+        "role": "primary",
+        "displayName": "Keyboard focus"
+      },
+      "nav-selected-bg": {
+        "role": "primary",
+        "displayName": "Selected navigation background"
+      },
+      "nav-selected-text": {
+        "role": "primary",
+        "displayName": "Selected navigation text"
+      },
+      "control-line": {
+        "role": "neutral",
+        "displayName": "Control border"
+      },
+      "control-hover-bg": {
+        "role": "neutral",
+        "displayName": "Control hover background"
+      },
+      "field-line": {
+        "role": "neutral",
+        "displayName": "Field border"
+      },
+      "field-text": {
+        "role": "neutral",
+        "displayName": "Field text"
+      },
+      "positive": {
+        "role": "semantic",
+        "displayName": "Positive comparison"
+      },
+      "negative": {
+        "role": "semantic",
+        "displayName": "Negative comparison"
+      },
+      "priority-high-bg": {
+        "role": "semantic",
+        "displayName": "High priority background"
+      },
+      "priority-high-text": {
+        "role": "semantic",
+        "displayName": "High priority text"
+      },
+      "blue-surface": {
+        "role": "primary",
+        "displayName": "Pale blue section surface"
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Login display heading",
+        "purpose": "Login brand heading."
+      },
+      "headline": {
+        "displayName": "Page heading",
+        "purpose": "Dashboard page headings."
+      },
+      "title": {
+        "displayName": "Section title",
+        "purpose": "Default section headings."
+      },
+      "body": {
+        "displayName": "Root paragraph",
+        "purpose": "Base type and paragraph line height; components have denser local sizes."
+      },
+      "label": {
+        "displayName": "Form label",
+        "purpose": "Labels above inputs and selects."
+      },
+      "button": {
+        "displayName": "Standard action",
+        "purpose": "Primary and secondary actions."
+      },
+      "metric": {
+        "displayName": "KPI value",
+        "purpose": "Tabular numerals with responsive size overrides."
+      }
+    },
+    "shadows": [
+      {
+        "name": "toast",
+        "value": "0 6px 26px #16395626",
+        "purpose": "Transient feedback above content."
+      },
+      {
+        "name": "dialog",
+        "value": "0 16px 60px #12273d30",
+        "purpose": "Modal content above its overlay."
+      }
+    ],
+    "motion": [
+      {
+        "name": "mobile-drawer",
+        "value": "transform 0.2s ease",
+        "purpose": "Mobile sidebar transition."
+      },
+      {
+        "name": "loading-spin",
+        "value": "spin 1s linear infinite",
+        "purpose": "Loading icons rotate to 360 degrees."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "animation: none !important; transition: none !important; scroll-behavior: auto !important",
+        "purpose": "All elements and pseudo-elements when prefers-reduced-motion is reduce."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "mobile-max",
+        "value": "760px"
+      },
+      {
+        "name": "compact-max",
+        "value": "1020px"
+      },
+      {
+        "name": "desktop-narrow-max",
+        "value": "1250px"
+      },
+      {
+        "name": "desktop-large-min",
+        "value": "1600px"
+      }
+    ],
+    "focus": {
+      "value": "3px solid #78b7ef",
+      "offset": "3px",
+      "purpose": "Buttons, links, inputs, and selects."
+    },
+    "sourceFiles": [
+      "frontend/src/styles.css",
+      "frontend/src/App.tsx",
+      "frontend/src/components/ui.tsx",
+      "frontend/src/api.ts",
+      "frontend/public/brand/fonts.css"
+    ],
+    "extractionNotes": "Implemented values only. No creative metaphor or synthetic tonal ramp was added. Primitives live in DESIGN.md; snippets use existing CSS variables with literal fallbacks for standalone rendering.",
+    "performanceTooltip": {
+      "mobileMax": "760px",
+      "inset": "8px",
+      "wrapperWidth": "calc(100% - 16px)",
+      "transform": "none",
+      "tooltipWidth": "100%",
+      "purpose": "Contain publication titles within the mobile chart."
+    }
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Primary action with shared focus and disabled states.",
+      "html": "<button class=\"ds-primary\">Daten aktualisieren</button>",
+      "css": ".ds-primary{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:38px;padding:9px 14px;border:1px solid #dce3eb;border-radius:7px;font-family:\"Red Hat Display\", sans-serif;font-size:11px;font-weight:700;line-height:1.5;white-space:nowrap;cursor:pointer;background:var(--blue,#0075d9);color:#fff;border-color:var(--blue,#0075d9)}.ds-primary:hover{background:var(--blue-dark,#0063b8)}.ds-primary:focus-visible{outline:3px solid #78b7ef;outline-offset:3px}.ds-primary:disabled{cursor:not-allowed;opacity:.5}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Outlined secondary action.",
+      "html": "<button class=\"ds-secondary\">CSV exportieren</button>",
+      "css": ".ds-secondary{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:38px;padding:9px 14px;border:1px solid #dce3eb;border-radius:7px;font-family:\"Red Hat Display\", sans-serif;font-size:11px;font-weight:700;line-height:1.5;white-space:nowrap;cursor:pointer;background:#fff;color:var(--ink,#1d1d1b)}.ds-secondary:hover{background:#f3f7fb;border-color:#b7cde1}.ds-secondary:focus-visible{outline:3px solid #78b7ef;outline-offset:3px}.ds-secondary:disabled{cursor:not-allowed;opacity:.5}"
+    },
+    {
+      "name": "Text Button",
+      "kind": "button",
+      "description": "Inline action with a hover underline.",
+      "html": "<button class=\"ds-text\">Alle Empfehlungen</button>",
+      "css": ".ds-text{display:inline-flex;align-items:center;gap:8px;background:none;border:0;padding:0;color:#006ac7;font-family:\"Red Hat Display\", sans-serif;font-size:11px;font-weight:700;white-space:nowrap;cursor:pointer}.ds-text:hover{text-decoration:underline;text-underline-offset:4px}.ds-text:focus-visible{outline:3px solid #78b7ef;outline-offset:3px}"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "field",
+      "description": "Visible label and native text input.",
+      "html": "<label class=\"ds-label\">Benutzername<input class=\"ds-field\" autocomplete=\"username\" placeholder=\"Dein Benutzername\"></label>",
+      "css": ".ds-label{font-family:\"Red Hat Display\", sans-serif;font-size:12px;font-weight:650;display:flex;flex-direction:column;gap:8px;color:var(--ink,#1d1d1b)}.ds-field{font-family:\"Red Hat Display\", sans-serif;font-weight:500;width:100%;min-height:42px;padding:11px 12px;border:1px solid #dce3ea;border-radius:7px;background:#fff;color:#334658;font-size:13px;caret-color:var(--blue,#0075d9)}.ds-field::placeholder{color:#8795a2}.ds-field:focus-visible{outline:3px solid #78b7ef;outline-offset:3px}"
+    },
+    {
+      "name": "Navigation",
+      "kind": "nav",
+      "refersTo": "navigation-active",
+      "description": "Default and blue selected items with white selected text and the sidebar edge marker.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Beispielnavigation\"><button class=\"ds-nav-item ds-active\">Übersicht</button><button class=\"ds-nav-item\">Kanäle</button></nav>",
+      "css": ".ds-nav{position:relative;padding:0 18px;background:#fff;max-width:248px}.ds-nav-item{background:transparent;border:0;padding:13px 12px;display:flex;width:100%;align-items:center;gap:12px;border-radius:8px;margin-bottom:5px;color:#63717e;font-family:\"Red Hat Display\", sans-serif;font-size:12px;font-weight:600;white-space:nowrap;text-align:left;cursor:pointer}.ds-nav-item:hover{background:#f5f8fb;color:var(--ink,#1d1d1b)}.ds-nav-item.ds-active{background:var(--blue,#0075d9);color:#fff}.ds-nav-item.ds-active:before{content:\"\";width:3px;height:17px;border-radius:2px;background:var(--blue,#0075d9);position:absolute;left:0}.ds-nav-item:focus-visible{outline:3px solid #78b7ef;outline-offset:3px}.ds-nav-item.ds-active:hover{background:var(--blue-dark,#0063b8);color:#fff}"
+    },
+    {
+      "name": "Priority Tag",
+      "kind": "chip",
+      "refersTo": "priority-high",
+      "description": "Non-interactive priority status with an explicit label.",
+      "html": "<span class=\"ds-priority\">Hohe Priorität</span>",
+      "css": ".ds-priority{font-family:\"Red Hat Display\", sans-serif;font-size:9px;font-weight:500;padding:4px 7px;border-radius:4px;background:#fff2e9;color:#a96834;white-space:nowrap}"
+    },
+    {
+      "name": "KPI Card",
+      "kind": "card",
+      "refersTo": "kpi-card",
+      "description": "Overview metric card with explicitly labelled sample values.",
+      "html": "<button class=\"ds-kpi\"><span class=\"ds-kpi-label\">Beispieldaten · Conversions</span><strong class=\"ds-kpi-value\">24.4</strong><span class=\"ds-kpi-comparison\">Kein Vergleich</span></button>",
+      "css": ".ds-kpi{font-family:\"Red Hat Display\", sans-serif;background:#fff;border:1px solid var(--line,#e6eaf0);border-radius:var(--radius,14px);padding:20px 19px;text-align:left;min-width:0;display:block;color:var(--ink,#1d1d1b);cursor:pointer}.ds-kpi:hover{border-color:#b5d5ef}.ds-kpi:focus-visible{outline:3px solid #78b7ef;outline-offset:3px}.ds-kpi-label{font-size:11px;font-weight:600;color:#536373}.ds-kpi-value{font-size:34px;font-weight:750;letter-spacing:-.035em;line-height:1.15;margin:13px 0 14px;display:block;font-variant-numeric:tabular-nums}.ds-kpi-comparison{font-size:12px;color:var(--muted,#64717f)}.ds-kpi-value{color:var(--blue-dark,#0063b8)}"
+    },
+    {
+      "name": "Insight Panel",
+      "kind": "custom",
+      "refersTo": "insight-panel",
+      "description": "Blue interpretation panel with a white action.",
+      "html": "<section class=\"ds-insight\"><span class=\"ds-insight-label\">Insights-Vorschau · Demo</span><h2 class=\"ds-insight-title\">Bereit für mehr Klarheit.</h2><p class=\"ds-insight-copy\">Illustrative Interpretation, keine echte KI-Auswertung.</p><button class=\"ds-insight-action\">Insights entdecken</button></section>",
+      "css": ".ds-insight{font-family:\"Red Hat Display\", sans-serif;background:var(--blue,#0075d9);color:#fff;border-radius:var(--radius,14px);padding:25px 25px 19px;display:flex;flex-direction:column;overflow:hidden}.ds-insight-label{font-size:11px;font-weight:600}.ds-insight-title{font-size:25px;font-weight:750;letter-spacing:-.035em;line-height:1.23;margin:21px 0 14px}.ds-insight-copy{font-size:12px;font-weight:500;color:#d9ebfc;line-height:1.75;max-width:45ch;margin:0 0 20px}.ds-insight-action{font-family:\"Red Hat Display\", sans-serif;background:#fff;color:#0065ba;border:0;border-radius:7px;padding:11px 13px;display:flex;align-items:center;justify-content:space-between;font-weight:700;font-size:11px;margin-top:auto;cursor:pointer}.ds-insight-action:focus-visible{outline:3px solid #78b7ef;outline-offset:3px}"
+    },
+    {
+      "name": "Page Introduction",
+      "kind": "custom",
+      "refersTo": "page-intro",
+      "description": "Blue page heading surface with white text.",
+      "html": "<header class=\"ds-intro\"><h1>Übersicht</h1><p>Performance im ausgewählten Monat.</p></header>",
+      "css": ".ds-intro{font-family:\"Red Hat Display\",sans-serif;background:var(--blue-dark,#0063b8);color:#fff;padding:24px;border-radius:14px}.ds-intro h1,.ds-intro p{color:#fff}@media(max-width:760px){.ds-intro{padding:20px}}"
+    },
+    {
+      "name": "CSV Export Disclosure",
+      "kind": "custom",
+      "refersTo": "export-panel",
+      "description": "Native disclosure containing scoped CSV export controls; chart headings share its pale blue surface.",
+      "html": "<details class=\"ds-export\"><summary>CSV herunterladen</summary><p>Datenbereich und Kennzahlen auswählen.</p></details>",
+      "css": ".ds-export{font-family:\"Red Hat Display\",sans-serif;background:#e8f3ff;border:1px solid #b4d7f5;border-radius:12px}.ds-export summary{cursor:pointer;padding:16px 20px;color:#00549c;font-weight:700}.ds-export summary::after{content:\"+\";float:right}.ds-export[open] summary::after{content:\"−\"}.ds-export summary:focus-visible{outline:3px solid #78b7ef;outline-offset:3px}.ds-export p{padding:0 20px 20px;font-size:12px}"
+    }
+  ],
+  "narrative": {
+    "overview": "This document records the implemented interface in `frontend/src/styles.css`, `frontend/src/App.tsx`, and `frontend/src/components/ui.tsx`. It uses a white navigation sidebar, a light grey canvas, bordered white panels, and blue primary controls. Red Hat Display is used throughout; the original Sonio logo and arrow assets are served from `frontend/public/brand/`.\n\nThis record replaces the provisional plan written during the same implementation. It adds no creative metaphor or brand claims. The frontmatter records reusable values, with component-specific extensions in `.impeccable/design.json`. The application canvas follows the extracted `canvas` token.",
+    "keyCharacteristics": [
+      "White panels separated by borders on a light grey canvas.",
+      "Blue page introductions, controls, selected navigation, KPI values, time-series lines, and the insight panel; pale blue export and chart headings.",
+      "Left-aligned labels and tabular metric numerals.",
+      "Text labels alongside data status, comparison, and priority indicators.",
+      "Responsive grids, visible keyboard focus, and reduced-motion support."
+    ],
+    "rules": [],
+    "dos": [
+      "**Do** reuse the original Sonio logo, arrow assets, and self-hosted Red Hat Display font.",
+      "**Do** use the implemented primary, neutral, border, radius, and control tokens.",
+      "**Do** keep status and priority meanings available in text alongside color and icons.",
+      "**Do** preserve visible keyboard focus, modal and mobile navigation behavior, and reduced-motion support.",
+      "**Do** label demonstration data and preserve missing values and fractional measurements."
+    ],
+    "donts": [
+      "**Don't** present demonstration values as live measurements.",
+      "**Don't** replace missing metrics with fabricated zeroes.",
+      "**Don't** show administrator-only editing workflows to viewers.",
+      "**Don't** remove explanation, evidence, and caveats from recommendation details."
+    ]
+  }
+}

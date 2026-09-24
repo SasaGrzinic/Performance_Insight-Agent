@@ -1,0 +1,23 @@
+.env
+.env.*
+!.env.example
+!frontend/.env.example
+node_modules/
+dist/
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+*.db
+*.db-*
+*.pyc
+.DS_Store
+.coverage
+
+.local/
+*.tsbuildinfo
+
+# Local review captures may contain real account and marketing data.
+.impeccable/review/
+client_secret*.json
+*.log

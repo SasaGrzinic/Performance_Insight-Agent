@@ -1,0 +1,70 @@
+name: sonio-insights
+x-backend: &backend
+  build: ./backend
+  env_file: .env
+  environment:
+    DATABASE_URL: postgresql+psycopg://sonio:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@postgres:5432/sonio
+  restart: unless-stopped
+  init: true
+  security_opt:
+    - no-new-privileges:true
+  depends_on:
+    migrate:
+      condition: service_completed_successfully
+services:
+  postgres:
+    image: postgres:18.6-alpine
+    environment:
+      POSTGRES_USER: sonio
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: sonio
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U sonio -d sonio"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+  migrate:
+    build: ./backend
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql+psycopg://sonio:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@postgres:5432/sonio
+    command: [alembic, upgrade, head]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+  api:
+    <<: *backend
+    environment:
+      DATABASE_URL: postgresql+psycopg://sonio:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}@postgres:5432/sonio
+      TRUST_PROXY: "true"
+    healthcheck:
+      test:
+        [
+          CMD,
+          python,
+          -c,
+          "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+  worker:
+    <<: *backend
+    command: [python, -m, app.jobs, worker]
+  scheduler:
+    <<: *backend
+    command: [python, -m, app.jobs, scheduler]
+  frontend:
+    build: ./frontend
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+volumes:
+  postgres_data:
