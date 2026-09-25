@@ -1,3 +1,4 @@
+import { KpiExplainer } from "./KpiExplainer";
 import {
   multiMetricSeries,
   relativeSeries,
@@ -17,7 +18,14 @@ import {
   ResponsiveContainer,
   ReferenceLine,
 } from "recharts";
-import { ArrowRight, ExternalLink, Play, Plus, X } from "lucide-react";
+import {
+  ArrowRight,
+  ChevronDown,
+  ExternalLink,
+  Play,
+  Plus,
+  X,
+} from "lucide-react";
 import { api, monthName, number } from "../api";
 import type { Dashboard } from "../types";
 import { ChannelIcon, Empty, Loading } from "./ui";
@@ -51,6 +59,7 @@ export type Post = {
   url: string;
   metrics: Record<string, number>;
   video_status: string;
+  image_url?: string | null;
 };
 export type PostsResponse = {
   month: string;
@@ -89,6 +98,22 @@ function metricValue(value: number | undefined, key: string) {
   return key === "watch_time_ms"
     ? `${number(value / 60000)} Min.`
     : number(value);
+}
+
+function PostImage({ post }: { post: Pick<Post, "image_url"> }) {
+  const [failed, setFailed] = useState(false);
+  return post.image_url && !failed ? (
+    <img
+      className="post-main-image"
+      src={post.image_url}
+      alt=""
+      loading="lazy"
+      referrerPolicy="no-referrer"
+      onError={() => setFailed(true)}
+    />
+  ) : (
+    <span className="post-image-unavailable">Kein Hauptbild verfügbar</span>
+  );
 }
 
 export function PostCollection({
@@ -140,7 +165,7 @@ export function PostCollection({
     )
     .sort((a, b) =>
       sort === "date"
-        ? b.published_at.localeCompare(a.published_at)
+        ? a.published_at.localeCompare(b.published_at)
         : (b.metrics[sort] ?? -Infinity) - (a.metrics[sort] ?? -Infinity),
     );
   const videoCount =
@@ -193,7 +218,7 @@ export function PostCollection({
         <label>
           Sortieren nach
           <select value={sort} onChange={(e) => setSort(e.target.value)}>
-            <option value="date">Veröffentlichung</option>
+            <option value="date">Datum aufsteigend</option>
             {Object.entries(postMetricLabels)
               .filter(([key]) => key !== "video_viewers")
               .map(([key, label]) => (
@@ -209,6 +234,7 @@ export function PostCollection({
         Abrufs. Sie sind keine Tages- oder Monatswerte. LinkedIn-Klicks sind
         nicht mit Website-Besuchen gleichzusetzen.
       </p>
+      <KpiExplainer channel="linkedin_organic" fields={postMetricLabels} />
       {filter === "video" && (
         <p className="data-explanation">
           Videoaufrufe zählen Wiedergaben ab 3 Sekunden. Die Wiedergabezeit
@@ -258,6 +284,7 @@ export function PostCollection({
                       {dateLabel(p.published_at)}
                     </time>
                   </div>
+                  <PostImage post={p} />
                   <h3>
                     <button
                       className="post-title"
@@ -319,17 +346,17 @@ export function PostCollection({
 export function PerformanceExplorer({
   data,
   channel,
-  onChannel,
   demo,
   showPosts = true,
   onOpenPosts,
+  onMonth,
 }: {
   data: Dashboard;
   channel: string;
-  onChannel: (channel: string) => void;
   demo: boolean;
   showPosts?: boolean;
   onOpenPosts?: () => void;
+  onMonth?: (month: string) => void;
 }) {
   const c = data.channels.find((c) => c.id === channel) || data.channels[0];
   const [selectedMetrics, setMetrics] = useState<string[]>([]);
@@ -349,7 +376,7 @@ export function PerformanceExplorer({
   const [candidate, setCandidate] = useState(data.comparison_month);
   const [day, setDay] = useState<number | null>(null);
   const [postMonth, setPostMonth] = useState(data.month);
-  const months = [data.month, ...comparisons.filter((m) => m !== data.month)];
+  const months = [data.month, ...comparisons.filter((m) => m !== data.month).slice(0, 3)];
   const queries = useQueries({
     queries: months.slice(1).map((month) => ({
       queryKey: ["dashboard", demo, month],
@@ -402,30 +429,22 @@ export function PerformanceExplorer({
             </div>
           </div>
           <div className="explorer-controls">
-            <label>
-              Kanal
-              <select
-                aria-label="Kanal für Zeitverlauf"
-                value={c.id}
-                onChange={(e) => {
-                  onChannel(e.target.value);
-                  setMetrics([]);
-                  setDay(null);
-                }}
-              >
-                {[...data.channels]
-                  .sort(
-                    (a, b) =>
-                      Number(!!b.last_success || b.status === "connected") -
-                      Number(!!a.last_success || a.status === "connected"),
-                  )
-                  .map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-              </select>
-            </label>
+            {onMonth && (
+              <label>
+                Basismonat
+                <input
+                  type="month"
+                  aria-label="Basismonat"
+                  value={data.month}
+                  onChange={(e) => {
+                    if (/^20\d{2}-(0[1-9]|1[0-2])$/.test(e.target.value)) {
+                      onMonth(e.target.value);
+                      setDay(null);
+                    }
+                  }}
+                />
+              </label>
+            )}
             <label>
               Darstellung
               <select
@@ -437,26 +456,78 @@ export function PerformanceExplorer({
                 <option value="relative">Verlauf relativ zum Höchstwert</option>
               </select>
             </label>
-            <label>
-              Vergleichsmonat
-              <input
-                type="month"
-                value={candidate}
-                max={new Date().toISOString().slice(0, 7)}
-                onChange={(e) => setCandidate(e.target.value)}
-              />
-            </label>
-            <button
-              className="button compare-add"
-              disabled={
-                !/^\d{4}-\d{2}$/.test(candidate) ||
-                months.includes(candidate) ||
-                months.length >= 4
-              }
-              onClick={() => setComparisons([...comparisons, candidate])}
+            <details
+              className="month-dropdown"
+              onKeyDown={(event) => {
+                if (event.key === "Escape") {
+                  event.currentTarget.open = false;
+                  event.currentTarget.querySelector("summary")?.focus();
+                }
+              }}
+              onBlur={(event) => {
+                if (!event.currentTarget.contains(event.relatedTarget))
+                  event.currentTarget.open = false;
+              }}
             >
-              <Plus size={15} /> Vergleichen
-            </button>
+              <summary>
+                Monate vergleichen <span>{months.length} ausgewählt</span>
+                <ChevronDown size={16} />
+              </summary>
+              <div className="month-dropdown-panel">
+                <fieldset className="month-multiselect">
+                  <legend>Bis zu 4 Monate auswählen</legend>
+                  <div>
+                    {Array.from({ length: 6 }, (_, i) => {
+                      const [y, m] = data.month.split("-").map(Number);
+                      return new Date(Date.UTC(y, m - 1 - i, 1))
+                        .toISOString()
+                        .slice(0, 7);
+                    }).map((m) => (
+                      <label key={m}>
+                        <input
+                          type="checkbox"
+                          checked={months.includes(m)}
+                          disabled={
+                            m === data.month ||
+                            (!months.includes(m) && months.length >= 4)
+                          }
+                          onChange={() =>
+                            setComparisons(
+                              months.includes(m)
+                                ? comparisons.filter((x) => x !== m)
+                                : [...comparisons, m],
+                            )
+                          }
+                        />
+                        {monthName(m)}
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
+                <div className="month-custom">
+                  <label>
+                    Weiteren Monat auswählen
+                    <input
+                      type="month"
+                      value={candidate}
+                      max={new Date().toISOString().slice(0, 7)}
+                      onChange={(e) => setCandidate(e.target.value)}
+                    />
+                  </label>
+                  <button
+                    className="button compare-add"
+                    disabled={
+                      !/^\d{4}-\d{2}$/.test(candidate) ||
+                      months.includes(candidate) ||
+                      months.length >= 4
+                    }
+                    onClick={() => setComparisons([...comparisons, candidate])}
+                  >
+                    <Plus size={15} /> Monat hinzufügen
+                  </button>
+                </div>
+              </div>
+            </details>
           </div>
           <fieldset className="metric-picker">
             <legend>
@@ -590,6 +661,19 @@ export function PerformanceExplorer({
                           const point = points.find(
                             (p) => p.day === hoveredDay,
                           );
+                          if (
+                            !demo && c.id === "linkedin_organic" &&
+                            !postQueries.some(q => q.isPending || q.isError) &&
+                            !months.some(
+                              (m, i) =>
+                                postsOnDay(
+                                  postQueries[i].data?.posts || [],
+                                  m,
+                                  hoveredDay,
+                                ).length,
+                            )
+                          )
+                            return null;
                           return (
                             <div className="performance-tooltip" role="status">
                               {months.map((month, i) => {
@@ -599,6 +683,11 @@ export function PerformanceExplorer({
                                   month,
                                   hoveredDay,
                                 );
+                                if (
+                                  !demo && c.id === "linkedin_organic" &&
+                                  !q.isPending && !q.isError && !posts.length
+                                )
+                                  return null;
                                 return (
                                   <section key={month}>
                                     <div className="tooltip-heading">
@@ -606,28 +695,32 @@ export function PerformanceExplorer({
                                         {hoveredDay}. {monthName(month)}
                                       </span>
                                     </div>
-                                    {metrics.map((key) => (
-                                      <div className="tooltip-metric" key={key}>
-                                        <span>
-                                          <i
-                                            style={{
-                                              background: metricColor(key),
-                                            }}
-                                          />
-                                          {metricLabel(key)}
-                                        </span>
-                                        <strong>
-                                          {number(
-                                            point?.[`${month}|${key}`] as
-                                              number | undefined,
-                                            c.units[key],
-                                          )}
-                                          {displayUnit(c.units[key])
-                                            ? ` ${displayUnit(c.units[key])}`
-                                            : ""}
-                                        </strong>
-                                      </div>
-                                    ))}
+                                    {(demo || c.id !== "linkedin_organic") &&
+                                      metrics.map((key) => (
+                                        <div
+                                          className="tooltip-metric"
+                                          key={key}
+                                        >
+                                          <span>
+                                            <i
+                                              style={{
+                                                background: metricColor(key),
+                                              }}
+                                            />
+                                            {metricLabel(key)}
+                                          </span>
+                                          <strong>
+                                            {number(
+                                              point?.[`${month}|${key}`] as
+                                                number | undefined,
+                                              c.units[key],
+                                            )}
+                                            {displayUnit(c.units[key])
+                                              ? ` ${displayUnit(c.units[key])}`
+                                              : ""}
+                                          </strong>
+                                        </div>
+                                      ))}
                                     {!demo &&
                                       c.id === "linkedin_organic" &&
                                       (q.isPending ? (
@@ -638,12 +731,20 @@ export function PerformanceExplorer({
                                         </p>
                                       ) : (
                                         posts.map((post) => (
-                                          <p
+                                          <div
                                             className="tooltip-post-title"
                                             key={post.id}
                                           >
-                                            {readablePostTitle(post.title)}
-                                          </p>
+                                            <PostImage post={post} />
+                                            <div>
+                                              <strong>{readablePostTitle(post.title)}</strong>
+                                              <dl className="tooltip-post-metrics">
+                                                <div><dt>Impressionen</dt><dd>{metricValue(post.metrics.impressions, "impressions")}</dd></div>
+                                                <div><dt>Klicks</dt><dd>{metricValue(post.metrics.clicks, "clicks")}</dd></div>
+                                              </dl>
+                                              <small>Seit Veröffentlichung</small>
+                                            </div>
+                                          </div>
                                         ))
                                       ))}
                                   </section>
@@ -707,7 +808,7 @@ export function PerformanceExplorer({
                     ch = d?.channels.find((ch) => ch.id === c.id);
                   return (
                     <div key={m}>
-                      <span>{monthName(m)}</span>
+                      {months.length > 1 && <span>{monthName(m)}</span>}
                       {metrics.map((key) => (
                         <div className="comparison-metric" key={key}>
                           <span>
@@ -900,6 +1001,7 @@ export function PerformanceExplorer({
                         <div className="selected-posts">
                           {activePosts.map((post) => (
                             <article key={post.id}>
+                              <PostImage post={post} />
                               <div>
                                 <span className="selected-post-kind">
                                   {types[post.kind] || "Beitrag"} · Stand{" "}

@@ -1,3 +1,4 @@
+import { KpiExplainer } from "./KpiExplainer";
 import type { Dashboard } from "../types";
 import { monthName, number } from "../api";
 import { ChannelIcon } from "./ui";
@@ -48,6 +49,7 @@ export function VideoPerformance({
             <p>Sonio Channel · Monatskennzahlen</p>
           </div>
         </div>
+        {youtube && <KpiExplainer channel="youtube" fields={youtube.fields} />}
         {youtube &&
         Object.values(youtube.values).some((value) => value != null) ? (
           <div className="panel youtube-video-summary">

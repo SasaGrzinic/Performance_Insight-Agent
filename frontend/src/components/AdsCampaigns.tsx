@@ -1,4 +1,5 @@
-import { demoCampaigns } from "../staticDemo";
+import { KpiExplainer } from "./KpiExplainer";
+import { asset, demoCampaigns } from "../staticDemo";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Download } from "lucide-react";
@@ -6,6 +7,8 @@ import { api, number } from "../api";
 import { saveCSV } from "../csv";
 
 type Campaign = {
+  image_url?: string | null;
+  example?: boolean;
   id: string;
   name: string;
   status: string | null;
@@ -64,7 +67,6 @@ export function AdsCampaigns({ demo }: { demo: boolean }) {
         : api<Data>("/linkedin/ads/campaigns"),
     refetchInterval: 60000,
   });
-  const [search, setSearch] = useState("");
   const [keys, setKeys] = useState(Object.keys(fields));
   if (query.isPending) return <p role="status">Kampagnen werden geladen …</p>;
   if (query.isError)
@@ -78,9 +80,27 @@ export function AdsCampaigns({ demo }: { demo: boolean }) {
       </section>
     );
   const d = query.data;
-  const campaigns = d.campaigns.filter((c) =>
-    c.name.toLocaleLowerCase().includes(search.toLocaleLowerCase()),
-  );
+  const campaigns = d.campaigns;
+  const example: Campaign = {
+    id: "example-only",
+    image_url: asset("/brand/sonio-blog-header.jpg"),
+    example: true,
+    name: "Beispielkampagne · Cloud-Webinar",
+    status: "COMPLETED",
+    objective: "WEBSITE_VISIT",
+    start: d.start,
+    end: d.end,
+    currency: "CHF",
+    values: { impressions: 42000, clicks: 420, spend: 840, conversions: 12 },
+    ctr: 1,
+    cpc: 2,
+    first_activity: null,
+    last_activity: null,
+  };
+  const displayCampaigns =
+    !demo && campaigns.filter((c) => Object.keys(c.values).length).length < 2
+      ? [...campaigns, example]
+      : campaigns;
   return (
     <section className="ads-campaigns" aria-label="LinkedIn Ads Kampagnen">
       <div className="section-heading">
@@ -104,15 +124,6 @@ export function AdsCampaigns({ demo }: { demo: boolean }) {
         </p>
       )}
       <div className="ads-actions">
-        <label>
-          Kampagne suchen
-          <input
-            type="search"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Titel eingeben"
-          />
-        </label>
         <details className="ads-export">
           <summary>CSV herunterladen</summary>
           <fieldset>
@@ -172,70 +183,84 @@ export function AdsCampaigns({ demo }: { demo: boolean }) {
           </button>
         </details>
       </div>
-      {!campaigns.length && (
-        <p>
-          {d.campaigns.length
-            ? "Keine Kampagne passt zu deiner Suche."
-            : "Noch keine Kampagnen geladen. Aktualisiere die Daten, sobald der Ads-Zugang eingerichtet ist."}
-        </p>
-      )}
+      {!campaigns.length && <p>Noch keine Kampagnen geladen.</p>}
       <div className="ads-campaign-list">
-        {campaigns.map((c) => (
-          <article key={c.id} className="ads-campaign">
-            <div className="ads-campaign-heading">
-              <div>
-                <h3>{c.name}</h3>
-                <p>
-                  Ziel:{" "}
-                  {c.objective
-                    ? objectives[c.objective] || c.objective
-                    : "Nicht angegeben"}
+        {displayCampaigns.map((c) => (
+          <article
+            key={c.id}
+            className={`ads-campaign ${c.example ? "ads-example" : ""}`}
+          >
+            <CampaignImage key={c.image_url || c.id} campaign={c} />
+            <div className="ads-campaign-body">
+              {c.example && (
+                <p className="example-label">
+                  Fiktive Beispielkampagne · Nicht in Exporten oder Auswertungen
+                  enthalten
                 </p>
-              </div>
-              <span className="ads-status">
-                {c.status ? statuses[c.status] || c.status : "Status unbekannt"}
-              </span>
-            </div>
-            <p className="ads-runtime">
-              Geplante Laufzeit: {date(c.start)} –{" "}
-              {c.end ? date(c.end) : "ohne festes Enddatum"}
-            </p>
-            <dl>
-              {Object.entries(fields).map(([key, label]) => (
-                <div key={key}>
-                  <dt>{label}</dt>
-                  <dd>
-                    {number(
-                      value(c, key),
-                      key === "spend" || key === "cpc" ? c.currency : "count",
-                    )}
-                    {key === "ctr" && c.ctr != null ? " %" : ""}
-                  </dd>
+              )}
+              <div className="ads-campaign-heading">
+                <div>
+                  <h3>{c.name}</h3>
+                  <p>
+                    Ziel:{" "}
+                    {c.objective
+                      ? objectives[c.objective] || c.objective
+                      : "Nicht angegeben"}
+                  </p>
                 </div>
-              ))}
-            </dl>
-            <p className="ads-data-note">
-              {c.first_activity
-                ? `Gelieferte Aktivität im Zeitraum: ${date(c.first_activity)} bis ${date(c.last_activity)}.`
-                : "Für die letzten 365 Tage liefert LinkedIn keine Kennzahlen zu dieser Kampagne."}
-            </p>
-            <details>
-              <summary>Ergebnisse einordnen</summary>
-              <p>
-                {c.objective === "BRAND_AWARENESS"
-                  ? "Das Ziel ist Markenbekanntheit. Impressionen zeigen die Ausspielung; Klicks und CPC sind ergänzende Signale. Ohne Reichweite und Häufigkeit lässt sich die Bekanntheitswirkung nicht abschliessend beurteilen."
-                  : c.objective === "WEBSITE_CONVERSION"
-                    ? "Das Ziel sind Website-Conversions. Beurteile die Ergebnisse anhand der definierten Conversion und ihrer Erfassung. Klicks allein zeigen noch keine Zielerreichung."
-                    : c.objective === "WEBSITE_VISIT"
-                      ? "Das Ziel sind Website-Besuche. Klicks und CPC geben erste Hinweise; tatsächliche Besuche und deren Qualität müssen mit Analytics eingeordnet werden."
-                      : "Beurteile diese Kampagne anhand ihres eigenen Ziels und der verfügbaren Messwerte."}{" "}
-                Zielgruppen und Themen werden nicht pauschal gegeneinander
-                bewertet.
+                <span className="ads-status">
+                  {c.status
+                    ? statuses[c.status] || c.status
+                    : "Status unbekannt"}
+                </span>
+              </div>
+              <p className="ads-runtime">
+                Geplante Laufzeit: {date(c.start)} –{" "}
+                {c.end ? date(c.end) : "ohne festes Enddatum"}
               </p>
-            </details>
+              <dl>
+                {Object.entries(fields).map(([key, label]) => (
+                  <div key={key}>
+                    <dt>{label}</dt>
+                    <dd>
+                      {number(
+                        value(c, key),
+                        key === "spend" || key === "cpc" ? c.currency : "count",
+                      )}
+                      {key === "ctr" && c.ctr != null ? " %" : ""}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+              <p className="ads-data-note">
+                {c.example
+                  ? "Alle Zahlen sind frei erfunden und dienen ausschliesslich der Darstellung."
+                  : c.first_activity
+                    ? `Gelieferte Aktivität im Zeitraum: ${date(c.first_activity)} bis ${date(c.last_activity)}.`
+                    : "Für die letzten 365 Tage liefert LinkedIn keine Kennzahlen zu dieser Kampagne."}
+              </p>
+              <details>
+                <summary>Ergebnisse einordnen</summary>
+                <p>
+                  {c.objective === "BRAND_AWARENESS"
+                    ? "Das Ziel ist Markenbekanntheit. Impressionen zeigen die Ausspielung; Klicks und CPC sind ergänzende Signale. Ohne Reichweite und Häufigkeit lässt sich die Bekanntheitswirkung nicht abschliessend beurteilen."
+                    : c.objective === "WEBSITE_CONVERSION"
+                      ? "Das Ziel sind Website-Conversions. Beurteile die Ergebnisse anhand der definierten Conversion und ihrer Erfassung. Klicks allein zeigen noch keine Zielerreichung."
+                      : c.objective === "WEBSITE_VISIT"
+                        ? "Das Ziel sind Website-Besuche. Klicks und CPC geben erste Hinweise; tatsächliche Besuche und deren Qualität müssen mit Analytics eingeordnet werden."
+                        : "Beurteile diese Kampagne anhand ihres eigenen Ziels und der verfügbaren Messwerte."}{" "}
+                  Zielgruppen und Themen werden nicht pauschal gegeneinander
+                  bewertet.
+                </p>
+              </details>
+            </div>
           </article>
         ))}
       </div>
+      <section className="detail-definitions">
+        <h2>So liest du diese Zahlen</h2>
+        <KpiExplainer channel="linkedin" fields={fields} />
+      </section>
       <p className="ads-footnote">
         Status und Laufzeit stammen aus LinkedIn. „Aktiv“ bedeutet nicht
         zwingend, dass Anzeigen ausgeliefert werden. Fehlende Werte erscheinen
@@ -248,5 +273,28 @@ export function AdsCampaigns({ demo }: { demo: boolean }) {
           : "Noch kein erfolgreicher Abruf."}
       </p>
     </section>
+  );
+}
+
+function CampaignImage({ campaign }: { campaign: Campaign }) {
+  const [failed, setFailed] = useState(false);
+  return (
+    <div className="campaign-image">
+      {campaign.image_url && !failed ? (
+        <img
+          src={campaign.image_url}
+          alt={`Anzeigenmotiv: ${campaign.name}`}
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          onError={() => setFailed(true)}
+        />
+      ) : (
+        <span>
+          {campaign.example
+            ? "Beispielmotiv · Cloud-Webinar"
+            : "Kein Anzeigenmotiv verfügbar"}
+        </span>
+      )}
+    </div>
   );
 }

@@ -1,8 +1,13 @@
+import { AnalyticsMonthlySources } from "./components/AnalyticsMonthlySources";
+import { AnalyticsContent } from "./components/AnalyticsContent";
+import { YouTubeVideos } from "./components/YouTubeVideos";
+import { MailchimpCampaigns } from "./components/MailchimpCampaigns";
+import { KpiExplainer } from "./components/KpiExplainer";
 import { STATIC_DEMO, asset } from "./staticDemo";
 import { AdsCampaigns } from "./components/AdsCampaigns";
 import { VideoPerformance } from "./components/VideoPerformance";
 import { CSVExport } from "./components/CSVExport";
-import { shiftMonth, currentReportingMonth } from "./comparison";
+import { currentReportingMonth } from "./comparison";
 import { Audience } from "./components/Audience";
 import { useState, useEffect } from "react";
 import {
@@ -94,6 +99,23 @@ const titles: Record<View, string> = {
   sources: "Alle Daten an einem Ort.",
   team: "Gute Entscheidungen sind Teamwork.",
   settings: "So arbeitet dein Dashboard.",
+};
+const channelDescriptions: Record<string, string> = {
+  linkedin_organic:
+    "Deine unbezahlten Beiträge auf LinkedIn: Sie machen Sonio sichtbar, vermitteln Wissen und stärken den Austausch mit der Community.",
+  linkedin:
+    "Bezahlte LinkedIn-Kampagnen erreichen gezielt berufliche Zielgruppen. Hier siehst du jede Kampagne mit ihrem Ziel und ihren Ergebnissen.",
+  google_ads:
+    "Bezahlte Anzeigen in der Google-Suche und im Google-Netzwerk: Sie erreichen Menschen, die nach passenden Lösungen suchen oder sich dafür interessieren.",
+  analytics:
+    "Google Analytics zeigt, wie Menschen deine Website nutzen und welche Inhalte und Aktionen für sie relevant sind.",
+  mailchimp:
+    "Newsletter und E-Mail-Kampagnen halten deine Kontakte auf dem Laufenden. Öffnungen und Klicks zeigen, welche Inhalte Interesse wecken.",
+  youtube:
+    "Deine Videos auf YouTube vermitteln Wissen und machen Sonio erlebbar. Aufrufe und Wiedergabezeit zeigen, wie die Inhalte genutzt werden.",
+  events:
+    "Veranstaltungen bringen Sonio und Interessierte zusammen. Die Anmeldelisten zeigen, welche Events Resonanz erzeugen.",
+  qr: "QR-Codes verbinden Print, Veranstaltungen und andere Kontaktpunkte mit digitalen Inhalten. Scans machen diese Zugriffe messbar.",
 };
 function App() {
   const initialDemo =
@@ -234,6 +256,7 @@ function App() {
       client.invalidateQueries({ queryKey: ["linkedin-posts"] });
       client.invalidateQueries({ queryKey: ["linkedin-audience"] });
       client.invalidateQueries({ queryKey: ["linkedin-ads-campaigns"] });
+      client.invalidateQueries({ queryKey: ["analytics-monthly-sources"] });
     }
   }, [progress.data, client]);
   function changeView(v: View) {
@@ -333,48 +356,6 @@ function App() {
   const isAds = view === "channels" && channel === "linkedin";
   const periodControls = (
     <div className="intro-actions">
-      {[
-        "overview",
-        "videos",
-        "posts",
-        "channels",
-        "insights",
-        "reports",
-        "audience",
-      ].includes(view) &&
-        !isAds && (
-          <>
-            <button
-              className="icon-button"
-              aria-label="Vorheriger Monat"
-              onClick={() => setMonth(shiftMonth(month, -1))}
-            >
-              <ChevronLeft size={18} />
-            </button>
-            <label className="month-picker">
-              <CalendarDays size={16} />
-              <span className="sr-only">Berichtsmonat</span>
-              <input
-                type="month"
-                aria-label="Berichtsmonat"
-                value={month}
-                min="2020-01"
-                max="2099-12"
-                onChange={(e) => {
-                  if (/^20\d{2}-(0[1-9]|1[0-2])$/.test(e.target.value))
-                    setMonth(e.target.value);
-                }}
-              />
-            </label>
-            <button
-              className="icon-button"
-              aria-label="Nächster Monat"
-              onClick={() => setMonth(shiftMonth(month, 1))}
-            >
-              <ChevronRight size={18} />
-            </button>
-          </>
-        )}
       {["overview", "posts", "channels", "audience", "videos"].includes(
         view,
       ) && (
@@ -521,16 +502,39 @@ function App() {
             </span>
           </div>
         </header>
-        <main id="main" className={`analysis-workspace view-${view}`}>
+        <main
+          id="main"
+          className={`analysis-workspace view-${view} ${channel === "linkedin_organic" && view === "channels" ? "organic-detail" : ""}`}
+        >
           <div className="page-intro photographic-intro">
-            <img
-              className="header-photo"
-              src={asset("brand/sonio-blog-header.jpg")}
-              alt=""
-              width="1600"
-              height="900"
-              fetchPriority="high"
-            />
+            {["channels", "posts", "audience"].includes(view) ? (
+              <svg className="header-photo channel-flag-photo" viewBox="0 0 1600 900" preserveAspectRatio="xMaxYMin slice" aria-hidden="true">
+                <image href={asset("brand/sonio-blog-header.jpg")} width="1600" height="900" />
+                <defs>
+                  <clipPath id="channel-flag-outline">
+                    <path d="M1346 54 C1385 49 1426 57 1481 53 L1484 107 C1485 121 1491 133 1481 146 C1467 161 1460 174 1432 181 C1406 188 1382 184 1364 195 Z" />
+                  </clipPath>
+                  <linearGradient id="channel-flag-folds" x1="0" x2="1" y1="0" y2="0">
+                    <stop offset="0" stopColor="#000" stopOpacity=".18" />
+                    <stop offset=".24" stopColor="#fff" stopOpacity=".12" />
+                    <stop offset=".48" stopColor="#000" stopOpacity=".2" />
+                    <stop offset=".7" stopColor="#fff" stopOpacity=".14" />
+                    <stop offset=".88" stopColor="#000" stopOpacity=".18" />
+                    <stop offset="1" stopColor="#fff" stopOpacity=".06" />
+                  </linearGradient>
+                </defs>
+                <g clipPath="url(#channel-flag-outline)">
+                  <foreignObject x="1340" y="47" width="156" height="153">
+                    <div className="flag-channel-mark">
+                      <ChannelIcon id={view === "channels" ? selected?.id || channel : "linkedin_organic"} size={156} />
+                    </div>
+                  </foreignObject>
+                  <rect x="1340" y="47" width="156" height="153" fill="url(#channel-flag-folds)" />
+                </g>
+              </svg>
+            ) : (
+              <img className="header-photo" src={asset("brand/sonio-blog-header.jpg")} alt="" width="1600" height="900" fetchPriority="high" />
+            )}
             <div className="intro-copy">
               <h1>
                 {view === "overview"
@@ -539,22 +543,6 @@ function App() {
                     ? selected?.name || "Kanal im Detail"
                     : titles[view] || titles.overview}
               </h1>
-              {["channels", "posts", "audience"].includes(view) && (
-                <div className="header-channel">
-                  <ChannelIcon
-                    id={
-                      view === "channels"
-                        ? selected?.id || channel
-                        : "linkedin_organic"
-                    }
-                    size={24}
-                  />
-                  <span>
-                    {view === "channels" ? selected?.name : "LinkedIn"} · Sonio
-                    AG
-                  </span>
-                </div>
-              )}
               <p>
                 {view === "overview"
                   ? "Alle Kanäle. Ein Überblick. Entdecke, was dein Marketing bewegt."
@@ -565,7 +553,8 @@ function App() {
                       : view === "posts"
                         ? "Videos, Beiträge und ihre Ergebnisse seit Veröffentlichung."
                         : view === "channels"
-                          ? "Verstehe, wie sich deine einzelnen Kanäle entwickeln."
+                          ? channelDescriptions[channel] ||
+                            "Kennzahlen und Inhalte dieses Marketingkanals im Überblick."
                           : view === "sources"
                             ? "Verbindungen verwalten, Daten prüfen und Anmeldelisten importieren."
                             : view === "insights"
@@ -685,7 +674,9 @@ function App() {
                       </div>
                     </div>
                     <p className="overview-freshness">
-                      {demo ? "Illustrative Monatswerte für die Präsentation. Keine Live-Aktualisierung." : "Aktueller Monat · Anzeige wird jede Minute neu geladen."}
+                      {demo
+                        ? "Illustrative Monatswerte für die Präsentation. Keine Live-Aktualisierung."
+                        : "Aktueller Monat · Anzeige wird jede Minute neu geladen."}
                       Datenstand je Kanal gemäss letztem erfolgreichen Abruf;
                       die Schnittstellen können verzögert liefern.
                     </p>
@@ -783,6 +774,26 @@ function App() {
                     </section>
                   </>
                 )}
+                {[
+                  "videos",
+                  "audience",
+                  "posts",
+                  "insights",
+                  "reports",
+                ].includes(view) && (
+                  <label className="content-month">
+                    Zeitraum für diesen Bereich
+                    <input
+                      aria-label="Berichtsmonat im Inhaltsbereich"
+                      type="month"
+                      value={month}
+                      onChange={(e) => {
+                        if (/^20\d{2}-(0[1-9]|1[0-2])$/.test(e.target.value))
+                          setMonth(e.target.value);
+                      }}
+                    />
+                  </label>
+                )}
                 {view === "videos" && <VideoPerformance data={d} demo={demo} />}
                 {view === "audience" && <Audience month={month} demo={demo} />}
                 {view === "posts" && (
@@ -810,13 +821,15 @@ function App() {
                       ))}
                     </div>
                     {isAds && <AdsCampaigns demo={demo} />}
-                    {selected && !isAds && (
+                    {channel === "mailchimp" && <MailchimpCampaigns demo={demo} />}
+                    {channel === "youtube" && <YouTubeVideos demo={demo} />}
+                    {selected && !isAds && channel !== "mailchimp" && channel !== "youtube" && (
                       <>
                         <div className="section-heading">
                           <div className="channel-title">
                             <ChannelIcon id={selected.id} size={25} />
                             <div>
-                              <h2>{selected.name}</h2>
+                              <h2>{selected.name} <span className="kpi-period">{monthName(d.month)}</span></h2>
                               <p>
                                 {selected.type} · {selected.message}
                               </p>
@@ -845,13 +858,15 @@ function App() {
                             ),
                           )}
                         </div>
+                        {selected.id === "analytics" && <AnalyticsMonthlySources month={d.month} demo={demo} />}
                         <PerformanceExplorer
-                          key={`channel-${d.month}-${channel}`}
+                          key={`channel-${channel}`}
+                          onMonth={setMonth}
                           data={d}
                           channel={channel}
-                          onChannel={setChannel}
                           demo={demo}
                         />
+                        {selected.id === "analytics" && <AnalyticsContent demo={demo} />}
                         {selected.id === "linkedin_organic" && (
                           <div className="channel-detail-links">
                             <button
@@ -870,6 +885,7 @@ function App() {
                         )}
                         <section className="panel detail-definitions">
                           <h2>So liest du diese Zahlen</h2>
+                          <KpiExplainer key={selected.id} channel={selected.id} fields={selected.fields} />
                           <p>
                             {selected.id === "events"
                               ? "Anmeldungen werden innerhalb jeder Event-Liste anhand der E-Mail-Adresse dedupliziert. Sie sind keine bestätigten Teilnahmen. Das Datum ist das Anmeldedatum."
