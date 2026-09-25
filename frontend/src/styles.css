@@ -4524,3 +4524,16 @@ summary:focus-visible {
 .monthly-origin-geo .geo-note{font-size:12px;line-height:1.6;margin-top:20px}.monthly-origin-channels .monthly-source-details{grid-template-columns:repeat(2,minmax(0,1fr))}
 @media(max-width:850px){.monthly-origin-layout{grid-template-columns:minmax(0,1fr);gap:8px}.monthly-origin-geo{padding:20px}.monthly-origin-channels{padding:8px 0 20px}}
 .ai-traffic-total strong{font-size:34px;color:#0063b8;font-variant-numeric:tabular-nums;margin-right:8px}
+
+.analysis-workspace .detail-toolbar{position:relative;display:flex;align-items:flex-start;justify-content:flex-end;gap:12px;margin:0 0 8px;min-height:44px;flex-wrap:nowrap}
+.analysis-workspace .detail-toolbar .intro-actions{flex-wrap:nowrap;flex-shrink:0}
+.analysis-workspace .detail-toolbar .csv-export,.analysis-workspace .detail-toolbar .ads-export{margin:0;width:auto;max-width:none;position:static}
+.analysis-workspace .detail-toolbar .csv-export>summary,.analysis-workspace .detail-toolbar .ads-export>summary{min-height:44px;padding:8px 12px;white-space:nowrap}
+.analysis-workspace .detail-toolbar .csv-export[open]{background:transparent}
+.analysis-workspace .detail-toolbar .csv-export-body{position:absolute;right:0;top:50px;width:min(680px,100%);background:#e8f3ff;border:1px solid #b4d7f5;border-radius:12px;padding:20px;z-index:30;box-shadow:0 8px 24px #173c6120}
+.analysis-workspace .detail-toolbar .ads-export[open]{position:absolute;right:0;top:0;width:min(600px,100%);background:#e8f3ff;z-index:30;padding:0 12px 16px;border-radius:12px}
+.analysis-workspace .back-to-overview{margin:0 0 10px}
+.analysis-workspace .context-row .csv-export{margin:0;position:relative}.analysis-workspace .context-row .csv-export[open]{width:auto}.analysis-workspace .context-row .csv-export-body{position:absolute;right:0;top:44px;width:min(650px,calc(100vw - 40px));background:#e8f3ff;padding:20px;z-index:30;border:1px solid #b4d7f5;border-radius:12px}
+@media(max-width:560px){.analysis-workspace .detail-toolbar{gap:4px}.analysis-workspace .detail-toolbar .button,.analysis-workspace .detail-toolbar .csv-export>summary,.analysis-workspace .detail-toolbar .ads-export>summary{font-size:12px;padding:8px}.analysis-workspace .detail-toolbar .intro-actions .primary{width:auto}}
+.analysis-workspace .section-heading>.detail-toolbar{margin:0;margin-left:auto;align-self:center}
+@media(max-width:700px){.analysis-workspace .section-heading:has(>.detail-toolbar){flex-wrap:wrap;gap:12px}.analysis-workspace .section-heading>.detail-toolbar{margin-left:0}}

@@ -354,6 +354,7 @@ function App() {
   const connected =
     d?.channels.filter((c) => c.status === "connected").length || 0;
   const isAds = view === "channels" && channel === "linkedin";
+  const inlineChannelActions = view === "channels" && !["linkedin", "mailchimp", "youtube"].includes(channel);
   const periodControls = (
     <div className="intro-actions">
       {["overview", "posts", "channels", "audience", "videos"].includes(
@@ -373,6 +374,11 @@ function App() {
       )}
     </div>
   );
+  const dashboardActions = (<div className="detail-toolbar" id="channel-action-toolbar">
+              {periodControls}
+              {data.data && !isAds && ["posts", "channels", "audience", "videos"].includes(view) && <CSVExport key={`${month}-${demo}`} data={data.data} demo={demo} />}
+            </div>);
+
   return (
     <div className="app-shell">
       <a href="#main" className="skip-link">
@@ -567,9 +573,7 @@ function App() {
               </p>
             </div>
           </div>
-          {view !== "overview" && (
-            <div className="detail-toolbar">{periodControls}</div>
-          )}
+          {view !== "overview" && !inlineChannelActions && dashboardActions}
           {view === "overview" && (
             <section
               className="agent-introduction"
@@ -585,17 +589,6 @@ function App() {
               </p>
             </section>
           )}
-          {data.data &&
-            !isAds &&
-            ["overview", "posts", "channels", "audience", "videos"].includes(
-              view,
-            ) && (
-              <CSVExport
-                key={`${month}-${demo}`}
-                data={data.data}
-                demo={demo}
-              />
-            )}
           {demo && (
             <div className="demo-banner">
               <Info size={16} />
@@ -659,6 +652,7 @@ function App() {
                           />
                           {job ? "Wird aktualisiert" : "Daten aktualisieren"}
                         </button>
+                        <CSVExport key={`${month}-${demo}`} data={d} demo={demo} />
                         <span className="context-divider" />
                         {d.definitions_confirmed
                           ? "Eigene Kennzahlen"
@@ -835,6 +829,7 @@ function App() {
                               </p>
                             </div>
                           </div>
+                          {inlineChannelActions && dashboardActions}
                         </div>
                         <div className="kpi-grid">
                           {Object.entries(selected.fields).map(

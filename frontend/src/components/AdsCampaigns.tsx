@@ -1,10 +1,17 @@
 import { KpiExplainer } from "./KpiExplainer";
 import { asset, demoCampaigns } from "../staticDemo";
-import { useState } from "react";
+import { useState, useEffect, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Download } from "lucide-react";
 import { api, number } from "../api";
 import { saveCSV } from "../csv";
+
+function AdsToolbarExport({children}:{children:ReactNode}) {
+  const [target,setTarget]=useState<HTMLElement|null>(null);
+  useEffect(()=>setTarget(document.getElementById('channel-action-toolbar')),[]);
+  return target?createPortal(children,target):null;
+}
 
 type Campaign = {
   image_url?: string | null;
@@ -123,7 +130,7 @@ export function AdsCampaigns({ demo }: { demo: boolean }) {
           bleiben sichtbar.
         </p>
       )}
-      <div className="ads-actions">
+      <AdsToolbarExport>
         <details className="ads-export">
           <summary>CSV herunterladen</summary>
           <fieldset>
@@ -182,7 +189,7 @@ export function AdsCampaigns({ demo }: { demo: boolean }) {
             <Download size={16} /> {campaigns.length} Kampagnen exportieren
           </button>
         </details>
-      </div>
+      </AdsToolbarExport>
       {!campaigns.length && <p>Noch keine Kampagnen geladen.</p>}
       <div className="ads-campaign-list">
         {displayCampaigns.map((c) => (
