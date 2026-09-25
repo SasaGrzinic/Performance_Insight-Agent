@@ -4537,3 +4537,13 @@ summary:focus-visible {
 @media(max-width:560px){.analysis-workspace .detail-toolbar{gap:4px}.analysis-workspace .detail-toolbar .button,.analysis-workspace .detail-toolbar .csv-export>summary,.analysis-workspace .detail-toolbar .ads-export>summary{font-size:12px;padding:8px}.analysis-workspace .detail-toolbar .intro-actions .primary{width:auto}}
 .analysis-workspace .section-heading>.detail-toolbar{margin:0;margin-left:auto;align-self:center}
 @media(max-width:700px){.analysis-workspace .section-heading:has(>.detail-toolbar){flex-wrap:wrap;gap:12px}.analysis-workspace .section-heading>.detail-toolbar{margin-left:0}}
+
+.analysis-workspace .section-heading>.detail-toolbar{flex-direction:column;align-items:stretch;gap:4px;flex-shrink:0}
+.analysis-workspace .section-heading>.detail-toolbar .button,
+.analysis-workspace .section-heading>.detail-toolbar .csv-export>summary{font-size:13px;font-weight:700;min-height:40px;padding:8px 12px}
+.analysis-workspace .section-heading>.detail-toolbar .intro-actions{display:block}
+.analysis-workspace .section-heading>.detail-toolbar .button{width:100%;justify-content:center}
+.analysis-workspace .section-heading>.detail-toolbar .csv-export>summary{justify-content:center}
+.analysis-workspace .section-heading>.detail-toolbar .csv-export-body{top:92px}
+.analysis-workspace .section-heading:has(>.detail-toolbar) .channel-title{flex:1;min-width:0}
+.analysis-workspace .section-heading:has(>.detail-toolbar) .kpi-period{display:inline-block;margin:0 0 0 12px}
