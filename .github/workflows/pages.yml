@@ -24,7 +24,7 @@ jobs:
         env:
           VITE_STATIC_DEMO: 'true'
           VITE_BASE_PATH: /Performance_Insight-Agent/
-      - uses: actions/upload-pages-artifact@v4
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: frontend/dist
   deploy:
