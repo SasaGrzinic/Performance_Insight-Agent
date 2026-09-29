@@ -1,0 +1,593 @@
+/* User-approved design: 29 September 2026. */
+.sidebar {
+  background: #173d62;
+  color: white;
+  border-color: #173d62;
+}
+.sidebar .brand span,
+.sidebar .workspace-switch,
+.sidebar .nav-item,
+.sidebar .profile,
+.sidebar .profile small {
+  color: #e2efff;
+}
+.sidebar .workspace-switch,
+.sidebar .report-reminder {
+  background: #204969;
+  border-color: #41637e;
+  color: white;
+}
+.sidebar .report-reminder p,
+.sidebar .report-reminder button {
+  color: #d8eafa;
+}
+.sidebar .nav-item:hover {
+  background: #285675;
+  color: white;
+}
+.sidebar .nav-item.active {
+  background: #0075d9;
+  color: white;
+}
+.marketing-mast {
+  margin-bottom: 20px;
+  color: #173d62;
+}
+.marketing-mast > span {
+  font-size: 12px;
+}
+.marketing-mast h1 {
+  font-size: 28px;
+  margin: 5px 0 0;
+}
+.marketing-hero {
+  position: relative;
+  aspect-ratio: 16/9;
+  overflow: hidden;
+  border-radius: 14px;
+  margin-bottom: 26px;
+  background: #bed2e3;
+}
+.marketing-hero > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.marketing-hero > div {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 5%;
+  background: linear-gradient(90deg, #173d62eb, #173d6290 38%, transparent 65%);
+  color: white;
+}
+.marketing-hero h2 {
+  font-size: clamp(24px, 2.5vw, 36px);
+  line-height: 1.15;
+  margin: 12px 0 16px;
+  max-width: 55%;
+}
+.marketing-hero p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: white;
+  max-width: 51%;
+}
+.marketing-hero span {
+  font-size: 12px;
+}
+.marketing-developments {
+  margin: 26px 0;
+}
+.marketing-developments .section-heading {
+  margin-bottom: 8px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.marketing-developments h2,
+.marketing-opportunities h2,
+.view-overview .channel-overview h2 {
+  font-size: 21px;
+}
+.marketing-developments .section-heading > span,
+.comparison-context {
+  font-size: 12px;
+  color: #526779;
+}
+.comparison-context {
+  margin: 0 0 12px;
+}
+.marketing-highlights {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  background: #e8f3ff;
+  border-radius: 12px;
+  padding: 14px 0;
+}
+.marketing-highlights article {
+  padding: 0 17px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  border-right: 1px solid #bed2e3;
+  min-width: 0;
+}
+.marketing-highlights article:last-child {
+  border: 0;
+}
+.highlight-channel {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 650;
+  font-size: 12px;
+}
+.highlight-channel i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.highlight-channel .positive {
+  background: #24814a;
+}
+.highlight-channel .negative {
+  background: #bb443c;
+}
+.marketing-highlights strong {
+  font-size: 17px;
+  color: #173d62;
+  font-variant-numeric: tabular-nums;
+}
+.marketing-highlights article > span:not(.highlight-channel),
+.marketing-highlights small {
+  font-size: 12px;
+  color: #365674;
+}
+.marketing-opportunities {
+  background: linear-gradient(115deg, #0063b8, #0075d9);
+  padding: 25px;
+  border-radius: 14px;
+  color: white;
+  margin: 26px 0 32px;
+}
+.marketing-opportunities .section-heading {
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.marketing-opportunities .section-heading p {
+  font-size: 12px;
+  color: #e2efff;
+  margin-top: 5px;
+}
+.marketing-opportunities .text-button {
+  color: white;
+}
+.marketing-recommendations {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+.marketing-recommendations article {
+  background: white;
+  color: #173d62;
+  padding: 18px;
+  border-radius: 10px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.recommendation-channel {
+  font-size: 17px;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+.recommendation-open {
+  border: 0;
+  background: transparent;
+  text-align: left;
+  padding: 0;
+  color: inherit;
+}
+.recommendation-open:hover {
+  text-decoration: underline;
+}
+.recommendation-open h3 {
+  font-size: 16px;
+  line-height: 1.35;
+  margin: 0 0 10px;
+}
+.marketing-recommendations article > p {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #43647e;
+  margin: 0 0 16px;
+}
+.recommendation-step {
+  position: relative;
+  margin-top: auto;
+  font-size: 13px;
+  border-top: 1px solid #d5e3ed;
+  padding-top: 6px;
+}
+.recommendation-step .step-trigger {
+  cursor: pointer;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #0063b8;
+  font-weight: 650;
+  list-style: none;
+}
+.recommendation-step .step-trigger:focus-visible {
+  outline: 3px solid #78b7ef;
+  outline-offset: 2px;
+}
+.recommendation-step .step-tooltip {
+  display: none;
+  background: #173d62;
+  color: white;
+  padding: 14px;
+  border-radius: 8px;
+  line-height: 1.55;
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  width: 100%;
+  z-index: 5;
+  box-shadow: 0 8px 25px #12273d30;
+}
+.recommendation-step[data-open="true"] .step-tooltip,
+.recommendation-step:focus-within .step-tooltip {
+  display: block;
+}
+@media (hover: hover) {
+  .recommendation-step:hover .step-tooltip {
+    display: block;
+  }
+}
+.step-tooltip button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  background: transparent;
+  color: white;
+  text-decoration: underline;
+  font-size: 12px;
+  padding: 12px 0 0;
+  min-height: 44px;
+}
+.view-overview .channel-overview-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+.view-overview .channel-entry {
+  padding: 17px;
+  background: #e8f3ff !important;
+  border: 1px solid #cee0ef !important;
+  min-width: 0;
+}
+.view-overview .channel-entry-heading {
+  gap: 8px;
+}
+.view-overview .channel-entry-heading .channel-icon {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
+.view-overview .channel-entry-heading h3 {
+  font-size: 14px;
+}
+.view-overview .channel-entry-heading span,
+.view-overview .channel-entry-heading .channel-entry-arrow,
+.view-overview .channel-entry-footer strong {
+  display: none;
+}
+.view-overview .channel-entry-status {
+  font-size: 11px;
+  margin: 10px 0;
+}
+.view-overview .channel-entry-values {
+  display: block;
+  margin: 0 0 12px;
+  padding: 0;
+  background: transparent;
+}
+.view-overview .channel-entry-values > div {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-start;
+  gap: 3px;
+  padding: 0;
+  border: 0;
+}
+.view-overview .channel-entry-values dd {
+  font-size: 23px;
+  font-weight: 650;
+  color: #173d62;
+  margin: 0;
+}
+.view-overview .channel-entry-values dt {
+  font-size: 12px;
+  color: #43647e;
+  text-align: left;
+}
+.view-overview .channel-entry-footer {
+  font-size: 11px;
+}
+.marketing-quote {
+  margin: 40px auto 30px;
+  text-align: center;
+  max-width: 660px;
+  color: #173d62;
+}
+.marketing-quote blockquote {
+  font-size: 16px;
+  line-height: 1.7;
+  margin: 0;
+}
+.marketing-quote blockquote span {
+  color: #0075d9;
+  font-size: 34px;
+  line-height: 1;
+  vertical-align: middle;
+  padding: 0 8px;
+}
+.marketing-quote figcaption {
+  font-size: 12px;
+  color: #526779;
+  margin-top: 12px;
+}
+.marketing-quote a {
+  font-weight: 650;
+}
+.login-panorama {
+  display: grid;
+  place-items: center;
+  background: #173d62;
+  min-height: 100dvh;
+  padding: 0;
+  grid-template-columns: 1fr;
+}
+.login-scene {
+  position: relative;
+  width: min(100%, 177.7778dvh);
+  aspect-ratio: 16/9;
+  isolation: isolate;
+  display: grid;
+  place-items: center;
+}
+.login-landscape {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  z-index: -2;
+}
+.login-scene::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(135deg, #09203470, transparent 48%);
+}
+.login-image-brand {
+  position: absolute;
+  top: 7%;
+  left: 5%;
+  display: flex;
+  align-items: center;
+  gap: 26px;
+  color: white;
+}
+.login-image-brand > img {
+  width: 115px;
+}
+.login-image-brand > div {
+  border-left: 1px solid #ffffff80;
+  padding-left: 26px;
+}
+.login-image-brand span {
+  font-size: 12px;
+  letter-spacing: 1.5px;
+}
+.login-image-brand h1 {
+  font-size: 26px;
+  font-weight: 500;
+  line-height: 1.2;
+  margin: 5px 0 0;
+  color: white;
+}
+.login-panorama .login-form-area {
+  padding: 0;
+  width: 260px;
+  max-width: 90%;
+  display: block;
+  position: static;
+}
+.login-panorama .login-box {
+  background: #173d62;
+  color: white;
+  padding: 18px 20px;
+  border-radius: 10px;
+  box-shadow: 0 12px 36px #0a26362b;
+}
+.login-panorama .login-box label {
+  font-size: 12px;
+  gap: 5px;
+}
+.login-panorama .login-box form {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+}
+.login-panorama .login-box input {
+  font-size: 14px;
+  min-height: 38px;
+  padding: 8px 10px;
+  color: #173d62;
+  background: #f1f6fa;
+}
+.login-panorama input::placeholder {
+  color: #586e7e;
+}
+.login-panorama .login-box .button {
+  min-height: 40px;
+  font-size: 13px;
+  margin: 0;
+}
+.login-panorama .login-box form > .button {
+  margin-top: 3px;
+}
+.login-panorama .login-context h2 {
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+.login-panorama .login-context p {
+  font-size: 12px;
+  color: #e2efff;
+  line-height: 1.5;
+  margin: 0 0 12px;
+}
+.login-panorama .login-help {
+  font-size: 11px;
+  line-height: 1.5;
+  color: #d3e5f4;
+  margin: 12px 0;
+}
+.login-panorama .login-footer {
+  position: absolute;
+  bottom: 3%;
+  left: 5%;
+  color: white;
+  font-size: 11px;
+}
+.login-panorama .form-error {
+  margin: 0;
+}
+@media (max-width: 1150px) {
+  .view-overview .channel-overview-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .marketing-recommendations {
+    gap: 12px;
+  }
+  .marketing-recommendations article {
+    padding: 14px;
+  }
+  .marketing-hero h2 {
+    font-size: 28px;
+  }
+}
+@media (max-width: 760px) {
+  .marketing-highlights {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px 0;
+  }
+  .marketing-highlights article:nth-child(2) {
+    border: 0;
+  }
+  .marketing-recommendations {
+    grid-template-columns: 1fr;
+  }
+  .marketing-opportunities {
+    padding: 20px;
+  }
+  .marketing-hero {
+    aspect-ratio: auto;
+  }
+  .marketing-hero > img {
+    height: auto;
+  }
+  .marketing-hero > div {
+    position: relative;
+    background: #173d62;
+    padding: 22px;
+  }
+  .marketing-hero h2,
+  .marketing-hero p {
+    max-width: 100%;
+  }
+  .login-panorama {
+    display: block;
+  }
+  .login-scene {
+    width: 100%;
+    aspect-ratio: auto;
+    padding-top: 56.25%;
+    padding-bottom: 45px;
+  }
+  .login-landscape {
+    height: auto;
+  }
+  .login-image-brand {
+    top: 20px;
+    left: 20px;
+    right: 20px;
+    gap: 14px;
+  }
+  .login-image-brand > img {
+    width: 80px;
+  }
+  .login-image-brand > div {
+    padding-left: 14px;
+  }
+  .login-image-brand h1 {
+    font-size: 18px;
+  }
+  .login-panorama .login-form-area {
+    margin: 24px auto 0;
+  }
+  .login-panorama .login-box input {
+    font-size: 16px;
+  }
+  .login-panorama .login-box .button {
+    min-height: 44px;
+  }
+  .login-panorama .login-footer {
+    bottom: 14px;
+    left: 20px;
+  }
+  .login-scene::before {
+    background: linear-gradient(180deg, #173d6266, transparent 30%);
+  }
+}
+@media (max-width: 380px) {
+  .view-overview .channel-overview-grid {
+    grid-template-columns: 1fr;
+  }
+  .marketing-highlights {
+    grid-template-columns: 1fr;
+  }
+  .marketing-highlights article {
+    border: 0;
+  }
+  .login-image-brand h1 {
+    font-size: 16px;
+  }
+}
+.login-panorama .login-box label {
+  margin: 0;
+}
+.login-panorama .login-box > .button {
+  color: #173d62;
+  white-space: normal;
+  width: 100%;
+}
+.login-panorama .login-box > .button svg {
+  flex-shrink: 0;
+}
+
+.recommendation-step .step-trigger {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  font-weight: 650;
+}

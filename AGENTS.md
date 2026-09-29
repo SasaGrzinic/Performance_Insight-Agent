@@ -223,3 +223,12 @@ npm run build
 - Ältere allgemeine Statusabsätze in `README.md`/`PRODUCT.md` können überholt sein
   (z. B. „keine externen Konten verbunden“). Für LinkedIn gilt der später bestätigte
   Live-Stand. Widersprüche prüfen und gezielt korrigieren, nicht blind übernehmen.
+
+## Freigegebene Dashboard-/Login-Gestaltung (29.09.2026)
+
+Die auf Branch `design/sonio-dashboard-login` integrierte Gestaltung wurde mit dem
+Nutzer abgestimmt. Bei weiteren UI-Arbeiten `docs/DESIGN_HANDOFF_2026-09-29.md` lesen.
+Vollständiges Bergbild, kleines zentriertes Login, Logo/Titel im Bild; Dashboard mit
+kompakten Klartext-Kanalkacheln und Empfehlungen vor den Kanälen erhalten.
+Keine Mockup-Zahlen als Live-Daten einsetzen und kein negatives Ergebnis erfinden,
+um die illustrative Aufteilung von drei positiven und einem negativen Trend zu erzwingen.

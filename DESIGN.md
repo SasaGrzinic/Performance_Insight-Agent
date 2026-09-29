@@ -250,3 +250,14 @@ Toasts use a dark background and status semantics. Analysis read failures have a
 - **Don't** replace missing metrics with fabricated zeroes.
 - **Don't** show administrator-only editing workflows to viewers.
 - **Don't** remove explanation, evidence, and caveats from recommendation details.
+
+## Freigegebene Aktualisierung vom 29.09.2026
+
+Für Dashboard und Login ersetzt die freigegebene Gestaltung die oben dokumentierte
+alte Darstellung: dunkle Navigation (`#173d62`), vollständiges Bergmotiv, kompakte
+Kanalzahlen und Entwicklungen, blaue Empfehlungsfläche mit Kanal zuerst sowie
+zentriertes Branson-Zitat. Die Anmeldung zeigt das vollständige Bild mit integriertem
+Logo/Titel und kleinem mittigem Formular. Red Hat Display und Original-Assets bleiben.
+Die konkrete Umsetzung liegt in `frontend/src/marketing-design.css` und
+`frontend/src/components/MarketingOverview.tsx`; Details und Datengrenzen in
+`docs/DESIGN_HANDOFF_2026-09-29.md`. Andere Fachansichten behalten ihre Struktur.

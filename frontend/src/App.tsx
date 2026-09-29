@@ -17,7 +17,12 @@ import {
 } from "./components/PerformanceExplorer";
 import type { FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { LineChart, Line } from "recharts";
+import {
+  OverviewHighlights,
+  OverviewRecommendations,
+  MarketingQuote,
+  channelMetricLabel,
+} from "./components/MarketingOverview";
 import {
   LayoutDashboard,
   Play,
@@ -268,9 +273,7 @@ function App() {
     window.scrollTo({ top: 0, behavior: "instant" });
   }
   function demoOnly() {
-    setNotice(
-      "Demo-Modus. Für eigene Daten ist eine Anmeldung erforderlich.",
-    );
+    setNotice("Demo-Modus. Für eigene Daten ist eine Anmeldung erforderlich.");
   }
   async function startJob(kind: string) {
     if (demo) {
@@ -375,10 +378,16 @@ function App() {
       )}
     </div>
   );
-  const dashboardActions = (<div className="detail-toolbar" id="channel-action-toolbar">
-              {periodControls}
-              {data.data && !isAds && ["posts", "channels", "audience", "videos"].includes(view) && <CSVExport key={`${month}-${demo}`} data={data.data} demo={demo} />}
-            </div>);
+  const dashboardActions = (
+    <div className="detail-toolbar" id="channel-action-toolbar">
+      {periodControls}
+      {data.data &&
+        !isAds &&
+        ["posts", "channels", "audience", "videos"].includes(view) && (
+          <CSVExport key={`${month}-${demo}`} data={data.data} demo={demo} />
+        )}
+    </div>
+  );
 
   return (
     <div className="app-shell">
@@ -397,7 +406,7 @@ function App() {
         className={"sidebar " + (mobile ? "open" : "")}
       >
         <a className="brand" href={asset(demo ? "?demo=1" : "")}>
-          <img src={asset("brand/sonio.svg")} alt="Sonio" />
+          <img src={asset("brand/sonio-light.svg")} alt="Sonio" />
           <span>insights</span>
         </a>
         <button
@@ -513,45 +522,104 @@ function App() {
           id="main"
           className={`analysis-workspace view-${view} ${channel === "linkedin_organic" && view === "channels" ? "organic-detail" : ""}`}
         >
-          <div className="page-intro photographic-intro">
-            {(
-              <svg className="header-photo channel-flag-photo" viewBox="0 0 1600 900" preserveAspectRatio="xMaxYMin slice" aria-hidden="true">
-                <image href={asset("brand/sonio-blog-header.jpg")} width="1600" height="900" />
-                <defs>
-                  <clipPath id="channel-flag-outline">
-                    <path d="M1346 54 C1385 49 1426 57 1481 53 L1484 107 C1485 121 1491 133 1481 146 C1467 161 1460 174 1432 181 C1406 188 1382 184 1364 195 Z" />
-                  </clipPath>
-                  <linearGradient id="channel-flag-folds" x1="0" x2="1" y1="0" y2="0">
-                    <stop offset="0" stopColor="#000" stopOpacity=".18" />
-                    <stop offset=".24" stopColor="#fff" stopOpacity=".12" />
-                    <stop offset=".48" stopColor="#000" stopOpacity=".2" />
-                    <stop offset=".7" stopColor="#fff" stopOpacity=".14" />
-                    <stop offset=".88" stopColor="#000" stopOpacity=".18" />
-                    <stop offset="1" stopColor="#fff" stopOpacity=".06" />
-                  </linearGradient>
-                </defs>
-                <g clipPath="url(#channel-flag-outline)">
-                  <foreignObject x="1340" y="47" width="156" height="153">
-                    <div className="flag-channel-mark">
-                      {!["channels", "posts", "audience"].includes(view) ? <img className="flag-sonio-logo" src={asset("brand/sonio.svg")} alt="Sonio" /> : <ChannelIcon id={view === "channels" ? selected?.id || channel : "linkedin_organic"} size={156} />}
-                    </div>
-                  </foreignObject>
-                  <rect x="1340" y="47" width="156" height="153" fill="url(#channel-flag-folds)" />
-                </g>
-              </svg>
-            )}
-            <div className="intro-copy">
-              <h1>
-                {view === "overview"
-                  ? "MARKETING PERFORMANCE & INSIGHT"
-                  : view === "channels"
+          {view === "overview" ? (
+            <>
+              <div className="marketing-mast">
+                <span>Performance &amp; Insight</span>
+                <h1>Wirkung im Blick.</h1>
+              </div>
+              <section className="marketing-hero" aria-label="Sonio Insights">
+                <img
+                  src={asset("brand/sonio-blog-header.jpg")}
+                  alt="Berglandschaft mit Gipfel und Zielflagge"
+                />
+                <div>
+                  <span>Sonio Insights</span>
+                  <h2>
+                    Marketing im Blick.
+                    <br />
+                    Wirkung im Fokus.
+                  </h2>
+                  <p>
+                    Alle Kanäle. Klare Erkenntnisse.
+                    <br />
+                    Die nächsten Schritte gemeinsam gestalten.
+                  </p>
+                </div>
+              </section>
+            </>
+          ) : (
+            <div className="page-intro photographic-intro">
+              {
+                <svg
+                  className="header-photo channel-flag-photo"
+                  viewBox="0 0 1600 900"
+                  preserveAspectRatio="xMaxYMin slice"
+                  aria-hidden="true"
+                >
+                  <image
+                    href={asset("brand/sonio-blog-header.jpg")}
+                    width="1600"
+                    height="900"
+                  />
+                  <defs>
+                    <clipPath id="channel-flag-outline">
+                      <path d="M1346 54 C1385 49 1426 57 1481 53 L1484 107 C1485 121 1491 133 1481 146 C1467 161 1460 174 1432 181 C1406 188 1382 184 1364 195 Z" />
+                    </clipPath>
+                    <linearGradient
+                      id="channel-flag-folds"
+                      x1="0"
+                      x2="1"
+                      y1="0"
+                      y2="0"
+                    >
+                      <stop offset="0" stopColor="#000" stopOpacity=".18" />
+                      <stop offset=".24" stopColor="#fff" stopOpacity=".12" />
+                      <stop offset=".48" stopColor="#000" stopOpacity=".2" />
+                      <stop offset=".7" stopColor="#fff" stopOpacity=".14" />
+                      <stop offset=".88" stopColor="#000" stopOpacity=".18" />
+                      <stop offset="1" stopColor="#fff" stopOpacity=".06" />
+                    </linearGradient>
+                  </defs>
+                  <g clipPath="url(#channel-flag-outline)">
+                    <foreignObject x="1340" y="47" width="156" height="153">
+                      <div className="flag-channel-mark">
+                        {!["channels", "posts", "audience"].includes(view) ? (
+                          <img
+                            className="flag-sonio-logo"
+                            src={asset("brand/sonio.svg")}
+                            alt="Sonio"
+                          />
+                        ) : (
+                          <ChannelIcon
+                            id={
+                              view === "channels"
+                                ? selected?.id || channel
+                                : "linkedin_organic"
+                            }
+                            size={156}
+                          />
+                        )}
+                      </div>
+                    </foreignObject>
+                    <rect
+                      x="1340"
+                      y="47"
+                      width="156"
+                      height="153"
+                      fill="url(#channel-flag-folds)"
+                    />
+                  </g>
+                </svg>
+              }
+              <div className="intro-copy">
+                <h1>
+                  {view === "channels"
                     ? selected?.name || "Kanal im Detail"
                     : titles[view] || titles.overview}
-              </h1>
-              <p>
-                {view === "overview"
-                  ? "Marketing Performance. Kanäle, Ergebnisse und nächste Schritte."
-                  : view === "videos"
+                </h1>
+                <p>
+                  {view === "videos"
                     ? "LinkedIn und YouTube: Video-Ergebnisse getrennt nach Plattform verstehen."
                     : view === "audience"
                       ? "Neue Follower pro Monat und dokumentierte Gesamtstände der Unternehmensseite."
@@ -569,31 +637,17 @@ function App() {
                                 : view === "team"
                                   ? "Team einladen und Zugriff auf Kennzahlen verwalten."
                                   : "Kennzahlen, Datenaktualisierung und automatisches Reporting."}
-              </p>
+                </p>
+              </div>
             </div>
-          </div>
-          {view !== "overview" && !inlineChannelActions && dashboardActions}
-          {view === "overview" && (
-            <section
-              className="agent-introduction"
-              aria-label="Über den Marketing-Agenten"
-            >
-              <h2>Aus Zahlen werden nächste Schritte.</h2>
-              <p>
-                Der Marketing Performance & Insight Agent führt die Kennzahlen
-                der verbundenen Kanäle an einem Ort zusammen. Er macht
-                Entwicklungen sichtbar und hilft dabei, Ergebnisse
-                einzuordnen und die nächsten Massnahmen zu priorisieren – für
-                einen klaren Überblick über die Wirkung des Marketings.
-              </p>
-            </section>
           )}
+          {view !== "overview" && !inlineChannelActions && dashboardActions}
           {demo && (
             <div className="demo-banner">
               <Info size={16} />
               <span>
                 <strong>Ein Blick auf die Möglichkeiten.</strong> Illustrative
-                Beispieldaten. Noch keine echten Kanäle verbunden.
+                Beispieldaten. Diese Ansicht enthält keine Live-Daten.
               </span>
               {!STATIC_DEMO && (
                 <button onClick={leaveDemo}>
@@ -631,38 +685,63 @@ function App() {
               <>
                 {view === "overview" && (
                   <>
+                    <OverviewHighlights dashboard={d} />
+                    <OverviewRecommendations
+                      analysis={a}
+                      channels={d.channels}
+                      onSelect={setRec}
+                      onAll={() => changeView("insights")}
+                    />
                     <ChannelOverview
-                      actions={<div className="overview-channel-actions">
-                        <button
-                          className="button primary"
-                          disabled={!!job || !isAdmin}
-                          onClick={() => startJob("/sync")}
-                        >
-                          <RefreshCw
-                            size={16}
-                            className={job && jobKind === "/sync" ? "spin" : ""}
+                      actions={
+                        <div className="overview-channel-actions">
+                          <button
+                            className="button primary"
+                            disabled={!!job || !isAdmin}
+                            onClick={() => startJob("/sync")}
+                          >
+                            <RefreshCw
+                              size={16}
+                              className={
+                                job && jobKind === "/sync" ? "spin" : ""
+                              }
+                            />
+                            {job ? "Wird aktualisiert" : "Daten aktualisieren"}
+                          </button>
+                          <CSVExport
+                            key={`${month}-${demo}`}
+                            data={d}
+                            demo={demo}
                           />
-                          {job ? "Wird aktualisiert" : "Daten aktualisieren"}
-                        </button>
-                        <CSVExport key={`${month}-${demo}`} data={d} demo={demo} />
-                        <button
-                          className="icon-button"
-                          disabled={!isAdmin}
-                          aria-label="Kennzahlen anpassen"
-                          title={d.definitions_confirmed ? "Eigene Kennzahlen anpassen" : "Vorläufige Kennzahlen anpassen"}
-                          onClick={() => setMetricModal(true)}
-                        >
-                          <SlidersHorizontal size={15} />
-                        </button>
-                      </div>}
-                      status={demo ? "8 Kanäle in der Demo" : `${connected} von ${d.channels.length} Kanälen verbunden`}
-                      freshness={<span>
-                      {demo
-                        ? "Illustrative Monatswerte für die Präsentation. Keine Live-Aktualisierung."
-                        : "Aktueller Monat · Anzeige wird jede Minute neu geladen."}
-                      Datenstand je Kanal gemäss letztem erfolgreichen Abruf;
-                      die Schnittstellen können verzögert liefern.
-                    </span>}
+                          <button
+                            className="icon-button"
+                            disabled={!isAdmin}
+                            aria-label="Kennzahlen anpassen"
+                            title={
+                              d.definitions_confirmed
+                                ? "Eigene Kennzahlen anpassen"
+                                : "Vorläufige Kennzahlen anpassen"
+                            }
+                            onClick={() => setMetricModal(true)}
+                          >
+                            <SlidersHorizontal size={15} />
+                          </button>
+                        </div>
+                      }
+                      status={
+                        demo
+                          ? "8 Kanäle in der Demo"
+                          : `${connected} von ${d.channels.length} Kanälen verbunden`
+                      }
+                      freshness={
+                        <span>
+                          {demo
+                            ? "Illustrative Monatswerte für die Präsentation. Keine Live-Aktualisierung."
+                            : "Aktueller Monat · Anzeige wird jede Minute neu geladen."}
+                          Datenstand je Kanal gemäss letztem erfolgreichen
+                          Abruf; die Schnittstellen können verzögert liefern.
+                        </span>
+                      }
                       channels={d.channels}
                       demo={demo}
                       month={month}
@@ -671,97 +750,12 @@ function App() {
                         changeView("channels");
                       }}
                     />
-                    <section
-                      className="overview-actions top-recommendations"
-                      aria-label="Top 3 Empfehlungen"
-                    >
-                      <div className="section-heading">
-                        <div>
-                          <h2>Top 3 Empfehlungen</h2>
-                          <p>
-                            Die wichtigsten nächsten Schritte für{" "}
-                            {monthName(month)}.
-                          </p>
-                        </div>
-                        <button
-                          className="text-button"
-                          onClick={() => changeView("insights")}
-                        >
-                          Alle Empfehlungen <ArrowRight size={16} />
-                        </button>
-                      </div>
-                      {a?.recommendations.length ? (
-                        <div className="recommendation-grid">
-                          {[...a.recommendations]
-                            .sort(
-                              (x, y) =>
-                                ({ high: 0, medium: 1, low: 2 })[x.priority] -
-                                { high: 0, medium: 1, low: 2 }[y.priority],
-                            )
-                            .slice(0, 3)
-                            .map((r, i) => (
-                              <RecommendationCard
-                                key={i}
-                                r={r}
-                                onClick={() => setRec(r)}
-                              />
-                            ))}
-                        </div>
-                      ) : (
-                        <div className="recommendations-preview">
-                          <p className="preview-caption">
-                            Grafische Vorschau · Noch keine datenbasierte
-                            Auswertung
-                          </p>
-                          <div className="recommendation-grid">
-                            {[
-                              {
-                                title: "Stärkster Hebel",
-                                icon: ChartNoAxesCombined,
-                                description:
-                                  "Die wichtigste Entwicklung der Kanäle – mit einer konkreten Massnahme für mehr Wirkung.",
-                              },
-                              {
-                                title: "Nächste Chance",
-                                icon: Lightbulb,
-                                description:
-                                  "Ein Potenzial aus den Kennzahlen – mit einer Empfehlung, wo sich genaueres Hinsehen lohnt.",
-                              },
-                              {
-                                title: "Nächster Test",
-                                icon: ArrowUpRight,
-                                description:
-                                  "Eine überprüfbare Idee – mit einem klaren nächsten Schritt und der passenden Erfolgskennzahl.",
-                              },
-                            ].map(({ title, icon: Icon, description }, i) => (
-                              <article
-                                className="recommendation-preview"
-                                key={title}
-                              >
-                                <div className="preview-card-heading">
-                                  <Icon size={42} />
-                                  <span>Empfehlung {i + 1}</span>
-                                </div>
-                                <h3>{title}</h3>
-                                <p>{description}</p>
-                                <footer>
-                                  <span>Konkreter nächster Schritt</span>
-                                  <ArrowRight size={18} />
-                                </footer>
-                              </article>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </section>
+                    <MarketingQuote />
                   </>
                 )}
-                {[
-                  "audience",
-                  "posts",
-                  "insights",
-                  "reports",
-                ].includes(view) && (
+                {["audience", "posts", "insights", "reports"].includes(
+                  view,
+                ) && (
                   <label className="content-month">
                     Zeitraum für diesen Bereich
                     <input
@@ -801,94 +795,129 @@ function App() {
                         </button>
                       ))}
                     </div>
-                    {isAds && <AdsCampaigns demo={demo} actions={dashboardActions} />}
-                    {channel === "mailchimp" && <MailchimpCampaigns demo={demo} actions={dashboardActions} />}
-                    {channel === "youtube" && <YouTubeVideos demo={demo} actions={dashboardActions} />}
-                    {selected && !isAds && channel !== "mailchimp" && channel !== "youtube" && (
-                      <>
-                        <div className="section-heading">
-                          <div className="channel-title">
-                            <ChannelIcon id={selected.id} size={25} />
-                            <div>
-                              <h2>{selected.name} <span className="kpi-period">{monthName(d.month)} <PeriodInfo>Monatswerte für den gewählten Zeitraum. Der laufende Monat ist unvollständig. Datenstand gemäss letztem erfolgreichen Abruf; die Schnittstellen können verzögert liefern.</PeriodInfo></span></h2>
-                              <p>
-                                {selected.type} · {selected.message}
-                              </p>
-                            </div>
-                          </div>
-                          {inlineChannelActions && dashboardActions}
-                        </div>
-                        <div className="kpi-grid">
-                          {Object.entries(selected.fields).map(
-                            ([key, label]) => (
-                              <KPICard
-                                key={key}
-                                kpi={{
-                                  channel: selected.id,
-                                  key,
-                                  label,
-                                  value: selected.values[key] ?? null,
-                                  previous: selected.previous[key] ?? null,
-                                  unit: selected.units[key] || "count",
-                                  target: null,
-                                  change: change(
-                                    selected.values[key],
-                                    selected.previous[key],
-                                  ),
-                                }}
-                              />
-                            ),
-                          )}
-                        </div>
-                        {selected.id === "analytics" && <AnalyticsMonthlySources month={d.month} demo={demo} />}
-                        <PerformanceExplorer
-                          key={`channel-${channel}`}
-                          onMonth={setMonth}
-                          data={d}
-                          channel={channel}
-                          demo={demo}
-                        />
-                        {selected.id === "analytics" && <AnalyticsContent demo={demo} />}
-                        {selected.id === "linkedin_organic" && (
-                          <div className="channel-detail-links">
-                            <button
-                              className="button"
-                              onClick={() => changeView("audience")}
-                            >
-                              <Users size={18} /> Follower-Entwicklung
-                            </button>
-                            <button
-                              className="button"
-                              onClick={() => changeView("posts")}
-                            >
-                              <FileText size={18} /> Alle Posts & Videos
-                            </button>
-                          </div>
-                        )}
-                        <section className="panel detail-definitions">
-                          <h2>Kennzahlen verstehen</h2>
-                          <KpiExplainer key={selected.id} channel={selected.id} fields={selected.fields} />
-                          <p>
-                            {selected.id === "events"
-                              ? "Anmeldungen werden innerhalb jeder Event-Liste anhand der E-Mail-Adresse dedupliziert. Sie sind keine bestätigten Teilnahmen. Das Datum ist das Anmeldedatum."
-                              : selected.id === "mailchimp"
-                                ? "Öffnungen und Klickende werden je Kampagne gezählt und dem Versanddatum zugeordnet. Die Summe über Kampagnen ist keine eindeutige Personenanzahl."
-                                : selected.id === "analytics"
-                                  ? "Sitzungen, engagierte Sitzungen und Schlüsselereignisse stammen direkt aus GA4. Schlüsselereignisse richten sich nach eurer Property-Konfiguration."
-                                  : "Die Messwerte und Attribution stammen aus der jeweiligen Plattform. Conversions verschiedener Kanäle können dieselbe Person oder Aktion enthalten."}
-                          </p>
-                          <p className="muted">
-                            Fehlende Werte erscheinen als „—“.{" "}
-                            {selected.last_success
-                              ? "Letzter erfolgreicher Abruf: " +
-                                new Date(selected.last_success).toLocaleString(
-                                  "de-CH",
-                                )
-                              : "Noch kein erfolgreicher Live-Abruf."}
-                          </p>
-                        </section>
-                      </>
+                    {isAds && (
+                      <AdsCampaigns demo={demo} actions={dashboardActions} />
                     )}
+                    {channel === "mailchimp" && (
+                      <MailchimpCampaigns
+                        demo={demo}
+                        actions={dashboardActions}
+                      />
+                    )}
+                    {channel === "youtube" && (
+                      <YouTubeVideos demo={demo} actions={dashboardActions} />
+                    )}
+                    {selected &&
+                      !isAds &&
+                      channel !== "mailchimp" &&
+                      channel !== "youtube" && (
+                        <>
+                          <div className="section-heading">
+                            <div className="channel-title">
+                              <ChannelIcon id={selected.id} size={25} />
+                              <div>
+                                <h2>
+                                  {selected.name}{" "}
+                                  <span className="kpi-period">
+                                    {monthName(d.month)}{" "}
+                                    <PeriodInfo>
+                                      Monatswerte für den gewählten Zeitraum.
+                                      Der laufende Monat ist unvollständig.
+                                      Datenstand gemäss letztem erfolgreichen
+                                      Abruf; die Schnittstellen können verzögert
+                                      liefern.
+                                    </PeriodInfo>
+                                  </span>
+                                </h2>
+                                <p>
+                                  {selected.type} · {selected.message}
+                                </p>
+                              </div>
+                            </div>
+                            {inlineChannelActions && dashboardActions}
+                          </div>
+                          <div className="kpi-grid">
+                            {Object.entries(selected.fields).map(
+                              ([key, label]) => (
+                                <KPICard
+                                  key={key}
+                                  kpi={{
+                                    channel: selected.id,
+                                    key,
+                                    label,
+                                    value: selected.values[key] ?? null,
+                                    previous: selected.previous[key] ?? null,
+                                    unit: selected.units[key] || "count",
+                                    target: null,
+                                    change: change(
+                                      selected.values[key],
+                                      selected.previous[key],
+                                    ),
+                                  }}
+                                />
+                              ),
+                            )}
+                          </div>
+                          {selected.id === "analytics" && (
+                            <AnalyticsMonthlySources
+                              month={d.month}
+                              demo={demo}
+                            />
+                          )}
+                          <PerformanceExplorer
+                            key={`channel-${channel}`}
+                            onMonth={setMonth}
+                            data={d}
+                            channel={channel}
+                            demo={demo}
+                          />
+                          {selected.id === "analytics" && (
+                            <AnalyticsContent demo={demo} />
+                          )}
+                          {selected.id === "linkedin_organic" && (
+                            <div className="channel-detail-links">
+                              <button
+                                className="button"
+                                onClick={() => changeView("audience")}
+                              >
+                                <Users size={18} /> Follower-Entwicklung
+                              </button>
+                              <button
+                                className="button"
+                                onClick={() => changeView("posts")}
+                              >
+                                <FileText size={18} /> Alle Posts & Videos
+                              </button>
+                            </div>
+                          )}
+                          <section className="panel detail-definitions">
+                            <h2>Kennzahlen verstehen</h2>
+                            <KpiExplainer
+                              key={selected.id}
+                              channel={selected.id}
+                              fields={selected.fields}
+                            />
+                            <p>
+                              {selected.id === "events"
+                                ? "Anmeldungen werden innerhalb jeder Event-Liste anhand der E-Mail-Adresse dedupliziert. Sie sind keine bestätigten Teilnahmen. Das Datum ist das Anmeldedatum."
+                                : selected.id === "mailchimp"
+                                  ? "Öffnungen und Klickende werden je Kampagne gezählt und dem Versanddatum zugeordnet. Die Summe über Kampagnen ist keine eindeutige Personenanzahl."
+                                  : selected.id === "analytics"
+                                    ? "Sitzungen, engagierte Sitzungen und Schlüsselereignisse stammen direkt aus GA4. Schlüsselereignisse richten sich nach eurer Property-Konfiguration."
+                                    : "Die Messwerte und Attribution stammen aus der jeweiligen Plattform. Conversions verschiedener Kanäle können dieselbe Person oder Aktion enthalten."}
+                            </p>
+                            <p className="muted">
+                              Fehlende Werte erscheinen als „—“.{" "}
+                              {selected.last_success
+                                ? "Letzter erfolgreicher Abruf: " +
+                                  new Date(
+                                    selected.last_success,
+                                  ).toLocaleString("de-CH")
+                                : "Noch kein erfolgreicher Live-Abruf."}
+                            </p>
+                          </section>
+                        </>
+                      )}
                   </>
                 )}
                 {view === "insights" && (
@@ -928,8 +957,8 @@ function App() {
                       </div>
                     ) : (
                       <Empty title="Erkenntnisse beginnen mit Daten">
-                        Sobald Messwerte und OpenRouter konfiguriert sind,
-                        kann die erste Analyse erstellt werden.
+                        Sobald Messwerte und OpenRouter konfiguriert sind, kann
+                        die erste Analyse erstellt werden.
                       </Empty>
                     )}
                     <div className="info-strip">
@@ -1132,11 +1161,21 @@ function ChannelOverview({
     <section className="channel-overview" aria-label="Alle Marketingkanäle">
       <div className="section-heading">
         <div>
-          <h2>Kanäle</h2>
+          <h2>Alle Kanäle. Ein Überblick.</h2>
           <div className="overview-period-status">
-            <span className="overview-month-help" tabIndex={0} aria-describedby="overview-month-tooltip">
+            <span
+              className="overview-month-help"
+              tabIndex={0}
+              aria-describedby="overview-month-tooltip"
+            >
               <CalendarDays size={15} /> {monthName(month)} <Info size={13} />
-              <span className="overview-month-tooltip" id="overview-month-tooltip" role="tooltip">{freshness}</span>
+              <span
+                className="overview-month-tooltip"
+                id="overview-month-tooltip"
+                role="tooltip"
+              >
+                {freshness}
+              </span>
             </span>
             <span className="overview-connected">{status}</span>
           </div>
@@ -1165,7 +1204,7 @@ function ChannelOverview({
                     : "Noch nicht verbunden";
             const keys = [
               ...new Set([c.primary, ...Object.keys(c.fields)]),
-            ].slice(0, 3);
+            ].slice(0, 1);
             return (
               <button
                 key={c.id}
@@ -1190,7 +1229,7 @@ function ChannelOverview({
                   <dl className="channel-entry-values">
                     {keys.map((key) => (
                       <div key={key}>
-                        <dt>{c.fields[key]}</dt>
+                        <dt>{channelMetricLabel(c, key)}</dt>
                         <dd>
                           {number(c.values[key], c.units[key])}
                           {c.units[key] && c.units[key] !== "count"
@@ -1300,131 +1339,98 @@ function Login({
     }
   }
   return (
-    <div className="login-layout">
-      <section className="login-brand">
-        <img src={asset("brand/sonio-light.svg")} alt="Sonio" />
-        <div>
-          <h1>
-            Aus vielen Kanälen
-            <br />
-            wird ein klares Bild.
-          </h1>
-          <p>
-            Verstehe, was wirkt. Erkenne, was möglich ist.
-            <br />
-            Und entscheide, was als Nächstes zählt.
-          </p>
-          <div className="login-line-art" aria-hidden="true">
-            <LineChart
-              width={460}
-              height={160}
-              data={[
-                { v: 3 },
-                { v: 5 },
-                { v: 4 },
-                { v: 8 },
-                { v: 7 },
-                { v: 12 },
-                { v: 11 },
-                { v: 16 },
-              ]}
-            >
-              <Line
-                dataKey="v"
-                type="monotone"
-                stroke="#ffffff"
-                strokeWidth={2}
-                dot={false}
-                isAnimationActive={false}
-              />
-            </LineChart>
+    <div className="login-layout login-panorama">
+      <div className="login-scene">
+        <img
+          className="login-landscape"
+          src={asset("brand/sonio-blog-header.jpg")}
+          alt="Berglandschaft mit Gipfel und Zielflagge"
+        />
+        <header className="login-image-brand">
+          <img src={asset("brand/sonio-light.svg")} alt="Sonio" />
+          <div>
+            <span>Marketing</span>
+            <h1>Performance &amp; Insights</h1>
           </div>
-        </div>
-        <span>Sonio Insights · Marketing Performance</span>
-      </section>
-      <section className="login-form-area">
-        <div className="login-box">
-          <span className="login-icon">
-            <ShieldCheck size={25} />
-          </span>
-          <h2>
-            {accepted
-              ? "Das Konto ist bereit."
-              : invite
-                ? "Willkommen im Team."
-                : "Willkommen zurück."}
-          </h2>
-          <p>
-            {accepted
-              ? "Die Anmeldung mit dem neuen Konto ist jetzt möglich."
-              : invite
-                ? "Benutzernamen und Passwort festlegen."
-                : sessionExpired
-                  ? "Die Sitzung ist abgelaufen. Zum Laden des Dashboards bitte erneut anmelden."
-                  : "Anmelden und Marketing Performance verstehen."}
-          </p>
-          {accepted ? (
-            <a className="button primary" href="/">
-              Zur Anmeldung <ArrowRight size={16} />
-            </a>
-          ) : (
-            <form onSubmit={submit}>
-              <label>
-                Benutzername
-                <input
-                  name="username"
-                  autoComplete="username"
-                  required
-                  minLength={invite ? 3 : 1}
-                  maxLength={80}
-                  placeholder="Benutzername"
-                />
-              </label>
-              <label>
-                Passwort
-                <input
-                  name="password"
-                  type="password"
-                  autoComplete={invite ? "new-password" : "current-password"}
-                  required
-                  minLength={invite ? 12 : 1}
-                  maxLength={256}
-                  placeholder={
-                    invite ? "Mindestens 12 Zeichen" : "Passwort"
-                  }
-                />
-              </label>
-              {error && (
-                <p role="alert" className="form-error">
-                  {error}
+        </header>
+        <section className="login-form-area">
+          <div className="login-box">
+            {(invite || accepted || sessionExpired) && (
+              <div className="login-context">
+                <h2>
+                  {accepted
+                    ? "Das Konto ist bereit."
+                    : invite
+                      ? "Willkommen im Team."
+                      : "Erneut anmelden"}
+                </h2>
+                <p>
+                  {accepted
+                    ? "Die Anmeldung mit dem neuen Konto ist jetzt möglich."
+                    : invite
+                      ? "Benutzernamen und Passwort festlegen."
+                      : "Die Sitzung ist abgelaufen. Bitte erneut anmelden."}
                 </p>
-              )}
-              <button className="button primary full" disabled={busy}>
-                {busy ? <LoaderCircle className="spin" size={16} /> : null}
-                {invite ? "Konto erstellen" : "Anmelden"}
-                <ArrowRight size={16} />
-              </button>
-            </form>
-          )}
-          {!invite && (
-            <>
-              <p className="login-help">
-                Noch kein Zugang? Der Master-Admin kann Zugang über einen
-                persönlichen Link gewähren.
-              </p>
-              {allowDemo && (
-                <button className="button full" onClick={onDemo}>
-                  Dashboard mit Beispieldaten entdecken{" "}
-                  <ExternalLink size={15} />
+              </div>
+            )}
+            {accepted ? (
+              <a className="button primary" href="/">
+                Zur Anmeldung <ArrowRight size={16} />
+              </a>
+            ) : (
+              <form onSubmit={submit}>
+                <label>
+                  Benutzername
+                  <input
+                    name="username"
+                    autoComplete="username"
+                    required
+                    minLength={invite ? 3 : 1}
+                    maxLength={80}
+                    placeholder="Benutzername"
+                  />
+                </label>
+                <label>
+                  Passwort
+                  <input
+                    name="password"
+                    type="password"
+                    autoComplete={invite ? "new-password" : "current-password"}
+                    required
+                    minLength={invite ? 12 : 1}
+                    maxLength={256}
+                    placeholder={invite ? "Mindestens 12 Zeichen" : "Passwort"}
+                  />
+                </label>
+                {error && (
+                  <p role="alert" className="form-error">
+                    {error}
+                  </p>
+                )}
+                <button className="button primary full" disabled={busy}>
+                  {busy ? <LoaderCircle className="spin" size={16} /> : null}
+                  {invite ? "Konto erstellen" : "Anmelden"}
+                  <ArrowRight size={16} />
                 </button>
-              )}
-            </>
-          )}
-        </div>
-        <span className="login-footer">
-          Sonio Insights · Geschützter Workspace
-        </span>
-      </section>
+              </form>
+            )}
+            {!invite && (
+              <>
+                <p className="login-help">Zugang über persönliche Einladung.</p>
+                {allowDemo && (
+                  <button className="button full" onClick={onDemo}>
+                    Demo mit Beispieldaten
+                    <ExternalLink size={15} />
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+          <span className="login-footer">
+            Sonio Insights · Geschützter Workspace
+          </span>
+        </section>
+      </div>
     </div>
   );
 }

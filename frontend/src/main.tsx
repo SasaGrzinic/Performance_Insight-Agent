@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import App from "./App";
 import { ApiError } from "./api";
 import "./styles.css";
+import "./marketing-design.css";
 const client = new QueryClient({
   defaultOptions: {
     queries: {

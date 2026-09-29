@@ -76,3 +76,17 @@ Diese Grenzen sind keine versteckten Live-Funktionen: Fehlende Verbindungen werd
 ## Offener Nutzerhinweis
 
 Der Nutzer sieht weiterhin nur einen Teil der Postüberschriften im Diagramm (nach dem Importabgleich). Vollständigkeit der UI-Zuordnung ist deshalb nicht abschliessend abgenommen. Bei Wiederaufnahme konkrete fehlende Titel/Zeiträume mit Tooltip und Beitragsliste abgleichen; der Importabgleich allein schliesst den UI-Fehler nicht aus. Aktuell auf Nutzerwunsch YouTube als nächsten Integrationsschritt vorbereiten.
+
+## 2026-09-29 – Dashboard und Login Designbranch
+
+- `npm test`: 19/19 erfolgreich, einschliesslich zwei neuer Regressionstests für
+  Trend-Auswahl, fehlende Werte, Null-Vergleichsbasis und echte Null-Ergebnisse.
+- `npm run build`: TypeScript und Vite Produktionsbuild erfolgreich.
+- Chromium/Playwright, 1440×900 und 390×844: Login und Dashboard gerendert,
+  Screenshots geprüft; kein horizontaler Dokumentüberlauf. Vollständiges Bergbild.
+- Empfehlung: Zusatztext per Hover und Klick sichtbar; Detaildialog geöffnet.
+- UI-Prüfung mit abgefangenen API-Antworten aus bestehender Demo-Fixture;
+  keine Live-API, keine echten Logindaten, keine produktiven Schreibvorgänge.
+- Impeccable-Detektor: keine Befunde in den geänderten UI-Dateien beim Prüflauf.
+- Backend, Docker und echtes Einloggen nicht erneut ausgeführt; unveränderte
+  Authentifizierungslogik ist durch bestehende Frontend-Regressionstests abgedeckt.
