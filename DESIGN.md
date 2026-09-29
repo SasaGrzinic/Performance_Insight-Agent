@@ -261,3 +261,12 @@ Logo/Titel und kleinem mittigem Formular. Red Hat Display und Original-Assets bl
 Die konkrete Umsetzung liegt in `frontend/src/marketing-design.css` und
 `frontend/src/components/MarketingOverview.tsx`; Details und Datengrenzen in
 `docs/DESIGN_HANDOFF_2026-09-29.md`. Andere Fachansichten behalten ihre Struktur.
+
+## LinkedIn Organic – Freigabe 29.09.2026
+
+Marketingansicht in `LinkedInOrganic.tsx`/`linkedin-organic.css`: vollständiges
+Bergmotiv, kompakte 3×2-Kennzahlen in #0075d9 mit weisser Schrift, Videozahlen
+im selben Blau. Red Hat Display; #0063b8 für Abschnittstitel, #eaf2f9 als Grund,
+weisse Inhaltsflächen. Abgrenzung durch Titel und Abstand, ohne Trennlinien.
+Dezente Zeitraumwahl beim Kennzahlen-Titel, Empfehlungen zuletzt, freies Seth-Godin-
+Zitat mit Berufsangabe. Siehe aktualisierte Design-Übergabe für Datenbeschränkungen.

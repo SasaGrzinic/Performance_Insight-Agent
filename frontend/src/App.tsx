@@ -1,3 +1,4 @@
+import { LinkedInHero, LinkedInOrganic } from "./components/LinkedInOrganic";
 import { PeriodInfo } from "./components/PeriodInfo";
 import { AnalyticsMonthlySources } from "./components/AnalyticsMonthlySources";
 import { AnalyticsContent } from "./components/AnalyticsContent";
@@ -548,7 +549,7 @@ function App() {
                 </div>
               </section>
             </>
-          ) : (
+          ) : view === "channels" && channel === "linkedin_organic" ? <LinkedInHero /> : (
             <div className="page-intro photographic-intro">
               {
                 <svg
@@ -807,7 +808,9 @@ function App() {
                     {channel === "youtube" && (
                       <YouTubeVideos demo={demo} actions={dashboardActions} />
                     )}
+                    {selected && channel === "linkedin_organic" && <LinkedInOrganic data={d} demo={demo} analysis={a} onMonth={setMonth} onRecommendation={setRec} onAll={() => changeView("insights")} actions={dashboardActions} />}
                     {selected &&
+                      channel !== "linkedin_organic" &&
                       !isAds &&
                       channel !== "mailchimp" &&
                       channel !== "youtube" && (

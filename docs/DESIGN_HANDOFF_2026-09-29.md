@@ -47,3 +47,49 @@ noch kein lokaler Branch dieses Namens existiert. Keine fremden Änderungen verw
 Ein schon laufender Codex-Task wechselt nicht automatisch durch den GitHub-Push.
 Die öffentliche GitHub-Pages-Demo bleibt bis zur Integration in den Deployment-Branch
 unverändert. Diese Arbeit ändert keine Zugangsdaten und führt keine Produktionseinführung aus.
+
+## Freigegebene LinkedIn-Organic-Ansicht (29.09.2026, abends)
+
+Die freigegebene Vorschau wird als React-Komponente `LinkedInOrganic.tsx` integriert,
+mit `linkedin-organic.css` und Datenhelfern in `linkedinMetrics.ts`.
+
+- Primäre Zielgruppe: Marketing. Vollständiges Bergmotiv, Titel im Himmel, kein
+  überlagertes Kanal-Logo. Kanalwahl bleibt mit Kanal-Icon erhalten.
+- Sechs kompakte Sonio-blaue Kacheln, Desktop drei pro Zeile: Impressionen,
+  Engagement-Rate, Kommentare/Reposts, organische Follower-Zugewinne,
+  LinkedIn-Klicks, Reaktionen. Keine Zahlen-Zusatzzeile oder Trend-Deltas darunter.
+- Monat dezent direkt bei «Sichtbarkeit & Relevanz», keine dominante Auswahl im Header.
+  Dort auch «Laufendes Jahr». Monatswechsel und CSV unter «Daten & Export»;
+  bestehender Monatsvergleich mit Kennzahl-Auswahl bleibt erhalten.
+- Abschnitte durch blaue Titel und Abstand gliedern, ohne dekorative Trennstriche.
+- Beitragsbilder kommen aus `image_url`; fehlende Bilder werden ehrlich ausgewiesen.
+- Video im Fokus nach gesamter/Ø Betrachtungsdauer oder Aufrufen wählbar;
+  Vorschaubild verlinkt zum Originalvideo auf LinkedIn (kein vorgetäuschter Player).
+- Alle Video-Kacheln im gleichen kräftigen Blau. Keine rosa/grünen Flächen.
+- Empfehlungen am Schluss, Kanal zuerst, nächste Schritte per Hover/Fokus/Klick.
+- Freistehendes zentriertes Seth-Godin-Zitat, blaue Anführungszeichen, darunter
+  «Marketingautor und Unternehmer», mit Link zur Originalquelle.
+
+### Datenlogik und verbleibende Integrationen
+
+Die Jahresauswahl lädt Januar bis zum aktuellen Schweizer Kalendermonat. Summen
+werden nur bei vollständig vorhandenen Monatswerten berechnet. Engagement wird aus
+summierten Interaktionen / Impressionen berechnet, nicht aus gemittelten Monatsraten.
+Monatsdatenqualität bleibt auf die vorhandene API angewiesen; fehlende Tagesabdeckung
+kann ohne zusätzliche API-Metadaten nicht zuverlässig erkannt werden.
+Beitrags- und Videowerte bleiben Gesamtwerte seit Veröffentlichung, gefiltert nach
+Veröffentlichungszeitraum, und sind entsprechend beschriftet. Video-Durchschnitt ist
+nach Aufrufen gewichtet. Abschlussrate wird nicht angezeigt.
+
+Zielklicks YouTube/Website, GA4-Zuordnung und relative Videobetrachtung benötigen
+zusätzliche Daten (Zieltracking bzw. verlässliche Videolänge). Sie werden nicht aus
+allgemeinen Klicks oder erfundenen Videolängen abgeleitet. Jahres-Empfehlungen werden
+nicht aus einer Monatsanalyse übernommen; diese Jahresanalyse ist noch offen.
+Die Demo enthält keine echten Posts/Videos. In Live werden keine Vorschau-Zahlen benutzt.
+
+### Codex übernehmen
+
+Branch `design/sonio-dashboard-login` aktualisieren (Befehle oben), dann diese Datei
+lesen. Navigation: **Kanäle → LinkedIn Organic**. Für die Vorschau der Oberfläche ist
+`/?demo=1` möglich; echte Posts und Videos erscheinen nur mit verbundenem Live-Konto.
+Ein bereits laufender Codex-Task muss den Branch ausdrücklich aktualisieren.

@@ -232,3 +232,10 @@ Vollständiges Bergbild, kleines zentriertes Login, Logo/Titel im Bild; Dashboar
 kompakten Klartext-Kanalkacheln und Empfehlungen vor den Kanälen erhalten.
 Keine Mockup-Zahlen als Live-Daten einsetzen und kein negatives Ergebnis erfinden,
 um die illustrative Aufteilung von drei positiven und einem negativen Trend zu erzwingen.
+
+## LinkedIn-Designfreigabe (29.09.2026)
+
+Die Marketingansicht für LinkedIn Organic ist nun in `LinkedInOrganic.tsx` umgesetzt.
+Vorgaben und verbleibende Datenanbindungen in `docs/DESIGN_HANDOFF_2026-09-29.md`.
+Keine dominanten Zeitraum-Kacheln im Header, keine dekorativen Trennlinien, keine
+rosa/grünen Video-Kacheln. Jahreswerte nur aus vorhandenen Monatsdaten aggregieren.

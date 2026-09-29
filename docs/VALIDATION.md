@@ -90,3 +90,16 @@ Der Nutzer sieht weiterhin nur einen Teil der Postüberschriften im Diagramm (na
 - Impeccable-Detektor: keine Befunde in den geänderten UI-Dateien beim Prüflauf.
 - Backend, Docker und echtes Einloggen nicht erneut ausgeführt; unveränderte
   Authentifizierungslogik ist durch bestehende Frontend-Regressionstests abgedeckt.
+
+## 2026-09-29 – LinkedIn Organic Designintegration
+
+- `npm test`: 22/22 erfolgreich. Neue Regressionen: fehlende Monatswerte versus
+  beobachtete Null, vollständige Engagement-Bestandteile, Schweizer Jahreswechsel.
+- `npm run build`: TypeScript/Vite erfolgreich. Bestehende Bundle-Grössenwarnung
+  (>500 kB Hauptchunk) bleibt; kein Buildfehler.
+- Chromium/Playwright bei 1440 und 390 Pixeln: sechs KPI-Kacheln, kein horizontaler
+  Dokumentüberlauf, Screenshots geprüft. Jahresauswahl, KPI-Auswahl (6→5), Video-
+  Ranking-Wechsel und Tastatur-Tooltip funktionieren; keine JavaScript-Laufzeitfehler.
+- Browserprüfung nutzt abgefangene API-Antworten mit Test-Posts, nicht Live-Kontodaten.
+  Echte LinkedIn-Berechtigungen, Zieltracking, Backend/Docker und Produktion wurden
+  hier nicht erneut getestet. Fehlende Zielklicks werden als «—» angezeigt.

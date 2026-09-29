@@ -100,7 +100,7 @@ function metricValue(value: number | undefined, key: string) {
     : number(value);
 }
 
-function PostImage({ post }: { post: Pick<Post, "image_url"> }) {
+export function PostImage({ post }: { post: Pick<Post, "image_url"> }) {
   const [failed, setFailed] = useState(false);
   return post.image_url && !failed ? (
     <img
