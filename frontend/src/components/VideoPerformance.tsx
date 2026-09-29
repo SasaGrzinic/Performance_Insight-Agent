@@ -1,104 +1,39 @@
-import { KpiExplainer } from "./KpiExplainer";
-import type { Dashboard } from "../types";
-import { monthName, number } from "../api";
-import { ChannelIcon } from "./ui";
-import { PostCollection } from "./PerformanceExplorer";
+import {VideoYearChart} from './VideoYearChart';
+import {VideoLibrary} from './VideoLibrary';
+import {useState} from 'react';
+import {useQueries} from '@tanstack/react-query';
+import {ResponsiveContainer,LineChart,Line,XAxis,YAxis,CartesianGrid,Tooltip} from 'recharts';
+import type {Dashboard} from '../types';
+import {api,monthName,number} from '../api';
+import {averageWatchSeconds,readablePostTitle} from '../comparison';
+import {ChannelIcon} from './ui';
+import {PeriodInfo} from './PeriodInfo';
+import {type PostsResponse,type Post} from './PerformanceExplorer';
+import {YouTubeVideos} from './YouTubeVideos';
+const metrics={video_views:'Videoaufrufe',impressions:'Impressionen',clicks:'Klicks',average_watch_seconds:'Ø Betrachtungsdauer'};
+const colors=['#1268cf','#23846b','#a44b19','#7954ad'];
+function metric(p:Post,key:string){return key==='average_watch_seconds'?averageWatchSeconds(p.metrics):p.metrics[key]}
+export function VideoPerformance({data,demo}:{data:Dashboard;demo:boolean}){
+ const [month,setMonth]=useState(data.month),[comparison,setComparison]=useState<string[]>([]),[chosen,setChosen]=useState<string[]>(['video_views']),[platform,setPlatform]=useState('overview');
 
-export function VideoPerformance({
-  data,
-  demo,
-}: {
-  data: Dashboard;
-  demo: boolean;
-}) {
-  const youtube = data.channels.find((c) => c.id === "youtube");
-  return (
-    <div className="video-workspace">
-      <p className="video-context">
-        {monthName(data.month)} · Jede Plattform wird separat ausgewertet.
-        Aufrufe und Betrachtungsdauer haben unterschiedliche Messdefinitionen
-        und werden nicht zu einem gemeinsamen Ergebnis addiert.
-      </p>
-      <section
-        aria-label="LinkedIn Video Performance"
-        className="video-platform"
-      >
-        <div className="video-platform-heading">
-          <ChannelIcon id="linkedin_organic" size={38} />
-          <div>
-            <h2>LinkedIn</h2>
-            <p>Videos der Sonio-Unternehmensseite</p>
-          </div>
-        </div>
-        <PostCollection
-          key={data.month}
-          month={data.month}
-          demo={demo}
-          videosOnly
-          highlight="video_views"
-        />
-      </section>
-      <section
-        aria-label="YouTube Video Performance"
-        className="video-platform"
-      >
-        <div className="video-platform-heading">
-          <ChannelIcon id="youtube" size={38} />
-          <div>
-            <h2>YouTube</h2>
-            <p>Sonio Channel · Monatskennzahlen</p>
-          </div>
-        </div>
-        {youtube && <KpiExplainer channel="youtube" fields={youtube.fields} />}
-        {youtube &&
-        Object.values(youtube.values).some((value) => value != null) ? (
-          <div className="panel youtube-video-summary">
-            {demo && <p>Illustrative Beispieldaten</p>}
-            <dl>
-              {Object.entries(youtube.fields).map(([key, label]) => (
-                <div key={key}>
-                  <dt>{label}</dt>
-                  <dd>{number(youtube.values[key], youtube.units[key])}</dd>
-                </div>
-              ))}
-            </dl>
-            <p>
-              {youtube.last_success
-                ? `Letzter erfolgreicher Abruf: ${new Date(youtube.last_success).toLocaleString("de-CH", { timeZone: "Europe/Zurich" })}`
-                : "Kein bestätigter Live-Abruf"}
-            </p>
-            <p>
-              Detaildaten pro Video und durchschnittliche Betrachtungsdauer
-              erscheinen nach Anbindung der YouTube-Analyse.
-            </p>
-          </div>
-        ) : (
-          <div className="panel youtube-video-pending">
-            <h3>
-              {youtube?.status === "connected"
-                ? "Keine YouTube-Kennzahlen für diesen Monat"
-                : "YouTube wartet auf die Verbindung"}
-            </h3>
-            <p>
-              Hier werden die YouTube-Videozahlen separat von LinkedIn
-              angezeigt. Die vorbereitete Anmeldung bleibt pausiert, bis du sie
-              fortsetzt.
-            </p>
-            <div className="video-metric-preview">
-              <span>
-                Aufrufe <strong>—</strong>
-              </span>
-              <span>
-                Wiedergabezeit <strong>—</strong>
-              </span>
-              <span>
-                Ø Betrachtungsdauer <strong>—</strong>
-              </span>
-            </div>
-            <small>Keine Daten verfügbar</small>
-          </div>
-        )}
-      </section>
-    </div>
-  );
+ const months=[month,...comparison.filter(m=>m!==month)];
+ const queries=useQueries({queries:months.map(m=>({queryKey:['linkedin-posts',demo,m],queryFn:()=>api<PostsResponse>(`/linkedin/posts?month=${m}`),enabled:!demo,staleTime:60000}))});
+ const videos=queries.map(q=>(q.data?.posts||[]).filter(p=>p.kind==='video'));
+ const sum=(key:string)=>{const values=videos[0].map(p=>metric(p,key)).filter(v=>v!=null) as number[];return values.length?values.reduce((a,b)=>a+b,0):undefined};
+ const watched=videos[0].filter(p=>p.metrics.watch_time_ms!=null&&p.metrics.video_views>0);
+ const avg=watched.length?watched.reduce((n,p)=>n+p.metrics.watch_time_ms,0)/watched.reduce((n,p)=>n+p.metrics.video_views,0)/1000:undefined;
+ const rows=Array.from({length:31},(_,i)=>{const row:Record<string,number|null>={day:i+1};months.forEach((_,mi)=>{const posts=videos[mi].filter(p=>Number(p.published_at.slice(8,10))===i+1);chosen.forEach(k=>{const values=posts.map(p=>metric(p,k)).filter(v=>v!=null) as number[];const eligible=posts.filter(p=>p.metrics.watch_time_ms!=null&&p.metrics.video_views>0);row[`${mi}-${k}`]=k==='average_watch_seconds'?(eligible.length?eligible.reduce((n,p)=>n+p.metrics.watch_time_ms,0)/eligible.reduce((n,p)=>n+p.metrics.video_views,0)/1000:null):(values.length?values.reduce((a,b)=>a+b,0):null)})});return row});
+ const options=Array.from({length:36},(_,i)=>{const d=new Date(data.month+'-01T12:00:00');d.setMonth(d.getMonth()-i);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`});
+ return <div className="video-workspace"><div className="channel-selector" role="group" aria-label="Video-Plattform"><button aria-pressed={platform==='overview'} className={platform==='overview'?'selected':''} onClick={()=>setPlatform('overview')}>Gesamtübersicht</button><button aria-pressed={platform==='linkedin'} className={platform==='linkedin'?'selected':''} onClick={()=>setPlatform('linkedin')}><ChannelIcon id="linkedin_organic"/>LinkedIn Videos</button><button aria-pressed={platform==='youtube'} className={platform==='youtube'?'selected':''} onClick={()=>setPlatform('youtube')}><ChannelIcon id="youtube"/>YouTube Videos</button></div>
+ {platform==='overview'&&<><VideoYearChart demo={demo}/><VideoLibrary demo={demo}/></>}
+ {platform==='youtube'?<YouTubeVideos demo={demo} initialMonth={month}/>:platform==='linkedin'?<section className="video-platform" aria-label="LinkedIn Video Performance"><div className="section-heading"><div className="channel-title"><ChannelIcon id="linkedin_organic" size={38}/><h2>LinkedIn Video Performance</h2></div></div>
+ <div className="video-overview-filters"><label><span>Veröffentlichungsmonat <PeriodInfo>Videos werden ihrem Veröffentlichungsmonat zugeordnet. Kennzahlen zeigen den verfügbaren Gesamtstand seit Veröffentlichung, keine täglichen Aufrufe. Punkte summieren Videos desselben Veröffentlichungstags. Betrachtungsdauer wird nach Aufrufen gewichtet. Fehlende Kennzahlen bleiben leer. LinkedIn und YouTube werden separat ausgewertet.</PeriodInfo></span><select aria-label="Veröffentlichungsmonat" value={month} onChange={e=>{setMonth(e.target.value);setComparison(v=>v.filter(m=>m!==e.target.value))}}>{options.map(m=><option key={m} value={m}>{monthName(m)}</option>)}</select></label><details className="video-compare"><summary>Monate vergleichen · {months.length} ausgewählt</summary><div>{options.filter(m=>m!==month).map(m=><label key={m}><input type="checkbox" checked={comparison.includes(m)} disabled={!comparison.includes(m)&&comparison.length>=3} onChange={()=>setComparison(v=>v.includes(m)?v.filter(x=>x!==m):[...v,m])}/>{monthName(m)}</label>)}</div></details></div>
+ {demo?<p>Videodetails stehen nur für die verbundene Unternehmensseite zur Verfügung. Keine echten Videos in der Demo.</p>:<>
+ {queries.some(q=>q.isPending)&&<p role="status">Videokennzahlen werden geladen…</p>}{queries.some(q=>q.isError)&&<p role="alert">Ein Zeitraum konnte nicht geladen werden. <button className="text-button" onClick={()=>queries.forEach(q=>q.refetch())}>Erneut versuchen</button></p>}
+ <dl className="video-summary-kpis">{[['Videos',queries[0].data?videos[0].length:undefined],['Videoaufrufe',sum('video_views')],['Ø Betrachtungsdauer (Sek.)',avg],['Interaktionen',sum('likes')==null?undefined:(sum('likes')||0)+(sum('comments')||0)+(sum('shares')||0)]].map(([label,value])=><div key={String(label)}><dt>{label}</dt><dd>{number(value as number|undefined)}</dd></div>)}</dl>
+ <div className="panel video-overview-chart"><h3>Video Performance im Vergleich</h3><div className="video-metric-picker" role="group" aria-label="Video-Kennzahlen">{Object.entries(metrics).map(([k,label])=><label key={k} style={{color:colors[Object.keys(metrics).indexOf(k)]}}><input type="checkbox" checked={chosen.includes(k)} disabled={chosen.length===1&&chosen.includes(k)} onChange={()=>setChosen(v=>v.includes(k)?v.filter(x=>x!==k):[...v,k])}/>{label}</label>)}</div>
+ <div className="video-chart-legend">{months.map((m,i)=><span key={m}>{i===0?'Durchgezogen':i===1?'Gestrichelt':i===2?'Gepunktet':'Strichpunkt'} · {monthName(m)}</span>)}</div>
+ {videos.some(v=>v.length)?<ResponsiveContainer width="100%" height={320}><LineChart data={rows} margin={{top:20,right:20,bottom:10,left:0}}><CartesianGrid vertical={false} stroke="#d9e4ef"/><XAxis dataKey="day" tickFormatter={d=>`${d}.`}/><YAxis yAxisId="count"/><YAxis yAxisId="seconds" orientation="right" hide={!chosen.includes('average_watch_seconds')} unit=" s"/><Tooltip content={({active,label})=>active&&videos.some(posts=>posts.some(p=>Number(p.published_at.slice(8,10))===Number(label)))?<div className="video-hover">{months.map((m,i)=>{const posts=videos[i].filter(p=>Number(p.published_at.slice(8,10))===Number(label));return posts.length?<div key={m}><strong>{label}. {monthName(m)}</strong>{posts.map(p=><article key={p.id}>{p.image_url&&<img src={p.image_url} alt=""/>}<div><b>{readablePostTitle(p.title||p.text)}</b><dl>{Object.entries(metrics).map(([k,name])=><div key={k}><dt>{name}</dt><dd>{number(metric(p,k))}{k==='average_watch_seconds'?' s':''}</dd></div>)}</dl></div></article>)}</div>:null})}</div>:null}/>{months.flatMap((m,i)=>chosen.map(k=><Line key={`${m}-${k}`} yAxisId={k==='average_watch_seconds'?'seconds':'count'} dataKey={`${i}-${k}`} name={`${metrics[k as keyof typeof metrics]} · ${monthName(m)}`} stroke={colors[Object.keys(metrics).indexOf(k)]} strokeDasharray={[undefined,'8 4','2 4','8 3 2 3'][i]} strokeWidth={2} dot={{r:4}} connectNulls type="linear"/>))}</LineChart></ResponsiveContainer>:!queries.some(q=>q.isPending)&&<p>Keine Videos in den ausgewählten Monaten vorhanden.</p>}
+ </div>{platform==='linkedin'&&<VideoLibrary demo={demo} linkedinOnly/>}
+ </> }</section>:null}</div>
 }

@@ -1,3 +1,5 @@
+import { PeriodInfo } from "./PeriodInfo";
+import {asset} from '../staticDemo';
 import {demoAnalytics,demoAnalyticsTraffic} from '../analyticsDemo';
 import {useState} from 'react';
 import {useQuery,useQueryClient} from '@tanstack/react-query';
@@ -41,21 +43,22 @@ function AreaPanel({area,period,setPeriod,demo,today}:{area:Area;period:string;s
  const [selected,setSelected]=useState('');const [limit,setLimit]=useState(10);
  const queryClient=useQueryClient();
  const [refreshVersion,setRefreshVersion]=useState(0);
- const q=useQuery<Report>({queryKey:['analytics-cohorts-v2',area,period,demo,refreshVersion],queryFn:()=>demo?Promise.resolve(demoAnalytics(area,period)):api<Report>(`/analytics/areas?area=${area}&period=${period}${refreshVersion?'&refresh=true':''}`),staleTime:3600000});
- const year=period==='unknown'?today.slice(0,4):period.slice(0,4);
+ const q=useQuery<Report>({queryKey:['analytics-cohorts-v3',area,period,demo,refreshVersion],queryFn:()=>demo?Promise.resolve(demoAnalytics(area,period)):api<Report>(`/analytics/areas?area=${area}&period=${period}${refreshVersion?'&refresh=true':''}`),staleTime:3600000});
+ const year=(period==='unknown'||period==='all')?today.slice(0,4):period.slice(0,4);
  const years=[...new Set([today.slice(0,4),year,...(q.data?.available_years||[])])].sort().reverse();
  const maxMonth=year===today.slice(0,4)?Number(today.slice(5,7)):12;
- const shown=(q.data?.pages||[]).filter(p=>!selected||selected===p.path);
- const hero=(selected?q.data?.pages.find(p=>p.path===selected)?.image:null)||q.data?.hero;
+ const pages=(q.data?.pages||[]).filter(p=>area!=='blog'||!(/blick[\s-]+hinter[\s-]+die[\s-]+kulissen/i.test(p.title+' '+p.path)));
+ const shown=pages.filter(p=>!selected||selected===p.path);
+ const hero=asset(`brand/analytics/${area}.webp`);
  return <section role="region" aria-label={groups[area].name}>
- <div className="analytics-area-hero">{hero&&<img src={hero} alt="" referrerPolicy="no-referrer"/>}<div><h3>{groups[area].name}</h3><p>Nach Veröffentlichung geordnet. Gesamte verfügbare Performance bis heute.</p></div></div>
- <div className="analytics-period-controls"><label>Veröffentlichungsjahr<select value={year} onChange={e=>setPeriod(e.target.value)}>{years.map(y=><option key={y}>{y}</option>)}</select></label><label>Veröffentlichungsmonat<select value={period} onChange={e=>setPeriod(e.target.value)}>{Array.from({length:maxMonth},(_,i)=>maxMonth-i).map(m=>{const value=`${year}-${String(m).padStart(2,'0')}`;return <option key={value} value={value}>{new Date(`${value}-01T12:00:00`).toLocaleDateString('de-CH',{month:'long'})}</option>})}<option value={year}>Ganzes Jahr {year}</option><option value="unknown">Ohne Veröffentlichungsdatum</option></select></label><button className="button" disabled={q.isFetching||demo} onClick={()=>{queryClient.invalidateQueries({queryKey:['analytics-lifetime-traffic',area]});setRefreshVersion(v=>v+1)}}>{q.isFetching?'Wird geladen…':'Kennzahlen aktualisieren'}</button></div>
+ <div className={`analytics-area-hero sphere-hero sphere-hero-${area} ${["profile","news","stories"].includes(area)?"sphere-title-dark":"sphere-title-light"}`}>{hero&&<img src={hero} alt="" referrerPolicy="no-referrer"/>}<div><h3>{groups[area].name}</h3></div></div>
+ <div className="analytics-period-controls"><label>Veröffentlichungsjahr<select value={year} onChange={e=>setPeriod(e.target.value)}>{years.map(y=><option key={y}>{y}</option>)}</select></label><label><span>Veröffentlichungsmonat <PeriodInfo>Die Auswahl filtert das Veröffentlichungsdatum. Kennzahlen zeigen die gesamte verfügbare Performance seit Veröffentlichung bis {q.data ? dateLabel(q.data.end) : "heute"}. Ohne bekanntes Datum werden Messwerte ab 1.1.2020 berücksichtigt.</PeriodInfo></span><select value={period} onChange={e=>setPeriod(e.target.value)}>{Array.from({length:maxMonth},(_,i)=>maxMonth-i).map(m=>{const value=`${year}-${String(m).padStart(2,'0')}`;return <option key={value} value={value}>{new Date(`${value}-01T12:00:00`).toLocaleDateString('de-CH',{month:'long'})}</option>})}<option value={year}>Ganzes Jahr {year}</option><option value="unknown">Ohne Veröffentlichungsdatum</option><option value="all">Alle</option></select></label><button className="button" disabled={q.isFetching||demo} onClick={()=>{queryClient.invalidateQueries({queryKey:['analytics-lifetime-traffic',area]});setRefreshVersion(v=>v+1)}}>{q.isFetching?'Wird geladen…':'Kennzahlen aktualisieren'}</button></div>
  {demo&&<p>Illustrative Beispieldaten – Seiten und Kennzahlen sind fiktiv.</p>}{q.isPending?<p role="status">Originalbilder, Veröffentlichungsdaten und Kennzahlen werden geladen…</p>:q.isError?<div role="alert"><p>Die Seitenauswertung konnte nicht geladen werden.</p><button className="button" onClick={()=>q.refetch()}>Erneut versuchen</button></div>:<>
- <p className="analytics-cohort-note">{period==='unknown'?'Datum unbekannt: verfügbare Messwerte ab 1.1.2020.':'Kennzahlen je Seite seit Veröffentlichung'} bis {dateLabel(q.data.end)}. Die Auswahl filtert das Veröffentlichungsdatum, nicht den Messzeitraum.</p>
+
  {(q.data.warning||q.data.catalog_warning)&&<p role="alert">{q.data.warning||q.data.catalog_warning}</p>}
- <div className="analytics-page-select"><label>Seite auswählen<select value={selected} onChange={e=>{setSelected(e.target.value);setLimit(10)}}><option value="">Alle Seiten ({q.data.pages.length})</option>{q.data.pages.map(p=><option key={p.path} value={p.path}>{p.title} · {p.language}</option>)}</select></label><span>Datenstand: {new Date(q.data.updated_at).toLocaleString('de-CH')}</span></div>
+ <div className="analytics-page-select"><label>Seite auswählen<select value={selected} onChange={e=>{setSelected(e.target.value);setLimit(10)}}><option value="">Alle Seiten ({pages.length})</option>{pages.map(p=><option key={p.path} value={p.path}>{p.title} · {p.language}</option>)}</select></label><span>Datenstand: {new Date(q.data.updated_at).toLocaleString('de-CH')}</span></div>
  {shown.slice(0,limit).map(p=><PageRow key={`${p.path}:${q.data.updated_at}`} page={p} area={area} demo={demo}/>)}
- {!shown.length&&<p>Für diesen Veröffentlichungszeitraum sind keine Seiten hinterlegt. Wähle einen anderen Monat oder «Ganzes Jahr». {q.data.unknown_dates>0&&`${q.data.unknown_dates} Seiten findest du unter «Ohne Veröffentlichungsdatum».`}</p>}
+ {!shown.length&&<p>Für diesen Veröffentlichungszeitraum sind keine Seiten hinterlegt. Wähle einen anderen Monat oder «Ganzes Jahr». {q.data.unknown_dates>0&&`${q.data.unknown_dates} Seiten sind unter «Ohne Veröffentlichungsdatum» verfügbar.`}</p>}
  {shown.length>limit&&<button className="button" onClick={()=>setLimit(limit+10)}>Weitere Seiten anzeigen ({shown.length-limit})</button>}
  </>}
  </section>;
@@ -64,8 +67,8 @@ export function AnalyticsContent({demo}:{demo:boolean}){
  const today=new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Zurich'}).format(new Date());
  const [area,setArea]=useState<Area>('blog');
  const [periods,setPeriods]=useState<Partial<Record<Area,string>>>({});
- const period=periods[area]||today.slice(0,7);
- return <section className="analytics-pages" aria-label="Website-Bereiche"><h2>Deine Website im Detail</h2><div className="channel-selector analytics-area-selector" role="group" aria-label="Website-Bereich auswählen">{(Object.keys(groups) as Area[]).map(k=>{const Icon=groups[k].icon;return <button key={k} className={area===k?'selected':''} aria-pressed={area===k} onClick={()=>setArea(k)}><Icon size={22}/>{groups[k].name}</button>})}</div>
+ const period=periods[area]||(area==='profile'?'all':today.slice(0,7));
+ return <section className="analytics-pages" aria-label="Website-Bereiche"><h2>Website im Detail</h2><div className="channel-selector analytics-area-selector" role="group" aria-label="Website-Bereich auswählen">{(Object.keys(groups) as Area[]).map(k=>{const Icon=groups[k].icon;return <button key={k} className={area===k?'selected':''} aria-pressed={area===k} onClick={()=>setArea(k)}><Icon size={22}/>{groups[k].name}</button>})}</div>
  <AreaPanel key={`${area}:${period}`} area={area} period={period} setPeriod={p=>setPeriods({...periods,[area]:p})} demo={demo} today={today}/>
  <details><summary>Kennzahlen und Datengrundlage verstehen</summary><p>Seiten werden nach dem Artikeldatum auf Sonio.com oder, falls dieses fehlt, nach der ersten Veröffentlichung im CMS eingeordnet. Ein späteres Bearbeitungsdatum verschiebt sie nicht. Seiten ohne bestätigtes Datum werden separat gezeigt. Historische CMS-Migrationen können das Erstveröffentlichungsdatum beeinflussen.</p><p>Alle Kennzahlen zeigen den verfügbaren Gesamtstand seit Veröffentlichung bis zum Datenstand. GA4 kann nur Werte liefern, seit das Tracking aktiv ist. Seiten vor 2020 werden frühestens ab 1.1.2020 abgefragt. Die Jahresauswahl summiert keine Monatswerte und verdoppelt keine Besucher.</p><p>Seitenaufrufe zählen wiederholte Aufrufe. Besucher sind von GA4 erkannte Nutzer; Sitzungen sind Besuche mit Nutzung dieser Seite. Ø aktive Zeit je Besucher ist die gemessene aktive Interaktionszeit geteilt durch Besucher. Besucher und Sitzungen verschiedener Seiten dürfen nicht addiert werden. «—» bedeutet fehlende Messwerte, nicht null.</p><p>Organisch und bezahlt folgen den GA4-Kanalgruppen. Herkunft und KI-Zugriffe beziehen sich auf die jeweilige Seite und denselben Gesamtzeitraum. DE und FR bleiben getrennt. Die Kompetenz- und Kampagnenansicht können dieselbe Seite enthalten; sie werden nicht zusammengerechnet.</p></details>
  </section>;

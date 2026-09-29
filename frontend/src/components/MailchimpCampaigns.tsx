@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { PeriodInfo } from "./PeriodInfo";
+import { useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { api, number } from "../api";
 import { KpiExplainer } from "./KpiExplainer";
@@ -36,7 +37,7 @@ const date = (s: string) =>
     month: "2-digit",
     timeZone: "Europe/Zurich",
   });
-export function MailchimpCampaigns({ demo }: { demo: boolean }) {
+export function MailchimpCampaigns({ demo, actions }: { demo: boolean; actions?: ReactNode }) {
   const currentMonth = Number(new Intl.DateTimeFormat("en", {month: "2-digit", timeZone: "Europe/Zurich"}).format(new Date()));
   const monthOrder = Array.from({length: 12}, (_, i) => ((currentMonth - 1 - i + 12) % 12));
   const [month, setMonth] = useState(String(currentMonth).padStart(2, "0"));
@@ -89,15 +90,13 @@ export function MailchimpCampaigns({ demo }: { demo: boolean }) {
       <div className="section-heading">
         <div>
           <h2>Events & Kampagnen 2026</h2>
-          <p>Versendete Mailings ohne Test- und Vorlagenmailings.</p>
+          <p>Versendete Mailings</p>
+          <p>{q.data.count} Mailings · {q.data.groups.length} Gruppen</p>
         </div>
-        <span>
-          {q.data.count} Mailings · {q.data.groups.length} Gruppen
-        </span>
+        {actions}
       </div>
       <p className="mailing-note">
-        Test- und Vorlagenmailings sind ausgeschlossen. Die Gruppierung wird aus
-        Titel und Betreff abgeleitet. Sprachvarianten und erneute Sendungen
+        Die Gruppierung wird aus Titel und Betreff abgeleitet. Sprachvarianten und erneute Sendungen
         bleiben einzeln sichtbar. Unklare Zuordnungen stehen separat.
       </p>
       {q.data.status === "error" && (
@@ -111,7 +110,7 @@ export function MailchimpCampaigns({ demo }: { demo: boolean }) {
       )}
       <div className="mailing-filters">
         <label>
-          Monat
+          <span>Monat <PeriodInfo>Gruppen mit Versand im gewählten Monat. Zugehörige Sendungen aus anderen Monaten bleiben sichtbar. Kennzahlen entsprechen dem letzten erfolgreichen Abruf.</PeriodInfo></span>
           <select value={month} onChange={(e) => setMonth(e.target.value)}>
             {monthOrder.map((i) => (
               <option key={i} value={String(i + 1).padStart(2, "0")}>
@@ -149,9 +148,7 @@ export function MailchimpCampaigns({ demo }: { demo: boolean }) {
       </div>
       <p className="mailing-note" role="status">
         {groups.length} von {q.data.groups.length} Gruppen
-        {month
-          ? " · Gruppen mit Versand im gewählten Monat; zugehörige Sendungen aus anderen Monaten bleiben sichtbar."
-          : ""}
+
       </p>
       {!groups.length && (
         <p>
@@ -202,7 +199,7 @@ export function MailchimpCampaigns({ demo }: { demo: boolean }) {
         ))}
       </div>
       <section className="panel detail-definitions">
-        <h2>So liest du diese Zahlen</h2>
+        <h2>Kennzahlen verstehen</h2>
         <KpiExplainer channel="mailchimp" fields={{...fields, ...detailFields}} />
         <p>
           Öffnende und Klickende

@@ -122,12 +122,14 @@ export function PostCollection({
   highlight = "impressions",
   day,
   videosOnly = false,
+  showDetails = false,
 }: {
   month: string;
   demo: boolean;
   highlight?: string;
   day?: number | null;
   videosOnly?: boolean;
+  showDetails?: boolean;
 }) {
   const [filter, setFilter] = useState(videosOnly ? "video" : "all");
   const [sort, setSort] = useState("date");
@@ -288,7 +290,7 @@ export function PostCollection({
                   <h3>
                     <button
                       className="post-title"
-                      aria-expanded={expanded === p.id}
+                      aria-expanded={showDetails || expanded === p.id}
                       onClick={() =>
                         setExpanded(expanded === p.id ? null : p.id)
                       }
@@ -296,7 +298,7 @@ export function PostCollection({
                       {readablePostTitle(p.title)}
                     </button>
                   </h3>
-                  {expanded === p.id && <p className="post-copy">{p.text}</p>}
+                  {(showDetails || expanded === p.id) && <p className="post-copy">{p.text}</p>}
                   <dl className="post-metrics">
                     {Object.entries(postMetricLabels)
                       .filter(

@@ -1,17 +1,11 @@
+import { PeriodInfo } from "./PeriodInfo";
 import { KpiExplainer } from "./KpiExplainer";
 import { asset, demoCampaigns } from "../staticDemo";
-import { useState, useEffect, type ReactNode } from "react";
-import { createPortal } from "react-dom";
+import { useState, cloneElement, isValidElement, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Download } from "lucide-react";
 import { api, number } from "../api";
 import { saveCSV } from "../csv";
-
-function AdsToolbarExport({children}:{children:ReactNode}) {
-  const [target,setTarget]=useState<HTMLElement|null>(null);
-  useEffect(()=>setTarget(document.getElementById('channel-action-toolbar')),[]);
-  return target?createPortal(children,target):null;
-}
 
 type Campaign = {
   image_url?: string | null;
@@ -58,14 +52,14 @@ const objectives: Record<string, string> = {
 const fields = {
   impressions: "Impressionen",
   clicks: "Klicks",
-  spend: "Ausgaben",
   ctr: "CTR",
-  cpc: "CPC",
   conversions: "Conversions",
+  cpc: "CPC",
+  spend: "Ausgaben",
 };
 const value = (c: Campaign, k: string) =>
   k === "ctr" ? c.ctr : k === "cpc" ? c.cpc : c.values[k];
-export function AdsCampaigns({ demo }: { demo: boolean }) {
+export function AdsCampaigns({ demo, actions }: { demo: boolean; actions?: ReactNode }) {
   const query = useQuery({
     queryKey: ["linkedin-ads-campaigns", demo],
     queryFn: () =>
@@ -108,29 +102,7 @@ export function AdsCampaigns({ demo }: { demo: boolean }) {
     !demo && campaigns.filter((c) => Object.keys(c.values).length).length < 2
       ? [...campaigns, example]
       : campaigns;
-  return (
-    <section className="ads-campaigns" aria-label="LinkedIn Ads Kampagnen">
-      <div className="section-heading">
-        <div>
-          <h2>Deine Kampagnen</h2>
-          <p>
-            Kennzahlen der letzten 365 Tage: {date(d.start)} bis {date(d.end)}
-          </p>
-        </div>
-        <span>{d.campaigns.length} Kampagnen</span>
-      </div>
-      <p className="ads-explainer">
-        Jede Kampagne für sich: Titel, Ziel und Ergebnisse über Monatsgrenzen
-        hinweg. Die Liste enthält auch ältere Kampagnen; ihre Kennzahlen bleiben
-        auf die letzten 365 Tage begrenzt.
-      </p>
-      {d.status === "error" && (
-        <p role="alert">
-          Aktualisierung fehlgeschlagen: {d.message} Zuletzt geladene Daten
-          bleiben sichtbar.
-        </p>
-      )}
-      <AdsToolbarExport>
+  const campaignExport = (      <>
         <details className="ads-export">
           <summary>CSV herunterladen</summary>
           <fieldset>
@@ -189,7 +161,26 @@ export function AdsCampaigns({ demo }: { demo: boolean }) {
             <Download size={16} /> {campaigns.length} Kampagnen exportieren
           </button>
         </details>
-      </AdsToolbarExport>
+      </>);
+  return (
+    <section className="ads-campaigns" aria-label="LinkedIn Ads Kampagnen">
+      <div className="section-heading">
+        <div>
+          <h2>Kampagnen</h2>
+          <p>{d.campaigns.length} Kampagnen</p>
+          <p>
+            {date(d.start)} bis {date(d.end)} <PeriodInfo>Kennzahlen der letzten 365 Tage, unabhängig vom Kampagnenstart. Der aktuelle Tag ist unvollständig. Fehlende Werte erscheinen als «—».</PeriodInfo>
+          </p>
+        </div>
+        {isValidElement<{children?: ReactNode}>(actions) ? cloneElement(actions, {}, actions.props.children, campaignExport) : campaignExport}
+      </div>
+      {d.status === "error" && (
+        <p role="alert">
+          Aktualisierung fehlgeschlagen: {d.message} Zuletzt geladene Daten
+          bleiben sichtbar.
+        </p>
+      )}
+
       {!campaigns.length && <p>Noch keine Kampagnen geladen.</p>}
       <div className="ads-campaign-list">
         {displayCampaigns.map((c) => (
@@ -227,7 +218,7 @@ export function AdsCampaigns({ demo }: { demo: boolean }) {
               </p>
               <dl>
                 {Object.entries(fields).map(([key, label]) => (
-                  <div key={key}>
+                  <div key={key} className={key === "spend" || key === "cpc" ? "campaign-cost" : undefined}>
                     <dt>{label}</dt>
                     <dd>
                       {number(
@@ -265,7 +256,7 @@ export function AdsCampaigns({ demo }: { demo: boolean }) {
         ))}
       </div>
       <section className="detail-definitions">
-        <h2>So liest du diese Zahlen</h2>
+        <h2>Kennzahlen verstehen</h2>
         <KpiExplainer channel="linkedin" fields={fields} />
       </section>
       <p className="ads-footnote">

@@ -6,7 +6,7 @@ const labels:Record<string,string>={campaign:'Kampagnen-Landingpage',profile:'Vo
 const metric=(n:number)=>({screenPageViews:240*n,totalUsers:150*n,sessions:180*n,userEngagementDuration:6300*n,engagementPerUser:42});
 const row=(name:string,key:string,value:number)=>({dimensions:[name],values:{[key]:value}});
 export function demoAnalytics(area:string,period:string){
- const now=new Date().toISOString().slice(0,10);const year=period.slice(0,4);const month=period.length===7?period:year+'-01';
+ const now=new Date().toISOString().slice(0,10);if(period==='all')period=now.slice(0,4);const year=period.slice(0,4);const month=period.length===7?period:year+'-01';
  const pages=period==='unknown'?[]:Array.from({length:period.length===4?6:2},(_,i)=>({path:`/demo/${area}/${i+1}`,url:'#',title:`Demo: ${labels[area]||'Inhalt'} ${i+1}`,image,published_at:`${period.length===4?year+'-'+String(i+1).padStart(2,'0'):month}-${i?'08':'03'}`,date_source:'Fiktives Veröffentlichungsdatum',language:i%2?'FR':'DE',current:metric(i+1),data_start:month+'-01',thresholded:false}));
  return {pages,end:now,updated_at:new Date().toISOString(),available_years:[now.slice(0,4),String(Number(now.slice(0,4))-1)],unknown_dates:0,catalog_count:12,hero:image};
 }

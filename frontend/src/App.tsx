@@ -1,3 +1,4 @@
+import { PeriodInfo } from "./components/PeriodInfo";
 import { AnalyticsMonthlySources } from "./components/AnalyticsMonthlySources";
 import { AnalyticsContent } from "./components/AnalyticsContent";
 import { YouTubeVideos } from "./components/YouTubeVideos";
@@ -90,29 +91,29 @@ const adminNav: { id: View; label: string; icon: typeof Plug }[] = [
 ];
 const titles: Record<View, string> = {
   videos: "Video Performance",
-  audience: "Wie deine Community wächst.",
-  posts: "Die Wirkung deiner Beiträge.",
+  audience: "Entwicklung der Community.",
+  posts: "Wirkung der Beiträge.",
   overview: "Marketing-Überblick",
   channels: "Jeder Kanal. Seine Wirkung.",
   insights: "Aus Zahlen werden nächste Schritte.",
-  reports: "Deine Performance, Monat für Monat.",
+  reports: "Marketing Performance, Monat für Monat.",
   sources: "Alle Daten an einem Ort.",
   team: "Gute Entscheidungen sind Teamwork.",
-  settings: "So arbeitet dein Dashboard.",
+  settings: "Einstellungen des Dashboards.",
 };
 const channelDescriptions: Record<string, string> = {
   linkedin_organic:
-    "Deine unbezahlten Beiträge auf LinkedIn: Sie machen Sonio sichtbar, vermitteln Wissen und stärken den Austausch mit der Community.",
+    "Unbezahlte Beiträge auf LinkedIn: Sie machen Sonio sichtbar, vermitteln Wissen und stärken den Austausch mit der Community.",
   linkedin:
-    "Bezahlte LinkedIn-Kampagnen erreichen gezielt berufliche Zielgruppen. Hier siehst du jede Kampagne mit ihrem Ziel und ihren Ergebnissen.",
+    "Bezahlte LinkedIn-Kampagnen erreichen gezielt berufliche Zielgruppen. Jede Kampagne erscheint hier mit ihrem Ziel und ihren Ergebnissen.",
   google_ads:
     "Bezahlte Anzeigen in der Google-Suche und im Google-Netzwerk: Sie erreichen Menschen, die nach passenden Lösungen suchen oder sich dafür interessieren.",
   analytics:
-    "Google Analytics zeigt, wie Menschen deine Website nutzen und welche Inhalte und Aktionen für sie relevant sind.",
+    "Google Analytics zeigt, wie Menschen die Website nutzen und welche Inhalte und Aktionen für sie relevant sind.",
   mailchimp:
-    "Newsletter und E-Mail-Kampagnen halten deine Kontakte auf dem Laufenden. Öffnungen und Klicks zeigen, welche Inhalte Interesse wecken.",
+    "Newsletter und E-Mail-Kampagnen halten Kontakte auf dem Laufenden. Öffnungen und Klicks zeigen, welche Inhalte Interesse wecken.",
   youtube:
-    "Deine Videos auf YouTube vermitteln Wissen und machen Sonio erlebbar. Aufrufe und Wiedergabezeit zeigen, wie die Inhalte genutzt werden.",
+    "Videos auf YouTube vermitteln Wissen und machen Sonio erlebbar. Aufrufe und Wiedergabezeit zeigen, wie die Inhalte genutzt werden.",
   events:
     "Veranstaltungen bringen Sonio und Interessierte zusammen. Die Anmeldelisten zeigen, welche Events Resonanz erzeugen.",
   qr: "QR-Codes verbinden Print, Veranstaltungen und andere Kontaktpunkte mit digitalen Inhalten. Scans machen diese Zugriffe messbar.",
@@ -268,7 +269,7 @@ function App() {
   }
   function demoOnly() {
     setNotice(
-      "Du bist in der Demo. Melde dich an, um mit deinen eigenen Daten zu arbeiten.",
+      "Demo-Modus. Für eigene Daten ist eine Anmeldung erforderlich.",
     );
   }
   async function startJob(kind: string) {
@@ -286,7 +287,7 @@ function App() {
       });
       setJob(r.id);
       setJobKind(kind);
-      setNotice("Auftrag gestartet. Du kannst hier weiterarbeiten.");
+      setNotice("Auftrag gestartet. Die Anwendung bleibt verfügbar.");
     } catch (e) {
       setNotice((e as Error).message);
     }
@@ -354,7 +355,7 @@ function App() {
   const connected =
     d?.channels.filter((c) => c.status === "connected").length || 0;
   const isAds = view === "channels" && channel === "linkedin";
-  const inlineChannelActions = view === "channels" && !["linkedin", "mailchimp", "youtube"].includes(channel);
+  const inlineChannelActions = view === "channels";
   const periodControls = (
     <div className="intro-actions">
       {["overview", "posts", "channels", "audience", "videos"].includes(
@@ -445,7 +446,7 @@ function App() {
             <span className="reminder-icon">
               <CalendarDays size={19} />
             </span>
-            <strong>Dein nächster Monatsreport</strong>
+            <strong>Nächster Monatsreport</strong>
             <p>
               Am 3. des Monats.
               <br />
@@ -513,7 +514,7 @@ function App() {
           className={`analysis-workspace view-${view} ${channel === "linkedin_organic" && view === "channels" ? "organic-detail" : ""}`}
         >
           <div className="page-intro photographic-intro">
-            {["channels", "posts", "audience"].includes(view) ? (
+            {(
               <svg className="header-photo channel-flag-photo" viewBox="0 0 1600 900" preserveAspectRatio="xMaxYMin slice" aria-hidden="true">
                 <image href={asset("brand/sonio-blog-header.jpg")} width="1600" height="900" />
                 <defs>
@@ -532,14 +533,12 @@ function App() {
                 <g clipPath="url(#channel-flag-outline)">
                   <foreignObject x="1340" y="47" width="156" height="153">
                     <div className="flag-channel-mark">
-                      <ChannelIcon id={view === "channels" ? selected?.id || channel : "linkedin_organic"} size={156} />
+                      {!["channels", "posts", "audience"].includes(view) ? <img className="flag-sonio-logo" src={asset("brand/sonio.svg")} alt="Sonio" /> : <ChannelIcon id={view === "channels" ? selected?.id || channel : "linkedin_organic"} size={156} />}
                     </div>
                   </foreignObject>
                   <rect x="1340" y="47" width="156" height="153" fill="url(#channel-flag-folds)" />
                 </g>
               </svg>
-            ) : (
-              <img className="header-photo" src={asset("brand/sonio-blog-header.jpg")} alt="" width="1600" height="900" fetchPriority="high" />
             )}
             <div className="intro-copy">
               <h1>
@@ -551,11 +550,11 @@ function App() {
               </h1>
               <p>
                 {view === "overview"
-                  ? "Alle Kanäle. Ein Überblick. Entdecke, was dein Marketing bewegt."
+                  ? "Marketing Performance. Kanäle, Ergebnisse und nächste Schritte."
                   : view === "videos"
                     ? "LinkedIn und YouTube: Video-Ergebnisse getrennt nach Plattform verstehen."
                     : view === "audience"
-                      ? "Neue Follower pro Monat und dokumentierte Gesamtstände deiner Unternehmensseite."
+                      ? "Neue Follower pro Monat und dokumentierte Gesamtstände der Unternehmensseite."
                       : view === "posts"
                         ? "Videos, Beiträge und ihre Ergebnisse seit Veröffentlichung."
                         : view === "channels"
@@ -568,7 +567,7 @@ function App() {
                               : view === "reports"
                                 ? "Alle Kennzahlen und Empfehlungen als nachvollziehbarer Monatsstand."
                                 : view === "team"
-                                  ? "Lade dein Team ein und verwalte den Zugriff auf eure Kennzahlen."
+                                  ? "Team einladen und Zugriff auf Kennzahlen verwalten."
                                   : "Kennzahlen, Datenaktualisierung und automatisches Reporting."}
               </p>
             </div>
@@ -581,11 +580,11 @@ function App() {
             >
               <h2>Aus Zahlen werden nächste Schritte.</h2>
               <p>
-                Dein Marketing Performance & Insight Agent führt die Kennzahlen
-                deiner verbundenen Kanäle an einem Ort zusammen. Er macht
-                Entwicklungen sichtbar und unterstützt dich dabei, Ergebnisse
+                Der Marketing Performance & Insight Agent führt die Kennzahlen
+                der verbundenen Kanäle an einem Ort zusammen. Er macht
+                Entwicklungen sichtbar und hilft dabei, Ergebnisse
                 einzuordnen und die nächsten Massnahmen zu priorisieren – für
-                einen klaren Überblick über die Wirkung deines Marketings.
+                einen klaren Überblick über die Wirkung des Marketings.
               </p>
             </section>
           )}
@@ -593,7 +592,7 @@ function App() {
             <div className="demo-banner">
               <Info size={16} />
               <span>
-                <strong>Ein Blick auf die Möglichkeiten.</strong> Du siehst
+                <strong>Ein Blick auf die Möglichkeiten.</strong> Illustrative
                 Beispieldaten. Noch keine echten Kanäle verbunden.
               </span>
               {!STATIC_DEMO && (
@@ -632,15 +631,8 @@ function App() {
               <>
                 {view === "overview" && (
                   <>
-                    <div className="context-row">
-                      <div className="context-label">
-                        <CalendarDays size={13} />
-                        <strong>{monthName(month)}</strong>
-                      </div>
-                      <div>
-                        {demo
-                          ? "8 Kanäle in der Demo"
-                          : `${connected} von ${d.channels.length} Kanälen verbunden`}
+                    <ChannelOverview
+                      actions={<div className="overview-channel-actions">
                         <button
                           className="button primary"
                           disabled={!!job || !isAdmin}
@@ -653,28 +645,24 @@ function App() {
                           {job ? "Wird aktualisiert" : "Daten aktualisieren"}
                         </button>
                         <CSVExport key={`${month}-${demo}`} data={d} demo={demo} />
-                        <span className="context-divider" />
-                        {d.definitions_confirmed
-                          ? "Eigene Kennzahlen"
-                          : "Vorläufige Kennzahlen"}
                         <button
                           className="icon-button"
                           disabled={!isAdmin}
                           aria-label="Kennzahlen anpassen"
+                          title={d.definitions_confirmed ? "Eigene Kennzahlen anpassen" : "Vorläufige Kennzahlen anpassen"}
                           onClick={() => setMetricModal(true)}
                         >
                           <SlidersHorizontal size={15} />
                         </button>
-                      </div>
-                    </div>
-                    <p className="overview-freshness">
+                      </div>}
+                      status={demo ? "8 Kanäle in der Demo" : `${connected} von ${d.channels.length} Kanälen verbunden`}
+                      freshness={<span>
                       {demo
                         ? "Illustrative Monatswerte für die Präsentation. Keine Live-Aktualisierung."
                         : "Aktueller Monat · Anzeige wird jede Minute neu geladen."}
                       Datenstand je Kanal gemäss letztem erfolgreichen Abruf;
                       die Schnittstellen können verzögert liefern.
-                    </p>
-                    <ChannelOverview
+                    </span>}
                       channels={d.channels}
                       demo={demo}
                       month={month}
@@ -728,19 +716,19 @@ function App() {
                           <div className="recommendation-grid">
                             {[
                               {
-                                title: "Dein stärkster Hebel",
+                                title: "Stärkster Hebel",
                                 icon: ChartNoAxesCombined,
                                 description:
-                                  "Die wichtigste Entwicklung deiner Kanäle – mit einer konkreten Massnahme für mehr Wirkung.",
+                                  "Die wichtigste Entwicklung der Kanäle – mit einer konkreten Massnahme für mehr Wirkung.",
                               },
                               {
-                                title: "Deine nächste Chance",
+                                title: "Nächste Chance",
                                 icon: Lightbulb,
                                 description:
-                                  "Ein Potenzial aus deinen Kennzahlen – mit einer Empfehlung, wo sich genaueres Hinsehen lohnt.",
+                                  "Ein Potenzial aus den Kennzahlen – mit einer Empfehlung, wo sich genaueres Hinsehen lohnt.",
                               },
                               {
-                                title: "Dein nächster Test",
+                                title: "Nächster Test",
                                 icon: ArrowUpRight,
                                 description:
                                   "Eine überprüfbare Idee – mit einem klaren nächsten Schritt und der passenden Erfolgskennzahl.",
@@ -769,7 +757,6 @@ function App() {
                   </>
                 )}
                 {[
-                  "videos",
                   "audience",
                   "posts",
                   "insights",
@@ -814,16 +801,16 @@ function App() {
                         </button>
                       ))}
                     </div>
-                    {isAds && <AdsCampaigns demo={demo} />}
-                    {channel === "mailchimp" && <MailchimpCampaigns demo={demo} />}
-                    {channel === "youtube" && <YouTubeVideos demo={demo} />}
+                    {isAds && <AdsCampaigns demo={demo} actions={dashboardActions} />}
+                    {channel === "mailchimp" && <MailchimpCampaigns demo={demo} actions={dashboardActions} />}
+                    {channel === "youtube" && <YouTubeVideos demo={demo} actions={dashboardActions} />}
                     {selected && !isAds && channel !== "mailchimp" && channel !== "youtube" && (
                       <>
                         <div className="section-heading">
                           <div className="channel-title">
                             <ChannelIcon id={selected.id} size={25} />
                             <div>
-                              <h2>{selected.name} <span className="kpi-period">{monthName(d.month)}</span></h2>
+                              <h2>{selected.name} <span className="kpi-period">{monthName(d.month)} <PeriodInfo>Monatswerte für den gewählten Zeitraum. Der laufende Monat ist unvollständig. Datenstand gemäss letztem erfolgreichen Abruf; die Schnittstellen können verzögert liefern.</PeriodInfo></span></h2>
                               <p>
                                 {selected.type} · {selected.message}
                               </p>
@@ -879,7 +866,7 @@ function App() {
                           </div>
                         )}
                         <section className="panel detail-definitions">
-                          <h2>So liest du diese Zahlen</h2>
+                          <h2>Kennzahlen verstehen</h2>
                           <KpiExplainer key={selected.id} channel={selected.id} fields={selected.fields} />
                           <p>
                             {selected.id === "events"
@@ -940,9 +927,9 @@ function App() {
                         ))}
                       </div>
                     ) : (
-                      <Empty title="Deine nächste Erkenntnis beginnt mit Daten">
+                      <Empty title="Erkenntnisse beginnen mit Daten">
                         Sobald Messwerte und OpenRouter konfiguriert sind,
-                        kannst du die erste Analyse erstellen.
+                        kann die erste Analyse erstellt werden.
                       </Empty>
                     )}
                     <div className="info-strip">
@@ -994,7 +981,7 @@ function App() {
           <footer className="page-footer">
             <span>
               Sonio Insights<span className="footer-dot">.</span> Klarheit für
-              dein Marketing.
+              Marketing.
             </span>
             <span>
               {demo
@@ -1039,9 +1026,9 @@ function App() {
             </div>
             <h3>Beobachtung</h3>
             <p>{rec.observation}</p>
-            <h3>Dein nächster Schritt</h3>
+            <h3>Nächster Schritt</h3>
             <p>{rec.action}</p>
-            <h3>Was du berücksichtigen solltest</h3>
+            <h3>Hinweise zur Einordnung</h3>
             <p>{rec.caveat}</p>
             <h3>Datenbasis</h3>
             {rec.evidence.map((e) => (
@@ -1129,7 +1116,13 @@ function ChannelOverview({
   demo,
   month,
   onSelect,
+  actions,
+  freshness,
+  status,
 }: {
+  actions: React.ReactNode;
+  freshness: React.ReactNode;
+  status: string;
   channels: Channel[];
   demo: boolean;
   month: string;
@@ -1139,9 +1132,16 @@ function ChannelOverview({
     <section className="channel-overview" aria-label="Alle Marketingkanäle">
       <div className="section-heading">
         <div>
-          <h2>Deine Kanäle</h2>
-          <p>Wähle einen Kanal für Kennzahlen, Verläufe und Inhalte.</p>
+          <h2>Kanäle</h2>
+          <div className="overview-period-status">
+            <span className="overview-month-help" tabIndex={0} aria-describedby="overview-month-tooltip">
+              <CalendarDays size={15} /> {monthName(month)} <Info size={13} />
+              <span className="overview-month-tooltip" id="overview-month-tooltip" role="tooltip">{freshness}</span>
+            </span>
+            <span className="overview-connected">{status}</span>
+          </div>
         </div>
+        {actions}
       </div>
       <div className="channel-overview-grid">
         {[...channels]
@@ -1204,7 +1204,7 @@ function ChannelOverview({
                   <p className="channel-entry-empty">
                     {c.last_success || c.status === "connected"
                       ? `Keine Kennzahlen für ${monthName(month)} vorhanden.`
-                      : "Nach der Anbindung erscheinen hier deine Kennzahlen."}
+                      : "Nach der Anbindung erscheinen hier die Kennzahlen."}
                   </p>
                 )}
                 <div className="channel-entry-footer">
@@ -1349,19 +1349,19 @@ function Login({
           </span>
           <h2>
             {accepted
-              ? "Dein Konto ist bereit."
+              ? "Das Konto ist bereit."
               : invite
                 ? "Willkommen im Team."
                 : "Willkommen zurück."}
           </h2>
           <p>
             {accepted
-              ? "Du kannst dich jetzt mit deinem neuen Konto anmelden."
+              ? "Die Anmeldung mit dem neuen Konto ist jetzt möglich."
               : invite
-                ? "Lege deinen Benutzernamen und dein Passwort fest."
+                ? "Benutzernamen und Passwort festlegen."
                 : sessionExpired
-                  ? "Deine Sitzung ist abgelaufen. Bitte melde dich erneut an, um dein Dashboard zu laden."
-                  : "Melde dich an und bring Klarheit in dein Marketing."}
+                  ? "Die Sitzung ist abgelaufen. Zum Laden des Dashboards bitte erneut anmelden."
+                  : "Anmelden und Marketing Performance verstehen."}
           </p>
           {accepted ? (
             <a className="button primary" href="/">
@@ -1377,7 +1377,7 @@ function Login({
                   required
                   minLength={invite ? 3 : 1}
                   maxLength={80}
-                  placeholder="Dein Benutzername"
+                  placeholder="Benutzername"
                 />
               </label>
               <label>
@@ -1390,7 +1390,7 @@ function Login({
                   minLength={invite ? 12 : 1}
                   maxLength={256}
                   placeholder={
-                    invite ? "Mindestens 12 Zeichen" : "Dein Passwort"
+                    invite ? "Mindestens 12 Zeichen" : "Passwort"
                   }
                 />
               </label>
@@ -1409,8 +1409,8 @@ function Login({
           {!invite && (
             <>
               <p className="login-help">
-                Noch kein Zugang? Dein Master-Admin kann dich über einen
-                persönlichen Link einladen.
+                Noch kein Zugang? Der Master-Admin kann Zugang über einen
+                persönlichen Link gewähren.
               </p>
               {allowDemo && (
                 <button className="button full" onClick={onDemo}>
@@ -1478,7 +1478,7 @@ const sourceInstructions: Record<
   qr: {
     fields: "Anbieter noch festzulegen · CSV-Import verfügbar",
     steps:
-      "Bis zur Wahl des Anbieters kannst du CSV-Dateien mit den Spalten date,scans importieren. Datum: JJJJ-MM-TT. Gleiche Quellen-ID ersetzt den bisherigen Import.",
+      "Bis zur Wahl des Anbieters lassen sich CSV-Dateien mit den Spalten date,scans importieren. Datum: JJJJ-MM-TT. Gleiche Quellen-ID ersetzt den bisherigen Import.",
     link: "",
   },
 };
@@ -1578,7 +1578,7 @@ function Sources({
         title={
           selected ? selected.name + " verbinden" : "Datenquelle verbinden"
         }
-        description="So richtest du die Verbindung ein"
+        description="Verbindung einrichten"
       >
         {selected && (
           <div className="source-detail">
@@ -1803,7 +1803,7 @@ function Reports({
             ))}
           </div>
         ) : (
-          <Empty title="Hier entsteht dein Report-Archiv">
+          <Empty title="Report-Archiv">
             Erstelle den ersten Report, sobald Daten für den ausgewählten Monat
             vorliegen.
           </Empty>
@@ -1930,10 +1930,10 @@ function Team({
       <section className="panel">
         <div className="panel-heading">
           <div>
-            <h2>Dein Team</h2>
+            <h2>Team</h2>
             <p>
-              Du entscheidest als Master-Admin, wer Zugang erhält. Neue Nutzer
-              können nur über deinen persönlichen Einladungslink beitreten. Es
+              Der Master-Admin entscheidet, wer Zugang erhält. Neue Nutzer
+              können nur über einen persönlichen Einladungslink beitreten. Es
               gibt keine offene Registrierung; eingeladene Mitglieder erhalten
               Lesezugriff.
             </p>
@@ -2002,7 +2002,7 @@ function Team({
         open={open}
         onClose={() => setOpen(false)}
         title="Ein neues Teammitglied einladen"
-        description="Du erstellst einen persönlichen Link und teilst ihn anschliessend selbst."
+        description="Persönlichen Einladungslink erstellen und anschliessend selbst teilen."
       >
         {url ? (
           <div className="invite-result">
@@ -2079,11 +2079,11 @@ function SettingsView({
         <Tabs.Content value="metrics">
           <section className="panel settings-panel">
             <SlidersHorizontal size={25} />
-            <h2>Die Kennzahlen, die für dich zählen.</h2>
+            <h2>Relevante Kennzahlen festlegen.</h2>
             <p>
               Wähle bis zu acht Kennzahlen für die Übersicht, passe ihre
               Bezeichnung an und hinterlege optional Monatsziele. Die Auswahl
-              ist vorläufig, bis du sie speicherst.
+              ist bis zum Speichern vorläufig.
             </p>
             <button className="button primary" onClick={onMetrics}>
               Kennzahlen festlegen <ArrowRight size={16} />
@@ -2216,7 +2216,7 @@ function MetricsEditor({
     <Modal
       open={open}
       onClose={onClose}
-      title="Deine wichtigsten Kennzahlen"
+      title="Wichtigste Kennzahlen"
       description="Bis zu acht Kennzahlen für die Übersicht. Die genaue Definition bleibt an den jeweiligen Kanal gebunden."
       wide
     >
