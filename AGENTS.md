@@ -239,3 +239,11 @@ Die Marketingansicht für LinkedIn Organic ist nun in `LinkedInOrganic.tsx` umge
 Vorgaben und verbleibende Datenanbindungen in `docs/DESIGN_HANDOFF_2026-09-29.md`.
 Keine dominanten Zeitraum-Kacheln im Header, keine dekorativen Trennlinien, keine
 rosa/grünen Video-Kacheln. Jahreswerte nur aus vorhandenen Monatsdaten aggregieren.
+
+## Eigener LinkedIn-Branch und visuelle Referenz
+
+Auf `design/linkedin-organic` liegt die vollständige freigegebene Vorschau unter
+`docs/design-reference/linkedin-organic-approved.html`. Für Codex-Übernahmen zuerst
+`docs/LINKEDIN_CODEX_HANDOFF.md` lesen. Die React-Integration ist nicht pixelgleich
+mit dieser Referenz; insbesondere der bestehende PerformanceExplorer muss bei einer
+visuellen Angleichung gegen die Referenz geprüft werden. Lokale Änderungen bewahren.
