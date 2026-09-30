@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 
 const definitions: Record<string, string> = {
   click_rate: "Mailchimp-Klickrate: Anteil der zugestellten Empfänger mit mindestens einem erfassten Klick. Mehrfachklicks derselben Person erhöhen diese Rate nicht. Bots können Klicks beeinflussen.",
@@ -13,6 +13,11 @@ const definitions: Record<string, string> = {
     "Wie oft Inhalte oder Anzeigen angezeigt wurden. Mehrere Anzeigen bei derselben Person zählen mehrfach.",
   clicks:
     "Von der Plattform gezählte Klicks. Sie entsprechen nicht automatisch Website-Besuchen.",
+  landing_page_clicks: "Klicks, die zur Zielseite der Anzeige führen. Keine eindeutigen Personen und kein Nachweis, dass die Website vollständig geladen wurde.",
+  landing_page_ctr: "Landingpage-Klicks geteilt durch Impressionen × 100. Zeigt, wie oft eine Einblendung zu einem Klick auf die Zielseite führt; unterscheidet sich von LinkedIns allgemeiner CTR.",
+  landing_page_cpc: "Ausgaben geteilt durch Landingpage-Klicks. Zeigt die Kosten für einen Klick zur Zielseite, nicht die Kosten pro Website-Besuch oder Lead.",
+  cpm: "Ausgaben geteilt durch Impressionen × 1’000. Beschreibt den Preis der Ausspielung, nicht die Qualität der erreichten Personen.",
+  cost_per_conversion: "Ausgaben geteilt durch die LinkedIn zugerechneten Website-Zielaktionen. Aussagekräftig erst mit bekanntem Conversion-Ziel und geprüftem Tracking. Bei null Zielaktionen nicht berechenbar.",
   ctr: "Klickrate: Klicks geteilt durch Impressionen × 100. Zeigt, welcher Anteil der Einblendungen zu einem Klick führte.",
   cpc: "Durchschnittliche Kosten pro Klick: Werbeausgaben geteilt durch Klicks.",
   spend:
@@ -59,10 +64,15 @@ const definitions: Record<string, string> = {
 export function KpiExplainer({
   channel,
   fields,
+  variant = "compact",
+  dataStatus,
 }: {
   channel: string;
   fields: Record<string, string>;
+  variant?: "compact" | "knowledge";
+  dataStatus?: string;
 }) {
+  const titleId = useId();
   const [selected, setSelected] = useState("");
   const key = selected in fields ? selected : Object.keys(fields)[0];
   const explanation =
@@ -70,6 +80,29 @@ export function KpiExplainer({
       ? "Klicks auf den LinkedIn-Beitrag und seine Inhalte. Dazu können auch interne Klicks gehören; dies sind keine nachgewiesenen Website-Besuche."
       : definitions[key] ||
         "Die Definition dieser Kennzahl ist noch nicht hinterlegt.";
+  if (variant === "knowledge") return (
+    <section className="yt-knowledge analytics-knowledge" aria-labelledby={titleId}>
+      <div className="yt-knowledge-heading">
+        <span>Von Zahlen zu Wirkung</span>
+        <h2 id={titleId}>Kennzahlen verstehen.</h2>
+        <p>{channel === "mailchimp" ? "Welche Mailings erreichen Menschen – und welche Inhalte wecken Interesse?" : "Was verrät der Wert über die Website – und was bedeutet er für das Marketing?"}</p>
+        <label>Kennzahl auswählen
+          <select value={key} onChange={e => setSelected(e.target.value)}>
+            {Object.entries(fields).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+          </select>
+        </label>
+      </div>
+      <div className="yt-knowledge-content">
+        <div aria-live="polite" aria-atomic="true">
+          <span className="analytics-knowledge-eyebrow">Einordnung</span>
+          <h3>{fields[key]}</h3>
+          <p>{explanation}</p>
+        </div>
+        <p className="analytics-knowledge-source">{channel === "mailchimp" ? "Quelle: Mailchimp · Gesamtstand seit Versand der ausgewählten Mailings. Website-Besuche separat aus GA4 und nur bei eindeutiger Kampagnenzuordnung." : "Quelle: GA4 · Zeitraum gemäss Monatsauswahl. Schlüsselereignisse richten sich nach der Property-Konfiguration und sind nicht automatisch Leads."}</p>
+        <p className="analytics-knowledge-status">Fehlende Werte erscheinen als „—“. {dataStatus}</p>
+      </div>
+    </section>
+  );
   return (
     <div className="kpi-explainer">
       <label>

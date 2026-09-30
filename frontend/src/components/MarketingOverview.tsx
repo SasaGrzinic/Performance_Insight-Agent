@@ -1,5 +1,6 @@
+import { EditorialQuote } from './EditorialQuote';
 import { useId, useState } from "react";
-import { overviewTrends } from "../overviewTrends";
+
 import { ArrowRight, Info } from "lucide-react";
 import { number, monthName } from "../api";
 import type { Analysis, Channel, Dashboard, Recommendation } from "../types";
@@ -19,11 +20,14 @@ export function channelMetricLabel(c: Channel, key: string) {
   return labels[key] || c.fields[key] || key;
 }
 export function OverviewHighlights({ dashboard: d }: { dashboard: Dashboard }) {
-  const selected = overviewTrends(d.channels);
+  const selected = d.channels.filter(c => c.status === "connected" || Object.values(c.values).some(v => Number.isFinite(v))).map(c => {
+    const k=c.primary, v=c.values[k], p=c.previous[k];
+    return {c,k,v,p,change:p>0&&Number.isFinite(v)?(v-p)/p*100:null,positive:v>p};
+  });
   return (
     <section className="marketing-developments">
       <div className="section-heading">
-        <h2>Entwicklungen im Blick.</h2>
+        <h2>Kennzahlen im Überblick.</h2>
         <span>
           {d.demo ? "Beispieldaten · " : ""}
           {monthName(d.month)} vs. {monthName(d.comparison_month)}
@@ -41,18 +45,17 @@ export function OverviewHighlights({ dashboard: d }: { dashboard: Dashboard }) {
             <article key={t.c.id}>
               <span className="highlight-channel">
                 <i
-                  className={t.positive ? "positive" : "negative"}
+                  className={t.change == null || t.change === 0 ? "neutral" : t.positive ? "positive" : "negative"}
                   aria-hidden="true"
                 />
                 {t.c.name}
               </span>
               <strong>
-                {number(Math.abs(t.change))} % {t.positive ? "mehr" : "weniger"}
+                {number(t.v)}
               </strong>
               <span>{channelMetricLabel(t.c, t.k)}</span>
               <small>
-                {number(t.p)} → {number(t.v)} ·{" "}
-                {t.positive ? "Gestiegen" : "Gesunken"}
+                {t.change == null ? "Kein Vorperiodenvergleich" : `${number(Math.abs(t.change))} % ${t.positive ? "mehr" : "weniger"} als in der Vorperiode`}
               </small>
             </article>
           ))}
@@ -67,11 +70,13 @@ export function OverviewHighlights({ dashboard: d }: { dashboard: Dashboard }) {
   );
 }
 export function OverviewRecommendations({
+  title = "Top 3 Empfehlungen",
   analysis,
   channels,
   onSelect,
   onAll,
 }: {
+  title?: string;
   analysis?: Analysis;
   channels: Channel[];
   onSelect: (r: Recommendation) => void;
@@ -88,8 +93,8 @@ export function OverviewRecommendations({
     <section className="marketing-opportunities">
       <div className="section-heading">
         <div>
-          <h2>Darauf können wir aufbauen.</h2>
-          <p>{items.length} Empfehlungen (Auswahl)</p>
+          <h2>{title}</h2>
+          <p>{analysis?.status === "rules" ? "Aus Kennzahlen abgeleitete Handlungshinweise · keine KI-Analyse" : items.length ? `${items.length} priorisierte nächste Schritte` : "Noch keine Analyse für diesen Zeitraum"}</p>
         </div>
         <button className="text-button" onClick={onAll}>
           Alle Empfehlungen <ArrowRight size={16} />
@@ -115,36 +120,14 @@ export function OverviewRecommendations({
         </div>
       ) : (
         <p>
-          Sobald eine Auswertung vorliegt, findest du hier konkrete nächste
-          Schritte für deine Kanäle.
+          Hier erscheinen die nächsten Schritte aus der Kanalanalyse. Die Analyse kann unter «Insights & Empfehlungen» erstellt werden; dafür muss der KI-Zugang eingerichtet sein.
         </p>
       )}
     </section>
   );
 }
 export function MarketingQuote() {
-  return (
-    <figure className="marketing-quote">
-      <blockquote
-        lang="en"
-        cite="https://www.linkedin.com/posts/rbranson_complexity-is-your-enemy-any-fool-can-activity-7372304006297296898-1Ces"
-      >
-        <span aria-hidden="true">“</span>Complexity is your enemy. Any fool can
-        make something complicated. It is hard to keep things simple.
-        <span aria-hidden="true">”</span>
-      </blockquote>
-      <figcaption>
-        <a
-          href="https://www.linkedin.com/posts/rbranson_complexity-is-your-enemy-any-fool-can-activity-7372304006297296898-1Ces"
-          target="_blank"
-          rel="noreferrer"
-        >
-          Richard Branson
-        </a>{" "}
-        · Founder, Virgin Group
-      </figcaption>
-    </figure>
-  );
+  return <EditorialQuote text="Complexity is your enemy. Any fool can make something complicated. It is hard to keep things simple." author="Richard Branson" role="Founder, Virgin Group" source="https://www.linkedin.com/posts/rbranson_complexity-is-your-enemy-any-fool-can-activity-7372304006297296898-1Ces"/>;
 }
 
 function NextStep({

@@ -209,3 +209,41 @@ def test_short_page_uses_provider_offset_and_old_drafts_do_not_stop_scan(monkeyp
     result = lp.fetch_posts(date(2026, 8, 1), date(2026, 8, 31), S)
     assert [post["id"] for post in result] == [URN]
     assert len([u for u in calls if "/posts?" in u]) == 2
+
+
+def test_images_resolve_only_provider_media_and_missing_is_explicit(monkeypatch):
+    monkeypatch.setattr(lp, "linkedin_headers", lambda s: {})
+    monkeypatch.setattr(
+        lp,
+        "request",
+        lambda *a, **k: SimpleNamespace(
+            json=lambda: {"downloadUrl": "https://media.licdn.com/test.jpg"}
+        ),
+    )
+    posts = [{"media_urn": "urn:li:image:abc"}]
+    lp.enrich_images(posts, S)
+    assert posts[0]["image_url"] == "https://media.licdn.com/test.jpg"
+    monkeypatch.setattr(
+        lp,
+        "request",
+        lambda *a, **k: SimpleNamespace(
+            json=lambda: {"downloadUrl": "https://other.invalid/test.jpg"}
+        ),
+    )
+    lp.enrich_images(posts, S)
+    assert posts[0]["image_url"] is None
+
+
+def test_sync_keeps_original_image_when_provider_image_is_unavailable(db, monkeypatch):
+    existing = {"id": URN, "organization": ORG, "published_at": "2026-09-08T10:00:00+00:00", "media_urn": "urn:li:image:abc", "metrics": {"impressions": 7}, "image_url": "https://media.licdn.com/original.jpg", "image_source": "public_post_og_image"}
+    db.add(LinkedInPost(id=URN, organization=ORG, published_at=existing["published_at"], data=existing))
+    db.commit()
+    monkeypatch.setattr(lp, "fetch_posts", lambda *args: [{**existing, "image_url": None, "image_source": None, "metrics": {"impressions": 8}}])
+    monkeypatch.setattr(lp, "enrich_images", lambda posts, settings: None)
+    for _ in range(2):
+        lp.sync_posts(db, date(2026, 9, 1), date(2026, 9, 30), S)
+        db.expire_all()
+        saved = db.get(LinkedInPost, URN).data
+        assert saved["image_url"] == existing["image_url"]
+        assert saved["image_source"] == "public_post_og_image"
+        assert saved["metrics"]["impressions"] == 8

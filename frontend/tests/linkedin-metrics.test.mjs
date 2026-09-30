@@ -17,3 +17,13 @@ test('year selection follows Swiss calendar including year boundary',()=>{
  assert.deepEqual(yearMonths(new Date('2025-12-31T23:30:00Z')),['2026-01']);
  assert.equal(yearMonths(new Date('2026-09-29T20:42:00Z')).length,9);
 });
+
+test('monthly tendencies distinguish rates, zero baselines and missing values', async()=>{
+ const {metricTrend}=await import('../src/linkedinMetrics.ts');
+ assert.equal(metricTrend(120,100).value,20);
+ assert.equal(metricTrend(80,100).direction,'down');
+ assert.equal(metricTrend(4,3,true).value,1);
+ assert.equal(metricTrend(1,0).value,undefined);
+ assert.equal(metricTrend(undefined,5).value,undefined);
+ assert.equal(metricTrend(0,0).value,0);
+});

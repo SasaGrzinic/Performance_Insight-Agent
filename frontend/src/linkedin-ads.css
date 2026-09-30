@@ -1,0 +1,16 @@
+/* Kampagnenansicht: gleiche ruhige Hierarchie wie Organic. */
+.ads-campaigns .section-heading h2{color:#0063b8;font-size:26px;letter-spacing:-.02em}
+.ads-campaigns .ads-intro{max-width:72ch;margin:0 0 26px;color:#294b6d}
+.ads-campaigns .ads-campaign{background:#fff;border-radius:12px;padding:20px;grid-template-columns:180px minmax(0,1fr);gap:22px}
+.ads-campaigns .ads-campaign h3{color:#0063b8;font-size:21px}
+.ads-campaigns .ads-primary-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:16px 0}
+.ads-campaigns .ads-primary-kpis>div{background:#0075d9;color:#fff;padding:12px;border:0;min-width:0;border-radius:7px}
+.ads-campaigns .ads-primary-kpis dt{color:#fff;font-weight:750;font-size:11px;min-height:30px;line-height:1.35}
+.ads-campaigns .ads-primary-kpis dd{color:#fff;font-size:23px;font-weight:600;margin:3px 0 0;font-variant-numeric:tabular-nums}
+.ads-campaigns .ads-secondary-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:16px}
+.ads-campaigns .ads-secondary-kpis dd{font-size:18px}
+.ads-campaigns .ads-example{background:#e8f3ff}
+.ads-campaigns .campaign-image img{max-height:220px}
+.ads-campaigns .ads-campaign summary:focus-visible{outline:2px solid #0075d9;outline-offset:3px}
+@media(max-width:900px){.ads-campaigns .ads-campaign{grid-template-columns:1fr}.ads-campaigns .campaign-image{max-width:280px}}
+@media(max-width:500px){.ads-campaigns .ads-primary-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.ads-campaigns .ads-campaign{padding:14px}.ads-campaigns .ads-primary-kpis dd{font-size:20px}}

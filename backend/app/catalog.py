@@ -75,7 +75,6 @@ CHANNELS = [
         "fields": {
             "views": "Aufrufe",
             "watch_minutes": "Wiedergabezeit (Min.)",
-            "subscribers_gained": "Neue Abonnenten",
         },
     },
     {

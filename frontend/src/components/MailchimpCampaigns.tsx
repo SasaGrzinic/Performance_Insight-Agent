@@ -1,3 +1,7 @@
+import { RecommendationTeaser } from './RecommendationTeaser';
+import { EditorialQuote } from './EditorialQuote';
+import { asset } from '../staticDemo';
+import '../mailchimp-cockpit.css';
 import { PeriodInfo } from "./PeriodInfo";
 import { useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -22,14 +26,8 @@ type Data = {
   last_success: string | null;
   status: string;
 };
-const fields = {
-  emails_sent: "Versendet",
-  unique_opens: "Öffnende",
-  unique_clicks: "Klickende",
-  click_rate: "Klickrate",
-  delivery_rate: "Zustellrate",
-};
-const detailFields = { delivered: "Zugestellt", hard_bounces: "Hard-Bounces", soft_bounces: "Soft-Bounces", unsubscribed: "Abmeldungen", unsubscribe_rate: "Abmelderate", open_rate: "Öffnungsrate" };
+const fields = { delivered: "Zugestellt", unique_clicks: "Klickende", click_rate: "Klickrate", unsubscribe_rate: "Abmelderate" };
+const detailFields = { emails_sent: "Versendet", unique_opens: "Öffnende", delivery_rate: "Zustellrate", hard_bounces: "Hard-Bounces", soft_bounces: "Soft-Bounces", unsubscribed: "Abmeldungen", open_rate: "Öffnungsrate" };
 const displayMetric = (values: Mailing["values"], key: string) => number(values[key]) + (key.endsWith("_rate") && values[key] != null ? " %" : "");
 const date = (s: string) =>
   new Date(s).toLocaleDateString("de-CH", {
@@ -86,19 +84,15 @@ export function MailchimpCampaigns({ demo, actions }: { demo: boolean; actions?:
   const displayedGroups = [...groups].sort((a, b) =>
     Math.max(...b.mailings.map(m => Date.parse(m.send_time))) - Math.max(...a.mailings.map(m => Date.parse(m.send_time))));
   return (
-    <section className="mailing-workspace">
+    <section className="mailing-workspace mc-workspace">
       <div className="section-heading">
         <div>
-          <h2>Events & Kampagnen 2026</h2>
-          <p>Versendete Mailings</p>
+          <h2>Mailings, die bewegen.</h2>
           <p>{q.data.count} Mailings · {q.data.groups.length} Gruppen</p>
         </div>
         {actions}
       </div>
-      <p className="mailing-note">
-        Die Gruppierung wird aus Titel und Betreff abgeleitet. Sprachvarianten und erneute Sendungen
-        bleiben einzeln sichtbar. Unklare Zuordnungen stehen separat.
-      </p>
+
       {q.data.status === "error" && (
         <p role="alert">
           Aktualisierung fehlgeschlagen. Die zuletzt geladenen Mailings bleiben
@@ -146,7 +140,7 @@ export function MailchimpCampaigns({ demo, actions }: { demo: boolean; actions?:
           <datalist id="mailing-title-options">{titleOptions.map(title => <option key={title} value={title} />)}</datalist>
         </label>
       </div>
-      <p className="mailing-note" role="status">
+      <MailingTotals mailings={displayedGroups.flatMap(g=>g.mailings)} /><p className="mailing-note" role="status">
         {groups.length} von {q.data.groups.length} Gruppen
 
       </p>
@@ -166,52 +160,19 @@ export function MailchimpCampaigns({ demo, actions }: { demo: boolean; actions?:
                 {group.mailings.length === 1 ? "Mailing" : "Mailings"}
               </span>
             </summary>
-            <div className="mailing-rows">
-              {[...group.mailings].sort((a,b) => Date.parse(b.send_time) - Date.parse(a.send_time)).map((m) => (
-                <article className="mailing-row" key={m.id}>
-                  <time dateTime={m.send_time}>{date(m.send_time)}</time>
-                  <MailingImage key={m.image_url || m.id} mailing={m} />
-                  <div className="mailing-copy">
-                    <div className="mailing-stage">
-                      {m.stage}
-                      {m.test && <span>Test / Vorlage im Titel</span>}
-                    </div>
-                    <h3>{m.title || m.subject || "Mailing ohne Titel"}</h3>
-                    {m.subject && m.subject !== m.title && <p>{m.subject}</p>}
-                    <small>ID: {m.id}</small>
-                  </div>
-                  <dl>
-                    {Object.entries(fields).map(([key, label]) => (
-                      <div key={key}>
-                        <dt>{label}</dt>
-                        <dd>{displayMetric(m.values, key)}</dd>
-                      </div>
-                    ))}
-                  </dl>
-                  <details className="mailing-delivery-details"><summary>Zustellung & Abmeldungen</summary>
-                    <dl>{Object.entries(detailFields).map(([key,label]) => <div key={key}><dt>{label}</dt><dd>{displayMetric(m.values,key)}</dd></div>)}</dl>
-                    <p>Öffnungsraten können durch Datenschutzfunktionen und Bots beeinflusst sein. Fehlende Werte bleiben „—“.</p>
-                  </details>
-                </article>
-              ))}
+            <div className="mc-cards">
+              {[...group.mailings].sort((a,b) => Date.parse(b.send_time) - Date.parse(a.send_time)).map(m=><MailingCard key={m.id} mailing={m} />)}
             </div>
           </details>
         ))}
       </div>
-      <section className="panel detail-definitions">
-        <h2>Kennzahlen verstehen</h2>
-        <KpiExplainer channel="mailchimp" fields={{...fields, ...detailFields}} />
-        <p>
-          Öffnende und Klickende
-          werden je Mailing gezählt; über mehrere Mailings hinweg sind das keine
-          eindeutigen Personen. Fehlende Berichte erscheinen als „—“.
-        </p>
-        {q.data.last_success && (
-          <p className="muted">
-            Datenstand: {new Date(q.data.last_success).toLocaleString("de-CH")}
-          </p>
-        )}
+      <section className="mc-knowledge">
+        <KpiExplainer channel="mailchimp" fields={{...fields, ...detailFields, sessions: 'Website-Besuche', engaged_sessions: 'Engagierte Website-Besuche'}} variant="knowledge" dataStatus="Mailchimp-Berichte; Website-Nutzung separat aus GA4. Der Bot-Filterstand der API ist nicht bestätigt. Öffnungen und Klicks können automatisierte Aktivität enthalten." />
+        {q.data.last_success && <p className="muted">Datenstand: {new Date(q.data.last_success).toLocaleString('de-CH')}</p>}
       </section>
+      <RecommendationTeaser/>
+      <EditorialQuote text="Marketing is the work of telling a story that changes people." author="Seth Godin" role="Marketingautor und Unternehmer" source="https://seths.blog/wp-content/uploads/2024/05/TMS4-Family-Tree-of-Marketing-v2.pdf"/>
+
     </section>
   );
 }
@@ -219,4 +180,42 @@ export function MailchimpCampaigns({ demo, actions }: { demo: boolean; actions?:
 function MailingImage({ mailing }: { mailing: Mailing }) {
   const [failed, setFailed] = useState(false);
   return <div className="mailing-image">{mailing.image_url && !failed ? <img src={mailing.image_url} alt={`Leitbild: ${mailing.title || mailing.subject}`} loading="lazy" referrerPolicy="no-referrer" onError={() => setFailed(true)} /> : <span>Kein Leitbild verfügbar</span>}</div>;
+}
+
+const explanations: Record<string,string> = {
+ delivered: 'Versendete E-Mails abzüglich unzustellbarer Nachrichten. Eine Zustellung belegt nicht die Platzierung im Posteingang oder das Lesen.',
+ unique_clicks: 'Empfänger mit mindestens einem erfassten Klick. Pro Mailing einmal gezählt. Über mehrere Mailings können dieselben Personen mehrfach enthalten sein; Bots können Klicks auslösen.',
+ click_rate: 'Anteil der zugestellten Empfänger mit mindestens einem Klick. Hilft, das Interesse unabhängig von der Versandgrösse einzuordnen. Kein Nachweis für Website-Besuche oder Leads.',
+ unsubscribe_rate: 'Abmeldungen geteilt durch zugestellte E-Mails. Ein Anstieg kann auf unpassende Inhalte oder eine zu hohe Versandhäufigkeit hindeuten; kleine Versandmengen vorsichtig bewerten.',
+ emails_sent: 'Versandvolumen vor Abzug unzustellbarer E-Mails.',
+ unique_opens: 'Empfänger mit erfasster Öffnung. Datenschutzfunktionen können Öffnungen automatisch auslösen. Nur als ergänzendes Signal betrachten.',
+ delivery_rate: 'Zugestellte E-Mails geteilt durch versendete E-Mails. Keine Garantie für die Platzierung im Posteingang.',
+ hard_bounces: 'Dauerhaft unzustellbar, beispielsweise eine ungültige Adresse.',
+ soft_bounces: 'Vorübergehend unzustellbar, beispielsweise ein volles Postfach.',
+ unsubscribed: 'Abmeldungen, die Mailchimp diesem Mailing zurechnet.',
+ open_rate: 'Erfasste Öffnungen im Verhältnis zur Zustellung. Durch Apple Mail Privacy Protection und Bots beeinflussbar.',
+};
+function MailingMetrics({values,detail=false}:{values:Mailing['values'];detail?:boolean}){
+ return <dl className="mc-metrics">{Object.entries(detail?detailFields:fields).map(([key,label])=><div key={key}><dt>{label} <PeriodInfo label={`${label} erklärt`}>{explanations[key]}</PeriodInfo></dt><dd>{displayMetric(values,key)}</dd></div>)}</dl>
+}
+function MailingTotals({mailings}:{mailings:Mailing[]}){
+ const sum=(key:string)=>mailings.length && mailings.every(m=>m.values[key]!=null)?mailings.reduce((n,m)=>n+m.values[key]!,0):null;
+ const delivered=sum('delivered'), clicks=sum('unique_clicks'), unsubscribed=sum('unsubscribed');
+ const values={delivered,unique_clicks:clicks,click_rate:delivered&&clicks!=null?clicks/delivered*100:null,unsubscribe_rate:delivered&&unsubscribed!=null?unsubscribed/delivered*100:null};
+ return <section className="mc-totals" aria-label="Kennzahlen der ausgewählten Mailings"><MailingMetrics values={values}/><p>{mailings.length} Mailings in der Auswahl · Gesamtstand seit Versand. Klickende je Mailing gezählt; Quoten nach Zustellungen gewichtet. Zugehörige Sendungen aus anderen Monaten sind enthalten.</p></section>
+}
+function MailingCard({mailing:m}:{mailing:Mailing}){
+ const [open,setOpen]=useState(false);
+ return <article className="mc-card"><MailingImage mailing={m}/><div className="mc-card-body"><div className="mc-meta"><span>{m.stage}</span><time dateTime={m.send_time}>{date(m.send_time)}</time></div><h3>{m.title||m.subject||'Mailing ohne Titel'}</h3>{m.subject&&m.subject!==m.title&&<p className="mc-subject">{m.subject}</p>}<MailingMetrics values={m.values}/><details className="mc-detail"><summary>Zustellung & Öffnungen</summary><MailingMetrics values={m.values} detail/></details><details className="mc-detail" onToggle={e=>setOpen(e.currentTarget.open)}><summary>Was interessiert? Links & Website-Besuche</summary>{open&&<MailingInsights id={m.id}/>}</details></div></article>
+}
+type Insights={links:{id:string;url:string;unique_clicks:number}[];website:{status:string;sessions:number|null;engaged_sessions:number|null;start?:string;end?:string;thresholded?:boolean};updated_at:string;warning?:string};
+function MailingInsights({id}:{id:string}){
+ const q=useQuery({queryKey:['mailchimp-insights',id],queryFn:()=>api<Insights>(`/mailchimp/campaigns/${encodeURIComponent(id)}/insights`),staleTime:3600000});
+ if(q.isPending)return <p role="status">Link-Interesse wird geladen …</p>;
+ if(q.isError)return <p role="alert">Details konnten nicht geladen werden. <button className="text-button" onClick={()=>q.refetch()}>Erneut laden</button></p>;
+ const d=q.data;
+ return <div className="mc-insights">{d.warning&&<p role="alert">{d.warning}</p>}<h4>Top 3 geklickte Links <PeriodInfo label="Link-Klickzahlen erklärt">Klickende je Link. Eine Person kann mehrere Links anklicken; die Werte dürfen nicht zu eindeutigen Personen addiert werden. Bots können enthalten sein.</PeriodInfo></h4>{d.links.length?<ol>{d.links.map(l=><li key={l.id}><a href={l.url} target="_blank" rel="noreferrer">{new URL(l.url).hostname}{new URL(l.url).pathname}</a><strong>{number(l.unique_clicks)} Klickende</strong></li>)}</ol>:<p>Keine Links mit erfassten Klicks vorhanden.</p>}<h4>Vom Mailing zur Website</h4><dl className="mc-metrics"><div><dt>Website-Besuche <PeriodInfo label="Website-Besuche erklärt">GA4-Sitzungen mit eindeutigem Mailing-Kampagnencode und Medium E-Mail, seit Versand. Eine Person kann mehrere Sitzungen auslösen. Nicht gleich Mailchimp-Klicks.</PeriodInfo></dt><dd>{number(d.website.sessions)}</dd></div><div><dt>Engagierte Besuche <PeriodInfo label="Engagierte Besuche erklärt">GA4-Sitzungen mit längerer Interaktion, mindestens zwei Seitenaufrufen oder einem Schlüsselereignis. Die konfigurierte Mindestdauer liegt standardmässig bei zehn Sekunden.</PeriodInfo></dt><dd>{number(d.website.engaged_sessions)}</dd></div></dl><p>{d.website.status==='unmapped'?'Keine eindeutige Kampagnenkennung in den Sonio-Links. Website-Besuche sind diesem Mailing nicht zuverlässig zuordenbar.':d.website.status==='unavailable'?'Analytics ist momentan nicht abrufbar.':d.website.status==='no_rows'?'Keine zugeordneten GA4-Berichtszeilen vorhanden.':`GA4 · ${d.website.start} bis ${d.website.end}`}</p>{d.website.thresholded&&<p>GA4-Datenschwellen können die Werte einschränken.</p>}<small>Abruf: {new Date(d.updated_at).toLocaleString('de-CH')}</small></div>
+}
+export function MailchimpHero(){
+ return <><div className="marketing-mast"><h1>Mailchimp Insights.</h1></div><section className="marketing-hero"><img src={asset('brand/sonio-blog-header.jpg')} alt="Sonio Berglandschaft mit Fahrer und Zielflagge"/><div><h2>Im Postfach beginnt die Verbindung.</h2><p>Relevanz erkennen. Interesse vertiefen. Beziehungen stärken.</p></div></section><p className="directory-intro">Welche Mailings erreichen Menschen – und welche Inhalte bewegen zum nächsten Schritt? Zustellung, Klicks und Abmeldungen machen die Wirkung sichtbar. Die Linkauswertung zeigt, welche Themen besonderes Interesse wecken.</p></>
 }

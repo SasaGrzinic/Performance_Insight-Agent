@@ -4,6 +4,7 @@ import re
 from datetime import date, timedelta
 
 from .connectors import (
+    NotConfigured,
     ProviderError,
     linkedin_headers,
     linkedin_url,
@@ -48,6 +49,66 @@ def campaigns(s, headers):
     return account, result
 
 
+def enrich_campaign_images(known, s):
+    """Resolve one representative creative image per campaign, without touching metrics."""
+    from urllib.parse import quote
+
+    from .linkedin_posts import enrich_images
+
+    try:
+        headers = {**linkedin_headers(s, ads=True), "X-RestLi-Method": "FINDER"}
+        params = {"q": "criteria", "pageSize": 100}
+        seen = set()
+        while True:
+            data = request(
+                "GET",
+                linkedin_url(f"adAccounts/{number_id(s.linkedin_ad_account_id)}/creatives", params),
+                headers=headers,
+            ).json()
+            for creative in data.get("elements", []):
+                campaign = known.get(creative.get("campaign"))
+                if campaign is None or campaign.get("image_url"):
+                    continue
+                if (
+                    creative.get("account")
+                    != f"urn:li:sponsoredAccount:{number_id(s.linkedin_ad_account_id)}"
+                ):
+                    continue
+                ref = creative.get("content", {}).get("reference", "")
+                if not re.fullmatch(r"urn:li:(share|ugcPost):[0-9]+", ref):
+                    continue
+                try:
+                    # Organisation content uses the separately authorised Organic reader.
+                    post = request(
+                        "GET",
+                        "https://api.linkedin.com/rest/posts/" + quote(ref, safe=""),
+                        headers=linkedin_headers(s),
+                    ).json()
+                    if post.get("author") != f"urn:li:organization:{s.linkedin_organization_id}":
+                        continue
+                    content = post.get("content", {})
+                    images = content.get("multiImage", {}).get("images", [])
+                    urn = (
+                        content.get("article", {}).get("thumbnail")
+                        or content.get("media", {}).get("id")
+                        or (images[0].get("id") if images else None)
+                    )
+                    media = {"media_urn": urn}
+                    enrich_images([media], s)
+                    if media.get("image_url"):
+                        campaign["image_url"] = media["image_url"]
+                        campaign["image_source"] = ref
+                except (ProviderError, NotConfigured):
+                    continue
+            token = data.get("metadata", {}).get("nextPageToken")
+            if not token or token in seen:
+                break
+            seen.add(token)
+            params["pageToken"] = token
+    except (ProviderError, NotConfigured):
+        return
+
+
 def fetch(start, end, s, *, include_campaigns=False):
     require(s.linkedin_ad_account_id, s.linkedin_organization_id)
     headers = linkedin_headers(s, ads=True)
@@ -64,7 +125,7 @@ def fetch(start, end, s, *, include_campaigns=False):
                 "end": {"year": last.year, "month": last.month, "day": last.day},
             },
             "accounts": [account_urn],
-            "fields": "dateRange,pivotValues,impressions,clicks,externalWebsiteConversions,costInLocalCurrency",
+            "fields": "dateRange,pivotValues,impressions,clicks,landingPageClicks,externalWebsiteConversions,costInLocalCurrency",
         }
         data = request("GET", linkedin_url("adAnalytics", params), headers=headers).json()
         elements = data.get("elements", [])
@@ -90,6 +151,7 @@ def fetch(start, end, s, *, include_campaigns=False):
             for raw, key in [
                 ("impressions", "impressions"),
                 ("clicks", "clicks"),
+                ("landingPageClicks", "landing_page_clicks"),
                 ("externalWebsiteConversions", "conversions"),
                 ("costInLocalCurrency", "spend"),
             ]:
@@ -112,6 +174,8 @@ def fetch(start, end, s, *, include_campaigns=False):
         last = min(end, cursor + timedelta(days=30))
         records.extend(window(cursor, last))
         cursor = last + timedelta(days=1)
+    if include_campaigns:
+        enrich_campaign_images(known, s)
     return (records, account, known) if include_campaigns else records
 
 
@@ -159,6 +223,7 @@ def campaign_summary(db, s, today):
             {
                 "id": c.id,
                 "name": c.data.get("name") or c.id,
+                "image_url": c.data.get("image_url"),
                 "status": c.data.get("status"),
                 "objective": c.data.get("objectiveType"),
                 "start": day(schedule.get("start")),

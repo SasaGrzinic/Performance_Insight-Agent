@@ -30,7 +30,7 @@ typography:
     letterSpacing: "-0.035em"
   headline:
     fontFamily: '"Red Hat Display", sans-serif'
-    fontSize: "clamp(26px, 2.1vw, 34px)"
+    fontSize: "clamp(25px, 2.5vw, 32px)"
     fontWeight: 750
     lineHeight: 1.22
     letterSpacing: "-0.035em"
@@ -55,7 +55,7 @@ typography:
     lineHeight: 1.5
   metric:
     fontFamily: '"Red Hat Display", sans-serif'
-    fontSize: "34px"
+    fontSize: "clamp(29px, 3vw, 38px)"
     fontWeight: 750
     lineHeight: 1.15
     letterSpacing: "-0.035em"
@@ -107,15 +107,55 @@ components:
     rounded: "{rounded.tag}"
     padding: "4px 7px"
   kpi-card:
-    backgroundColor: "{colors.surface}"
+    backgroundColor: "transparent"
     textColor: "{colors.ink}"
-    rounded: "{rounded.panel}"
-    padding: "20px 19px"
+    rounded: "0"
+    padding: "22px 24px"
   page-intro:
     backgroundColor: "{colors.primary-hover}"
     textColor: "{colors.surface}"
     rounded: "{rounded.panel}"
-    padding: "24px"
+    padding: "22px 26px"
+  photographic-intro:
+    backgroundColor: "{colors.primary-hover}"
+    textColor: "{colors.surface}"
+    rounded: "{rounded.panel}"
+    padding: "40px"
+  overview-intro:
+    backgroundColor: "{colors.primary-hover}"
+    textColor: "{colors.surface}"
+    rounded: "{rounded.panel}"
+    padding: "40px"
+  channel-entry:
+    backgroundColor: "#e2efff"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.panel}"
+    padding: "18px 20px"
+  ads-campaign:
+    backgroundColor: "#e2efff"
+    rounded: "{rounded.panel}"
+    padding: "20px"
+  ads-campaign-alternate:
+    backgroundColor: "#d4e7fb"
+  ads-campaign-mobile:
+    padding: "16px"
+  metric-option-selected:
+    backgroundColor: "{colors.blue-surface}"
+    textColor: "#153d60"
+    rounded: "{rounded.field}"
+    padding: "9px 12px"
+  performance-body:
+    padding: "20px 24px"
+  performance-body-mobile:
+    padding: "16px"
+  publication-day:
+    backgroundColor: "#f2f7fc"
+    textColor: "#00549c"
+    rounded: "{rounded.field}"
+    height: "44px"
+  publication-day-selected:
+    backgroundColor: "{colors.primary-hover}"
+    textColor: "{colors.surface}"
   export-panel:
     backgroundColor: "{colors.blue-surface}"
     rounded: "12px"
@@ -148,7 +188,7 @@ This record replaces the provisional plan written during the same implementation
 
 Primary and primary-hover map to the CSS custom properties `--blue` and `--blue-dark`. Primary appears in action buttons, links, chart strokes, and the insight panel. Primary-hover is the primary button hover background. Selected navigation uses primary blue and white text, with primary-hover on hover. The user-approved stronger blue treatment also uses primary-hover behind the page introduction and for KPI values, white introduction text, and blue-surface behind export controls and chart headings. Video entries use a local pale blue tint (`#f1f7ff`) with a blue border (`#b4d7f5`). Existing primitive values are retained; earlier nav-selected primitives are no longer the active navigation component mapping.
 
-Channel icon tiles retain their local provider colors. These distinguish channels within the interface rather than define alternate primary actions.
+Channel icons use local provider SVG assets for LinkedIn, YouTube, Google Ads, Google Analytics and Mailchimp; event and QR channels retain line icons. These distinguish channels within the interface rather than define alternate primary actions. Header and chart-context logos sit in white bordered tiles with an 8px radius and 8px padding.
 
 ### Neutral
 
@@ -162,15 +202,25 @@ Self-hosted Red Hat Display is the only font family, with a sans-serif fallback.
 
 The frontmatter records desktop defaults: display for the login brand heading, headline for page headings, title for section headings, body for root paragraph text, label for form labels, button for standard actions, and metric for KPI values. Supporting text is commonly 10–13px; the implementation does not define a proportional type scale.
 
-KPI values and comparison indicators use tabular numerals. KPI values change to 39px at the large-desktop breakpoint, 30px in the narrower desktop layout, and 29px on mobile. Page headings use 29px at widths up to 1250px and 28px at widths up to 760px. Paragraph measures are component-specific, including 45ch in the insight panel and 65ch in settings.
+KPI values and comparison indicators use tabular numerals. Analysis workspace KPI values use the metric clamp and become 29px on mobile. LinkedIn Organic overrides these with compact 28px values and bold labels (weight 800). Comparison context and previous values use 12px, with 13px percentage deltas. Page headings use the headline clamp and become 25px at widths up to 760px. Paragraph measures are component-specific, including 45ch in the insight panel and 65ch in settings.
 
 ## Layout
 
 The desktop shell has a fixed sidebar and a matching content offset. Sidebar width is 248px by default, 220px at widths up to 1250px, and 200px at widths up to 1020px. Main content has a 1640px maximum width and default padding of 34px 36px 0.
 
-The KPI grid uses four equal columns with a 16px gap, becoming two columns at 1020px. Chart and insight panels use a two-column grid with a 1.9fr chart column and a second column with a 260px minimum; they stack at 1020px. Recommendation and source grids start at three columns. Recommendations become one column at 1020px; sources become two at 1250px and one at 760px.
+Organic and other monthly channel details retain the KPI strip and performance workspace; the overview has neither a KPI strip nor a chart. The KPI strip uses four equal columns without gaps, becoming two columns at 1020px. Its white surface has horizontal outer borders and internal dividers. LinkedIn Organic uses five compact columns with 14px vertical and 16px horizontal cell padding, becoming three columns at 1100px and two at 760px. The performance workspace spans the available content width, with 20px vertical and 24px horizontal body padding, reduced to 16px on mobile. A compact monthly briefing replaces the former adjacent insight card; unavailable AI analysis is explained once. Connected or previously synchronised channels lead the channel selector. Recommendation and source grids start at three columns. Recommendations become one column at 1020px; sources become two at 1250px and one at 760px.
 
 At 760px and below, the main offset disappears and the sidebar becomes a drawer. Main padding becomes 25px 19px 0. The closed drawer is hidden from focus; opening it traps keyboard focus and makes the main content inert. Escape closes it and focus returns to the opening control. Tables scroll inside their own container.
+
+The overview presents all eight channels as clickable cards with a channel logo or icon, status and up to three available KPI slots. Cards use two equal columns with a 20px gap, becoming one column with a 14px gap at 760px. Card padding is 18px vertically and 20px horizontally on desktop and mobile; channel marks are 44px inside 60px tiles. Selecting a card opens the retained channel deep dive.
+
+The overview header uses `/brand/sonio-blog-header.jpg` across its full image surface, with the exact white title **MARKETING PERFORMANCE & INSIGHT**. Its minimum height is 400px with 40px padding on desktop, and 330px with 24px padding at 760px and below. The title uses `clamp(30px, 3.4vw, 48px)`, 1.08 line height and a 19ch maximum width; mobile uses 30px. The photograph is cropped at center top on desktop and right top on mobile. A dark bottom-to-top gradient preserves text legibility. An agent introduction follows the header, with a 24px heading and 16px paragraph (21px and 15px on mobile). The context row shows the current reporting month without a month input and places refresh beside the connected-channel count. The reporting timezone comes from public configuration, with Europe/Zurich as fallback; the displayed month is recalculated every minute. Monthly detail views retain month selection; LinkedIn Ads uses its independent rolling 365-day window. A freshness note distinguishes minute-based display refresh from the last successful provider retrieval. The Top 3 recommendations section follows all eight channel cards. Reference captures are `.impeccable/review/compact-blue-desktop.png` and `.impeccable/review/compact-blue-mobile.png`.
+
+All analysis pages, including channel details and Video Performance, reuse the approved full-image header described above: 400px minimum height and 40px padding on desktop, 330px and 24px at 760px and below. The image fills the header, with the same crop, gradient and white title treatment as the overview. Channel-specific descriptions sit under the title inside the photographic header and remain visible on mobile. Subpage refresh controls sit in a separate toolbar below the header with 24px bottom spacing; the toolbar contains no month selector. Monthly channel selection lives in the performance workspace; Video Performance, posts, audience, insights and reports place their month selector in the content area. Controls wrap, and the primary action spans the available width on mobile. The former split photograph and blue text surface is superseded.
+
+LinkedIn Ads uses compact image-led campaign rows with a 20px list gap. Each row pairs a 180px image column with flexible content and six metric columns, becoming three metric columns at 1100px and two at 760px. At 760px, image and content stack with a 12px gap, campaign headings and export actions stack vertically, and images are limited to 240px width. Ads omits search, month selection and monthly comparison controls; its refresh action remains below the shared photographic header.
+
+Mailchimp uses compact, initially expanded mailing groups with native disclosure controls. Pale blue group headings and a primary-blue top border separate white mailing rows. Rows place the send date, an actual lead image from the mailing content, stage/title/subject and five metrics in columns, with 16px padding and gaps. Images fit within 112px by 76px without cropping; unavailable images use a text fallback. At 1200px the metrics move below the copy; at 600px the date spans the row, images narrow to 80px, row padding becomes 12px and the group count moves below the title. Month and content-type selects sit alongside a free-text search, stacking into one column at 760px. The month selector defaults to the current month in Europe/Zurich and lists it first, with the whole-year option last. The month filter selects whole groups and explicitly explains that related sendings from other months remain visible. Groups are ordered by their latest mailing, newest first; mailings within each group also run newest first. Grouping inferred from titles and subjects is labelled; unclear assignments remain separate. Test/template mailings are excluded, while language variants and repeat sendings retain separate rows. The five immediately visible metrics are sent, unique openers, unique clickers, click rate and delivery rate, arranged in a three-column metric grid. A nested native disclosure labelled “Zustellung & Abmeldungen” reveals delivered messages, hard and soft bounces, unsubscribe count and rate, and open rate; it spans the row on mobile. The shared KPI explainer covers every displayed metric. Rate values include a percent suffix; missing report metrics display a dash. The existing title/subject grouping remains in place; event-registration attribution is deferred.
 
 The spacing tokens capture recurring values. The stylesheet also contains local padding, gaps, and responsive adjustments; it does not constrain every measurement to a single scale.
 
@@ -182,7 +232,7 @@ Standard buttons change background and border colors without movement. The mobil
 
 ## Shapes
 
-Priority tags use the small tag radius. Buttons and fields share the field radius; selected navigation uses the navigation radius. Main panels, KPI cards, recommendation cards, and the insight panel use the panel radius, mapped to `--radius`. Dialogs use the largest recorded radius.
+Priority tags use the small tag radius. Buttons and fields share the field radius; selected navigation uses the navigation radius. Main panels, recommendation cards, and the insight panel use the panel radius, mapped to `--radius`. Analysis KPI cells have square corners within a contiguous white strip. Dialogs use the largest recorded radius.
 
 Fields and panels have solid one-pixel borders. File upload regions have dashed borders. Avatars and channel icons use their own compact rounded containers.
 
@@ -200,7 +250,7 @@ Inputs and selects use white backgrounds, the field border and text tokens, 13px
 
 ### Navigation
 
-Main navigation uses left-aligned text and line icons. Selection adds primary blue, white text, and a thin blue marker at the sidebar edge. Hover uses a pale neutral background. Administrative navigation and editing controls follow the account role.
+Main navigation runs in this order: Übersicht, Kanäle, Insights & Empfehlungen, Video Performance, Reports. Administrative entries remain Datenquellen, Team & Zugänge, Einstellungen. Main navigation uses left-aligned text and line icons. Selection adds primary blue, white text, and a thin blue marker at the sidebar edge. Hover uses a pale neutral background. Administrative navigation and editing controls follow the account role.
 
 Settings use Radix Tabs with a blue underline for the active tab. Channel buttons use filled selected states and update their channel chart or details.
 
@@ -210,23 +260,43 @@ Priority tags are small rounded rectangles with high, medium, or low text labels
 
 ### Cards / Containers
 
-KPI cards contain a label, channel icon, tabular value, comparison, and optional target. Overview KPI cards are buttons opening the relevant channel; detail KPI cards are articles. Interactive cards change border color on hover.
+KPI cells contain a label, tabular value, percentage comparison, explicit previous value when available, and optional target. They omit decorative channel icons. Detail KPI cards are articles. The overview instead uses channel-entry buttons with a logo or icon, status, up to three KPI slots, data date and a channel-opening action. Cards cycle through blue surfaces (#e2efff, #f1f7ff, #d9eafa), with respective borders (#b7d4f5, #d4e3f5, #accbeb), independently of data availability; unavailable values remain missing and channels without data show an explanatory empty state. Interactive KPI cells use the blue-surface background on hover without movement.
 
-Standard panels contain charts, tables, reports, and settings. Recommendation cards contain a channel icon, priority, title, observation, and action; their dialog exposes observation, next step, caveat, and evidence.
+Standard panels contain charts, tables, reports, and settings. Recommendation cards contain a channel icon, priority, title, observation, and action; their dialog exposes observation, next step, caveat, and evidence. The overview shows up to three available recommendations sorted by high, medium, then low priority. When none are available, it shows three non-interactive graphical preview cards under “Grafische Vorschau · Noch keine datenbasierte Auswertung”. These describe future recommendation roles without fabricated findings or measurements; the illustrative evidence skeleton is removed. This explicitly requested preview remains visible while AI is unconfigured, without setup alerts. Recommendation and preview cards use 20px padding and three blue variants: #e2efff with #b7d4f5 borders, #bddbfa with #95bee8 borders, and #07569c with matching borders and white text. Preview icons are 42px; the panel radius and responsive grid from three columns to one at 1020px remain.
 
 ### Charts / Insight Panel
 
-Recharts renders the selected channel's daily series with a primary-colored line, pale fading area fill, horizontal grid lines, and a tooltip. Missing points remain gaps, while empty charts show explanatory text.
+Recharts renders up to four selected daily metrics as lines with horizontal grid lines and a tooltip. The workspace contains the base-month input and a compact “Monate vergleichen” disclosure showing the selected count. Its checkbox list and optional custom month allow at most four months including the base month; the base month cannot be deselected. Controls use four desktop columns, two at 1100px and one at 600px. Metric colors remain stable by field; month comparisons use solid, long-dash, short-dash and dash-dot strokes. Metric checkboxes have 44px minimum-height targets and a pale blue selected state; their labels remain visible alongside color dots. Absolute mode separates axes by unit. Relative mode sets each month/metric series' own highest value to 100%; tooltip and day-inspector values remain absolute. Missing points remain gaps, while empty charts show explanatory text.
 
 The insight panel uses a primary background, white heading and action control, and pale supporting text. Demo content has explicit sample-data labels. Missing metrics show a dash. Number formatting preserves up to two decimal places.
 
-On mobile (760px and below), the performance tooltip wrapper is anchored 8px from the chart’s left and top edges, with transforms disabled and width `calc(100% - 16px)`. The tooltip fills that wrapper so publication titles remain within the chart.
+A persistent day inspector below the chart exposes month and day selectors, publication-day buttons, and all posts for the selected date. Day buttons have a minimum height of 44px and width of 46px, with a filled blue selected state. Post titles use readable normalised mathematical Unicode letters; titles wrap without truncation. Daily channel metrics remain distinct from post totals since publication. Each Organic tooltip post shows its real main image when available, its full title, impressions and clicks, with the explicit “Seit Veröffentlichung” time basis. Missing or failed images show “Kein Hauptbild verfügbar”; no substitute image is invented. Tooltip images fit within 100px by 70px without cropping. On mobile (760px and below), the hover tooltip is hidden: the persistent inspector provides touch and keyboard access to the selected day and its posts. Post details stack vertically and selectors expand to full width.
+
+The post collection includes the same real main images above each title, fitting the card width within a 150px image area without cropping. Compact metric labels use 12px and values 18px. Default date ordering runs from the oldest to the newest publication; metric sorting remains descending. All posts on a date are retained.
+
+### LinkedIn Ads Campaigns
+
+Each campaign appears as a separate article with its real title, objective, text status and planned runtime. The six metric slots are impressions, clicks, spend, CTR, CPC and conversions; unavailable values remain dashes. The list includes older campaign metadata while all displayed metrics use the stated rolling 365-day window, independently of the reporting month. No monthly or blanket campaign comparison is shown.
+
+Rows alternate the `ads-campaign` and `ads-campaign-alternate` blue surfaces, with the shared panel radius and compact campaign padding tokens. Real API-provided campaign images fit without cropping within a 160px maximum height; unavailable or failed images use a text fallback. Titles wrap without truncation at 18px; tabular metric values use 21px, and labels use 12px with weight 800. Runtime and data notes use 12px. A native CSV disclosure provides metric field selection and exports the real campaign list. The per-row “Ergebnisse einordnen” disclosure provides fixed objective-specific reading guidance, not a generated AI recommendation.
+
+When fewer than two real campaigns have metrics, the live view appends one visibly labelled fictitious example. Its image and invented values are presentation-only, excluded from campaign counts, exports and analysis; missing real measurements remain missing.
+
+### KPI Explanations
+
+Channel definitions, Ads, post collections and video views use the shared “KPI erklärt” native dropdown. It lists the metrics relevant to that view and shows one plain-language explanation alongside it, announced with a polite live region when selection changes. The 12px bold label sits above the select; explanation text uses 14px with a 65ch maximum measure. At 760px and below, selection and explanation stack with a 10px gap. Definitions preserve channel-specific meaning, units and caveats, including internal LinkedIn clicks, follower gains versus net growth, and qualified video views.
+
+### Video Performance
+
+The dedicated video view reuses the shared full-image introduction, refresh toolbar and a month selector in the content area. LinkedIn and YouTube appear as separate platform sections with 36px bottom spacing; their headings pair a 44px channel mark in a 64px white tile with a 24px heading. LinkedIn reuses the existing post collection with a fixed video-only filter. Its video cards use 20px padding, 14px corners, a #b7d4f5 border and alternating #e2efff, #f1f7ff and #d9eafa surfaces; the surrounding collection has a transparent background without an outer border. Platform totals are not combined.
+
+YouTube uses a #bddbfa blue panel with 20px padding: available monthly values appear as a summary; missing data stays an explicit pending state with dashes. This view does not establish a YouTube connection. Its metric grid has three columns and a 20px gap, becoming one column with a 14px gap at 760px and below. Reference captures are `.impeccable/review/video-performance-desktop.png` and `.impeccable/review/video-performance-mobile.png`.
 
 ### CSV Export / Page Introduction
 
-The page introduction is a primary-hover blue panel with white text, white month controls, and a white primary-action variant. Padding reduces from 24px to 20px on mobile. KPI values and comparison totals use primary-hover blue.
+The page introduction is a primary-hover blue panel with white text, white month controls, and a white primary-action variant. The base page-introduction component uses 22px vertical and 26px horizontal padding, reduced to 18px on mobile; its supporting paragraph is hidden on mobile. Analysis pages override this base component with the shared full-image variant described in Layout, using the local `/brand/sonio-blog-header.jpg` image. Subpage controls sit below the photograph. The overview follows its header with the agent introduction; its current-month label and refresh action sit in the context row. KPI values and comparison totals use primary-hover blue.
 
-The CSV export is a native disclosure with a blue-surface background, a local blue border, and a 12px radius. The summary includes the selected month; native selects and labeled metric checkboxes control the export. Controls wrap and expand to full width on mobile. The chart heading shares its pale blue background, preserving white chart plotting areas and the existing panel hierarchy.
+The CSV export is a compact native disclosure aligned with the overview context row on desktop. Closed, it has a transparent background without a border and a 44px minimum summary height; its extra summary text is hidden. Open, it expands to full width with a blue-surface background and 12px radius; native selects and labeled metric checkboxes control the export. Controls wrap and expand to full width on mobile. The chart heading shares its pale blue background, preserving white chart plotting areas and the existing panel hierarchy.
 
 ### Dialogs / Feedback
 
@@ -251,6 +321,9 @@ Toasts use a dark background and status semantics. Analysis read failures have a
 - **Don't** show administrator-only editing workflows to viewers.
 - **Don't** remove explanation, evidence, and caveats from recommendation details.
 
+### Kanalidentität im Header (25.09.2026)
+Auf Kanal-, Post- und Followerseiten sitzt das jeweilige Kanallogo innerhalb der fotografierten Fahne. Bild und Logo teilen denselben SVG-Koordinatenraum und bleiben beim responsiven Zuschnitt zusammen. Die frühere zusätzliche Zeile «Kanal · Sonio AG» im Header entfällt. Titel und Kanalbeschreibung bleiben erhalten; die Übersicht verwendet weiterhin das Originalbild.
+
 ## Freigegebene Aktualisierung vom 29.09.2026
 
 Für Dashboard und Login ersetzt die freigegebene Gestaltung die oben dokumentierte
@@ -270,3 +343,13 @@ im selben Blau. Red Hat Display; #0063b8 für Abschnittstitel, #eaf2f9 als Grund
 weisse Inhaltsflächen. Abgrenzung durch Titel und Abstand, ohne Trennlinien.
 Dezente Zeitraumwahl beim Kennzahlen-Titel, Empfehlungen zuletzt, freies Seth-Godin-
 Zitat mit Berufsangabe. Siehe aktualisierte Design-Übergabe für Datenbeschränkungen.
+
+### Gemeinsame Aktionsleiste — 30.09.2026
+«Daten aktualisieren» und «CSV herunterladen» stehen horizontal nebeneinander.
+Für bestehende und neue Kanalansichten dieselbe `channel-action-toolbar` verwenden;
+keine vertikale Sondervariante ergänzen. Auf kleinen Displays darf die gesamte
+Aktionszeile unter den Titel wechseln, beide Aktionen bleiben nebeneinander.
+Analytics nutzt den gemeinsamen grossen Bildheader ohne Kanal-Logo/Fahnenoverlay,
+Sonio-blaue KPI-/Inhaltsflächen und den gemeinsamen EditorialQuote-Abschluss.
+GEO listet alle unterstützten KI-Quellen offen; fehlende Berichtszeilen als «—»
+mit Erklärung statt erfundenen Nullen darstellen.

@@ -2,7 +2,7 @@ import {staticDemoResponse} from './staticDemo.ts';
 import type {Dashboard} from './types';
 /** Entirely synthetic public examples. Never import live cache or provider exports here. */
 const image = (import.meta.env?.BASE_URL || '/')+'brand/sonio-blog-header.jpg';
-const labels:Record<string,string>={campaign:'Kampagnen-Landingpage',profile:'Vorstellungsseite',competence:'Kompetenzfeld',blog:'Blogartikel',behind:'Blick hinter die Kulissen',news:'Newsartikel',stories:'Customer Story'};
+const labels:Record<string,string>={campaign:'Kampagnen-Landingpage',profile:'Vorstellungsseite',competence:'Kompetenzfeld',services:'Serviceseite',videos:'Videoseite',blog:'Blogartikel',behind:'Blick hinter die Kulissen',news:'Newsartikel',stories:'Customer Story'};
 const metric=(n:number)=>({screenPageViews:240*n,totalUsers:150*n,sessions:180*n,userEngagementDuration:6300*n,engagementPerUser:42});
 const row=(name:string,key:string,value:number)=>({dimensions:[name],values:{[key]:value}});
 export function demoAnalytics(area:string,period:string){

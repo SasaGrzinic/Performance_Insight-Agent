@@ -298,35 +298,11 @@
 .li-video-kpis .li-tile strong {
   font-size: 21px;
 }
-.li-quote {
-  text-align: center;
-  background: none;
-  border: 0;
-  margin: 40px auto 26px;
-  padding: 0;
-  max-width: 650px;
-  font-size: 17px;
-  line-height: 1.7;
-}
-.li-quote > span {
-  color: #0075d9;
-  font-size: 28px;
-}
-.li-quote cite {
-  font-style: normal;
-  display: block;
-  font-size: 13px;
-  margin-top: 10px;
-}
-.li-quote cite a {
-  color: #173d62;
-  font-weight: 600;
-}
-.li-quote cite small {
-  display: block;
-  color: #526779;
-  font-size: 12px;
-}
+
+
+
+
+
 .li-cockpit .marketing-opportunities {
   background: #0075d9;
 }
@@ -411,3 +387,122 @@
 .li-cockpit .day-inspector {
   border-top: 0;
 }
+/* Approved HTML reference, fea9b7f: scoped to Organic to preserve other pages. */
+.app-shell:has(.organic-detail) .sidebar{background:#0063b8;border:0}
+.app-shell:has(.organic-detail) .sidebar .nav-item.active{background:#fff;color:#0063b8}
+.app-shell:has(.organic-detail) .sidebar .nav-item{font-size:12px}
+.app-shell:has(.organic-detail) .sidebar .workspace-switch{background:transparent;border:0}
+.app-shell:has(.organic-detail) .sidebar .report-reminder{background:transparent;border:0}
+.organic-detail{background:#e5eef7;font-size:14px;color:#173d62}
+.li-mast{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:14px}
+.li-mast h1{font-size:25px;margin:0;line-height:1.2;letter-spacing:-.7px;color:#173d62}
+.li-mast small,.li-mast>span{font-size:12px;color:#526779}
+.li-hero h2{font-size:27px;letter-spacing:-.5px}
+.analysis-workspace .li-hero p{font-size:13px;margin-top:8px}
+.li-intro{font-size:14px;line-height:1.6;margin:16px 0 20px;max-width:680px}
+.li-controls nav{gap:5px}
+.li-controls nav a{font-size:12px;padding:7px 10px}
+.li-controls nav a:first-child,.li-controls>.button{background:#0075d9;color:#fff;border:0}
+.li-controls>.button{font-size:12px;padding:9px 11px;min-height:36px;border-radius:5px;display:flex;gap:8px}
+.li-cockpit>#li-impact{margin-top:20px}
+.li-tile{padding:12px 14px}
+.li-tile>div{font-size:11px;min-height:23px;justify-content:flex-start}
+.li-tile strong{font-size:22px;line-height:1.2;margin-top:7px;font-weight:600}
+.li-heading small{font-size:12px;color:#526779}
+.li-format-filters{display:flex;gap:8px;flex-wrap:wrap}
+.li-format-filters button{font:inherit;font-size:12px;padding:7px 12px;border:1px solid #aec6dc;background:#fff;border-radius:5px;color:#173d62;cursor:pointer}
+.li-format-filters button[aria-pressed=true]{background:#0075d9;border-color:#0075d9;color:#fff}
+.li-table-panel{padding:20px;background:#fff;border-radius:10px;overflow-x:auto;margin-top:14px}
+.li-table{border-collapse:collapse;width:100%;font-size:12px;text-align:left}
+.li-table th{background:#0075d9;color:#fff;font-size:11px;font-weight:500;white-space:nowrap}
+.li-table td,.li-table th{padding:12px 9px;border-bottom:1px solid #aec6dc;vertical-align:top}
+.li-table td:not(:first-child){font-variant-numeric:tabular-nums;white-space:nowrap}
+.li-table tr:hover td{background:#e8f3ff}
+.li-post-cell{display:flex;gap:10px;min-width:230px;align-items:flex-start}
+.li-post-cell .post-main-image{width:94px;height:59px;object-fit:cover;border-radius:5px;flex-shrink:0}
+.li-post-cell .post-image-unavailable{width:94px;flex-shrink:0;font-size:11px}
+.li-post-cell a{color:#173d62;font-weight:600;text-decoration:none;line-height:1.45;display:block}
+.li-post-cell a:hover{text-decoration:underline}
+.li-post-cell small{display:block;font-size:11px;color:#526779;margin-top:4px}
+.li-video-feature{grid-template-columns:1.25fr 1fr;margin:14px 0 16px}
+.li-video-feature>a{position:relative;min-height:240px}
+.li-video-feature>div{padding:23px}
+.li-video-feature h3{font-size:22px;margin:10px 0;line-height:1.25;color:#173d62}
+.li-video-feature p{font-size:12px;color:#526779}
+.li-video-award{font-size:12px;color:#526779}
+.li-play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:52px;height:52px;border-radius:50%;border:1px solid #ffffff88;background:#0075d9;color:#fff;display:grid;place-items:center}
+.li-poster-label{position:absolute;bottom:12px;left:12px;background:#0063b8;color:#fff;font-size:11px;border-radius:4px;padding:4px 8px}
+.li-winner-choice{display:block!important;font-size:11px!important;color:#526779;margin:12px 0}
+.li-winner-choice select{display:block;width:100%;margin:6px 0;font-size:12px}
+.li-winner-kpis .li-tile strong{font-size:15px}
+.li-website-panel{background:#d9eafa;padding:20px;border-radius:10px}
+.li-website-kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.li-website-kpis .li-tile{background:#fff;color:#173d62}
+.li-help[data-open=true]>[role=tooltip]{visibility:visible}
+.li-help>button{cursor:pointer}
+.li-cockpit .marketing-opportunities{padding:24px;border-radius:12px}
+.li-cockpit .marketing-opportunities h2{font-size:23px}
+.li-cockpit .marketing-recommendations{gap:12px}
+.li-cockpit .marketing-recommendations article{padding:18px}
+.li-cockpit .marketing-recommendations h3{font-size:17px}
+
+/* Keep the existing comparison engine; tuck its secondary controls away. */
+.li-advanced-metrics>summary{display:none}
+.li-compact-chart .li-advanced-metrics>summary{display:list-item;cursor:pointer;font-size:12px;color:#526779;padding:8px 0}
+.li-cockpit .li-compact-chart{background:#fff;border:0;box-shadow:none;border-radius:10px;padding:20px}
+.li-compact-chart .performance-body{padding:0;display:flex;flex-direction:column}
+.li-compact-chart .explorer-controls{background:#d9eafa;border-radius:7px;padding:10px;gap:10px;display:flex;align-items:center;flex-wrap:wrap;margin:0 0 8px}
+.li-compact-chart .explorer-controls>label{display:flex;flex-direction:row;align-items:center;gap:7px;font-size:12px;flex:none;margin:0}
+.li-compact-chart .explorer-controls input,.li-compact-chart .explorer-controls select{font:inherit;font-size:12px;padding:7px;min-height:34px;width:auto;border:1px solid #aec6dc;border-radius:5px;background:#fff;color:#173d62}
+.li-compact-chart .explorer-controls .li-scale-control{display:none}
+.li-compact-chart .month-dropdown{min-width:0;margin:0}
+.li-compact-chart .month-dropdown>summary{min-height:34px;padding:7px;font-size:12px;background:#fff}
+.li-compact-chart .chart-container{height:200px;margin:10px 0}
+.li-compact-chart .comparison-totals{display:none}
+.li-compact-chart .month-legend{order:2;margin:5px 0;font-size:11px}
+.li-compact-chart .data-explanation{order:3;font-size:11px;line-height:1.5;margin:10px 0 0}
+.li-compact-chart .day-inspector{order:4}
+.li-compact-chart .metric-picker{margin:6px 0 12px}
+.li-compact-chart .li-advanced-metrics{margin-bottom:5px}
+@media(min-width:901px){.app-shell:has(.organic-detail) .sidebar{width:175px;padding:28px 15px 0}.app-shell:has(.organic-detail) .main-shell{margin-left:175px}.app-shell:has(.organic-detail) .sidebar .brand{padding:0;gap:4px}.app-shell:has(.organic-detail) .sidebar .brand img{width:118px}.app-shell:has(.organic-detail) .sidebar .brand span{display:none}.app-shell:has(.organic-detail) .sidebar .workspace-switch{padding:8px 0}.app-shell:has(.organic-detail) .sidebar .workspace-avatar{display:none}.app-shell:has(.organic-detail) .sidebar .nav-item{padding:11px 8px;gap:7px}.app-shell:has(.organic-detail) .sidebar .nav-item svg{width:15px;flex-shrink:0}.app-shell:has(.organic-detail) .sidebar .sidebar-bottom{padding:10px 0}.analysis-workspace.organic-detail{padding:19px 26px 26px}}
+@media(max-width:1050px){.li-video-feature{grid-template-columns:1fr}.li-video-feature>a{max-height:400px}}
+@media(max-width:600px){.li-hero h2{font-size:18px;max-width:72%}.analysis-workspace .li-hero p{font-size:11px;max-width:64%}.li-mast{align-items:flex-start}.li-mast h1{font-size:23px}.li-mast>span{font-size:11px}.li-table-panel{padding:12px}.li-table{min-width:610px}.li-website-kpis{grid-template-columns:1fr}.li-video-feature>div{padding:18px}.li-cockpit .li-compact-chart{padding:12px}.li-compact-chart .explorer-controls>label{flex-wrap:wrap}.li-intro{font-size:13px}}
+.app-shell:has(.organic-detail) .sidebar .nav-item{white-space:normal;line-height:1.4;text-align:left}
+.app-shell:has(.organic-detail) .sidebar .workspace-switch small{color:#e0efff}
+.li-cockpit .li-compact-chart .chart-container{height:200px;min-height:0}
+.li-compact-chart .li-advanced-metrics:not([open]){max-width:100%}
+.li-table-panel:focus-visible{outline:3px solid #0075d9;outline-offset:3px}
+.li-compact-chart .performance-body{display:block;min-width:0}
+.li-advanced-toggle{border:0;background:transparent;color:#526779;font:inherit;font-size:12px;padding:8px 0;text-align:left;cursor:pointer}
+.li-advanced-toggle::before{content:'+';margin-right:6px}
+.li-advanced-toggle[aria-expanded=true]::before{content:'−'}
+
+/* Follow-up: lead video is visual-only, statistics remain below. */
+.li-cockpit .li-video-feature{display:block;background:transparent}
+.li-cockpit .li-video-feature>a{display:block;aspect-ratio:16/9;min-height:0;max-height:none}
+.li-cockpit .li-video-feature .post-main-image{width:100%;height:100%;min-height:0;object-fit:contain;background:#173d62}
+.li-heading .li-winner-choice{margin:0;min-width:220px}
+
+
+
+
+
+/* Observed follower stock and period gains are different measures. */
+.li-tile.li-follower-pair .li-follower-values{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}
+.li-follower-values>div{min-width:0}
+.li-follower-values span{display:flex;align-items:center;gap:4px;flex-wrap:wrap;font-size:11px}
+.li-follower-values small{display:block;color:#fff;font-size:10px;line-height:1.35;margin-top:5px}
+.li-follower-pair>small{display:block;margin-top:6px;font-size:11px}
+.li-follower-pair>small button{color:inherit;background:none;border:0;text-decoration:underline;cursor:pointer}
+@media(max-width:600px){.li-follower-pair{grid-column:1 / -1}}
+
+/* Dezent untergeordnete Monatsentwicklung im bestehenden KPI-Raster. */
+.li-tile .li-tendency{display:flex;align-items:center;gap:4px;margin-top:7px;font-size:11px;line-height:1.35;color:#fff;font-weight:400}
+.li-tendency>svg{flex-shrink:0}
+.li-tendency .li-help{flex-shrink:0}
+.li-tendency .li-help button{opacity:1}
+.li-tendency-pair{display:flex;flex-wrap:wrap;gap:0 12px}
+.li-tendency-pair .li-tendency-period,.li-follower-values .li-tendency-period{display:none}
+.li-follower-values .li-tendency>span{display:inline;font-size:11px}
+.li-impact-title{display:flex;align-items:baseline;flex-wrap:wrap;gap:6px 14px}
+.li-post-count{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#40617b}

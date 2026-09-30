@@ -404,7 +404,7 @@ def report(report_id: str, user=Depends(current_user), db=Depends(get_db)):
 def settings(user=Depends(admin)):
     configured = {
         "google_ads": bool(s.google_ads_customer_id and s.google_refresh_token),
-        "analytics": bool(s.ga4_property_id and s.google_refresh_token),
+        "analytics": bool(s.ga4_property_id and (s.ga4_refresh_token or s.google_refresh_token)),
         "linkedin": bool(
             s.linkedin_ad_account_id
             and (s.linkedin_ads_access_token or s.linkedin_ads_refresh_token)
@@ -552,3 +552,338 @@ def ads_campaigns(user=Depends(current_user), db=Depends(get_db)):
     from .linkedin_ads import campaign_summary
 
     return campaign_summary(db, s, datetime.now(ZoneInfo(s.report_timezone)).date())
+
+
+@app.get("/api/mailchimp/campaigns")
+def mailchimp_campaigns(user=Depends(current_user), db=Depends(get_db)):
+    from .mailchimp_campaigns import summary
+
+    return summary(db)
+
+
+@app.get("/api/mailchimp/campaigns/{campaign_id}/insights")
+def mailing_insights(campaign_id: str, refresh: bool = False, user=Depends(current_user), db=Depends(get_db)):
+    from .mailchimp_campaigns import summary
+    from .mailchimp_insights import fetch
+
+    snapshot = summary(db)
+    mailing = next((m for g in snapshot["groups"] for m in g["mailings"] if m["id"] == campaign_id), None)
+    if not mailing:
+        raise HTTPException(404, "Mailing nicht gefunden")
+    today = datetime.now(ZoneInfo(s.report_timezone)).date()
+    return ga4_cached(db, "mailchimp:insights:v1:" + campaign_id + ":" + str(snapshot["last_success"]), lambda: fetch(s, mailing, today), refresh=refresh)
+
+
+@app.get("/api/videos/library")
+def video_library(user=Depends(current_user), db=Depends(get_db)):
+    """All imported videos; no provider calls or monthly truncation."""
+    from .models import LinkedInPost
+
+    videos = []
+    for post in db.scalars(select(LinkedInPost).where(
+        LinkedInPost.organization == "urn:li:organization:" + s.linkedin_organization_id
+    )):
+        if post.data.get("kind") == "video":
+            videos.append({**post.data, "platform": "linkedin", "updated_at": post.updated_at.isoformat()})
+    youtube, playlists = {}, {}
+    # Older catalogues contain the complete upload list, but their Analytics
+    # metrics describe a month. Only carry over explicit lifetime counters.
+    for cache in db.scalars(select(Preference).where(Preference.key.startswith("youtube:videos:"))):
+        for video in cache.value.get("videos", []):
+            youtube[video["id"]] = {**video, "metrics": video.get("lifetime") or {},
+                                    "platform": "youtube", "updated_at": cache.value.get("updated_at")}
+        for playlist in cache.value.get("playlists", []):
+            playlists[playlist["id"]] = playlist
+    caches = db.scalars(select(Preference).where(Preference.key.startswith("youtube:published:"))).all()
+    for cache in sorted(caches, key=lambda c: c.value.get("updated_at", "")):
+        for video in cache.value.get("videos", []):
+            youtube[video["id"]] = {**video, "platform": "youtube", "updated_at": cache.value.get("updated_at")}
+        for playlist in cache.value.get("playlists", []):
+            playlists[playlist["id"]] = playlist
+    videos.extend(youtube.values())
+    return {"videos": sorted(videos, key=lambda v: v.get("published_at", ""), reverse=True),
+            "playlists": list(playlists.values()),
+            "basis": "imported_lifetime"}
+
+
+@app.get("/api/youtube/videos")
+def youtube_videos(
+    month=Depends(month_param),
+    refresh: bool = False,
+    year: bool = False,
+    user=Depends(current_user),
+    db=Depends(get_db),
+):
+    import httpx
+
+    from .connectors import NotConfigured, ProviderError
+    from .youtube_videos import fetch
+
+    start, end = month_bounds(month)
+    if year:
+        start, end = date(start.year, 1, 1), date(start.year, 12, 31)
+    end = min(end, datetime.now(ZoneInfo(s.report_timezone)).date())
+    if start > end:
+        raise HTTPException(422, "Bitte einen vergangenen oder den aktuellen Monat wählen.")
+    key = "youtube:published:" + month + (":year" if year else "")
+    cached = db.get(Preference, key)
+    if (
+        cached
+        and "available_years" in cached.value
+        and not refresh
+        and all("duration" in v for v in cached.value.get("videos", []))
+        and (
+            datetime.now(ZoneInfo("UTC")) - datetime.fromisoformat(cached.value["updated_at"])
+        ).total_seconds()
+        < 3600
+    ):
+        return cached.value
+    try:
+        result = fetch(s, start, end)
+    except (ProviderError, NotConfigured, httpx.HTTPError):
+        if cached:
+            return {
+                **cached.value,
+                "warning": "Aktualisierung fehlgeschlagen. Letzter erfolgreicher Stand wird angezeigt.",
+            }
+        raise HTTPException(
+            502, "YouTube-Videos konnten nicht geladen werden. Bitte erneut versuchen."
+        ) from None
+    if cached:
+        cached.value = result
+    else:
+        db.add(Preference(key=key, value=result))
+    db.commit()
+    return result
+
+
+@app.get("/api/youtube/promoted")
+def youtube_promoted(refresh: bool = False, user=Depends(current_user), db=Depends(get_db)):
+    from .youtube_videos import promoted
+
+    return ga4_cached(db, "youtube:promoted:v1", lambda: promoted(s), refresh=refresh)
+
+
+@app.get("/api/youtube/videos/{video}/traffic")
+def youtube_traffic(
+    video: str, month=Depends(month_param), year: bool = False, user=Depends(current_user), db=Depends(get_db)
+):
+    import httpx
+
+    from .connectors import NotConfigured, ProviderError
+    from .youtube_videos import traffic
+
+    cached = db.get(Preference, "youtube:published:" + month + (":year" if year else ""))
+    if not cached or video not in {v["id"] for v in cached.value["videos"]}:
+        raise HTTPException(404, "Video nicht im Sonio-Kanal gefunden.")
+    try:
+        return traffic(
+            s,
+            video,
+            date.fromisoformat(
+                next(v["published_at"][:10] for v in cached.value["videos"] if v["id"] == video)
+            ),
+            date.fromisoformat(cached.value["end"]),
+        )
+    except (ProviderError, NotConfigured, httpx.HTTPError):
+        raise HTTPException(502, "Zugriffsquellen sind derzeit nicht verfügbar.") from None
+
+
+@app.get("/api/analytics/campaigns")
+def analytics_campaigns(
+    month=Depends(month_param),
+    refresh: bool = False,
+    user=Depends(current_user),
+    db=Depends(get_db),
+):
+    import httpx
+
+    from .connectors import NotConfigured, ProviderError
+    from .ga4_campaigns import CAMPAIGNS, fetch
+
+    key = "ga4:campaigns:" + month
+    cached = db.get(Preference, key)
+    if (
+        cached
+        and {c["path"] for c in cached.value.get("campaigns", [])} == {p for _, p in CAMPAIGNS}
+        and not refresh
+        and (
+            datetime.now(ZoneInfo("UTC")) - datetime.fromisoformat(cached.value["updated_at"])
+        ).total_seconds()
+        < 3600
+    ):
+        return cached.value
+    try:
+        result = fetch(s, month, datetime.now(ZoneInfo(s.report_timezone)).date())
+    except ValueError:
+        raise HTTPException(
+            422, "Bitte einen gültigen vergangenen oder aktuellen Monat wählen."
+        ) from None
+    except (ProviderError, NotConfigured, httpx.HTTPError):
+        if cached:
+            return {
+                **cached.value,
+                "warning": "Aktualisierung fehlgeschlagen. Letzter erfolgreicher Stand wird angezeigt.",
+            }
+        raise HTTPException(502, "Kampagnendaten konnten nicht geladen werden.") from None
+    if cached:
+        cached.value = result
+    else:
+        db.add(Preference(key=key, value=result))
+    db.commit()
+    return result
+
+
+@app.get("/api/analytics/content")
+def analytics_content(
+    month=Depends(month_param),
+    refresh: bool = False,
+    user=Depends(current_user),
+    db=Depends(get_db),
+):
+    import httpx
+
+    from .connectors import NotConfigured, ProviderError
+    from .ga4_content import fetch
+
+    key = "ga4:content:" + month
+    cached = db.get(Preference, key)
+    if (
+        cached
+        and not refresh
+        and (
+            datetime.now(ZoneInfo("UTC")) - datetime.fromisoformat(cached.value["updated_at"])
+        ).total_seconds()
+        < 3600
+    ):
+        return cached.value
+    try:
+        result = fetch(s, month, datetime.now(ZoneInfo(s.report_timezone)).date())
+    except ValueError:
+        raise HTTPException(
+            422, "Bitte einen gültigen vergangenen oder aktuellen Monat wählen."
+        ) from None
+    except (ProviderError, NotConfigured, httpx.HTTPError):
+        if cached:
+            return {
+                **cached.value,
+                "warning": "Aktualisierung fehlgeschlagen. Letzter erfolgreicher Stand wird angezeigt.",
+            }
+        raise HTTPException(502, "Inhaltsdaten konnten nicht geladen werden.") from None
+    if cached:
+        cached.value = result
+    else:
+        db.add(Preference(key=key, value=result))
+    db.commit()
+    return result
+
+
+def ga4_cached(db, key, loader, seconds=3600, refresh=False):
+    import httpx
+
+    from .connectors import NotConfigured, ProviderError
+
+    cached = db.get(Preference, key)
+    if (
+        cached
+        and not refresh
+        and (
+            datetime.now(ZoneInfo("UTC")) - datetime.fromisoformat(cached.value["updated_at"])
+        ).total_seconds()
+        < seconds
+    ):
+        return cached.value
+    try:
+        result = loader()
+    except (ProviderError, NotConfigured, httpx.HTTPError):
+        if cached:
+            return {
+                **cached.value,
+                "warning": "Aktualisierung fehlgeschlagen. Letzter erfolgreicher Stand wird angezeigt.",
+            }
+        raise HTTPException(
+            502, "Analytics-Daten konnten nicht geladen werden. Bitte erneut versuchen."
+        ) from None
+    if cached:
+        cached.value = result
+    else:
+        db.add(Preference(key=key, value=result))
+    db.commit()
+    return result
+
+
+@app.get("/api/analytics/areas")
+def analytics_areas(
+    area: str, period: str, refresh: bool = False, user=Depends(current_user), db=Depends(get_db)
+):
+    from .ga4_areas import AREAS, belongs, catalog, fetch, select_pages
+
+    if area not in AREAS:
+        raise HTTPException(422, "Unbekannter Inhaltsbereich.")
+    today = datetime.now(ZoneInfo(s.report_timezone)).date()
+    try:
+        select_pages([], period, today)
+    except ValueError:
+        raise HTTPException(422, "Ungültiger Veröffentlichungszeitraum.") from None
+    cat = ga4_cached(db, "ga4:catalog:v4:" + area, lambda: catalog(area), 86400, refresh)
+    cat = {**cat, "pages": [p for p in cat["pages"] if belongs(area, p["path"])]}
+    pages = select_pages(cat["pages"], period, today)
+    pages.sort(key=lambda p: (p["published_at"] or "", p["path"]), reverse=True)
+    result = ga4_cached(
+        db, "ga4:cohort:v5:" + area + ":" + period + ":" + str(today), lambda: fetch(s, pages, today, include_comparison=True), refresh=refresh
+    )
+    return {
+        **result,
+        "pages": sorted(
+            [p for p in result["pages"] if belongs(area, p["path"])], key=lambda p: (p.get("published_at") or "", p["path"]), reverse=True
+        ),
+        "area": area,
+        "period": period,
+        "available_years": sorted(
+            {p["published_at"][:4] for p in cat["pages"] if p["published_at"]}, reverse=True
+        ),
+        "unknown_dates": sum(not p["published_at"] for p in cat["pages"]),
+        "catalog_warning": cat.get("warning"),
+        "catalog_count": len(cat["pages"]),
+        "hero": next(
+            (
+                p["image"]
+                for p in sorted(
+                    cat["pages"], key=lambda p: p.get("published_at") or "", reverse=True
+                )
+                if p.get("image")
+            ),
+            None,
+        ),
+    }
+
+
+@app.get("/api/analytics/area-traffic")
+def analytics_area_traffic(
+    area: str, path: str, refresh: bool = False, user=Depends(current_user), db=Depends(get_db)
+):
+    from hashlib import sha256
+
+    from .ga4_areas import AREAS, traffic
+
+    if area not in AREAS:
+        raise HTTPException(422, "Unbekannter Inhaltsbereich.")
+    cat = db.get(Preference, "ga4:catalog:v4:" + area)
+    page = next((p for p in cat.value["pages"] if p["path"] == path), None) if cat else None
+    if not page:
+        raise HTTPException(404, "Seite nicht im Sonio-Inhaltsverzeichnis gefunden.")
+    today = datetime.now(ZoneInfo(s.report_timezone)).date()
+    if page.get("published_at") and page["published_at"] > str(today):
+        raise HTTPException(422, "Die Seite liegt in der Zukunft.")
+    key = "ga4:traffic:v2:" + sha256(path.encode()).hexdigest()[:40]
+    return ga4_cached(db, key, lambda: traffic(s, page, today), refresh=refresh)
+
+
+@app.get('/api/analytics/monthly-sources')
+def analytics_monthly_sources(month=Depends(month_param), refresh: bool = False,
+                              user=Depends(current_user), db=Depends(get_db)):
+    from .ga4_monthly_sources import fetch
+    today = datetime.now(ZoneInfo(s.report_timezone)).date()
+    if month > today.strftime('%Y-%m'):
+        raise HTTPException(422, 'Bitte einen aktuellen oder vergangenen Monat wählen.')
+    return ga4_cached(db, 'ga4:monthly-sources:v3:'+month, lambda: fetch(s, month, today), refresh=refresh)

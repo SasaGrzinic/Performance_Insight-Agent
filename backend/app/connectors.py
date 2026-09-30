@@ -56,15 +56,16 @@ def request(method, url, **kwargs):
     return response
 
 
-def google_token(s):
-    require(s.google_client_id, s.google_client_secret, s.google_refresh_token)
+def google_token(s, refresh_token=None):
+    refresh_token = refresh_token or s.google_refresh_token
+    require(s.google_client_id, s.google_client_secret, refresh_token)
     return request(
         "POST",
         "https://oauth2.googleapis.com/token",
         data={
             "client_id": s.google_client_id,
             "client_secret": s.google_client_secret,
-            "refresh_token": s.google_refresh_token,
+            "refresh_token": refresh_token,
             "grant_type": "refresh_token",
         },
     ).json()["access_token"]
@@ -105,7 +106,7 @@ def analytics(start, end, s):
     data = request(
         "POST",
         f"https://analyticsdata.googleapis.com/v1beta/properties/{number_id(s.ga4_property_id)}:runReport",
-        headers={"Authorization": f"Bearer {google_token(s)}"},
+        headers={"Authorization": f"Bearer {google_token(s, s.ga4_refresh_token)}"},
         json=body,
     ).json()
     if data.get("rowCount", 0) > 10000:
@@ -125,13 +126,16 @@ def analytics(start, end, s):
 
 
 def google_ads(start, end, s):
-    require(s.google_ads_customer_id, s.google_ads_developer_token)
+    require(s.google_ads_customer_id)
+    if not getattr(s, "google_ads_refresh_token", ""):
+        raise NotConfigured("Google Ads separat autorisieren: Ads-Berechtigung fehlt.")
     if not re.fullmatch(r"v\d+", s.google_ads_api_version):
         raise ProviderError("Ungültige API-Version")
     headers = {
-        "Authorization": f"Bearer {google_token(s)}",
-        "developer-token": s.google_ads_developer_token,
+        "Authorization": f"Bearer {google_token(s, s.google_ads_refresh_token)}",
     }
+    if getattr(s, "google_ads_developer_token", ""):
+        headers["developer-token"] = s.google_ads_developer_token
     if s.google_ads_login_customer_id:
         headers["login-customer-id"] = number_id(s.google_ads_login_customer_id)
     url = f"https://googleads.googleapis.com/{s.google_ads_api_version}/customers/{number_id(s.google_ads_customer_id)}/googleAds:searchStream"

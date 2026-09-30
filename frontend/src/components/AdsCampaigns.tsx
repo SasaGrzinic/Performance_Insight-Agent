@@ -1,3 +1,5 @@
+import {RecommendationTeaser} from "./RecommendationTeaser";
+import "../linkedin-ads.css";
 import { PeriodInfo } from "./PeriodInfo";
 import { KpiExplainer } from "./KpiExplainer";
 import { asset, demoCampaigns } from "../staticDemo";
@@ -49,16 +51,44 @@ const objectives: Record<string, string> = {
   VIDEO_VIEW: "Videoaufrufe",
   LEAD_GENERATION: "Lead-Generierung",
 };
+const primaryFields = {
+  impressions: "Impressionen",
+  landing_page_clicks: "Landingpage-Klicks",
+  landing_page_ctr: "Landingpage-Klickrate",
+  landing_page_cpc: "Kosten / Landingpage-Klick",
+  conversions: "Website-Zielaktionen",
+  spend: "Ausgaben",
+};
 const fields = {
+  ...primaryFields,
+  cpm: "Kosten / 1’000 Einblendungen",
+  cost_per_conversion: "Kosten / Zielaktion",
   impressions: "Impressionen",
   clicks: "Klicks",
   ctr: "CTR",
-  conversions: "Conversions",
+  conversions: "Website-Zielaktionen",
   cpc: "CPC",
   spend: "Ausgaben",
 };
-const value = (c: Campaign, k: string) =>
-  k === "ctr" ? c.ctr : k === "cpc" ? c.cpc : c.values[k];
+const ratio = (a: number | undefined, b: number | undefined, scale = 1) =>
+  Number.isFinite(a) && Number.isFinite(b) && b! > 0 ? a! / b! * scale : null;
+const value = (c: Campaign, k: string) => {
+  if (k === "landing_page_ctr") return ratio(c.values.landing_page_clicks, c.values.impressions, 100);
+  if (k === "landing_page_cpc") return ratio(c.values.spend, c.values.landing_page_clicks);
+  if (k === "cpm") return ratio(c.values.spend, c.values.impressions, 1000);
+  if (k === "cost_per_conversion") return ratio(c.values.spend, c.values.conversions);
+  return k === "ctr" ? c.ctr : k === "cpc" ? c.cpc : c.values[k];
+};
+const campaignFields = (c: Campaign) => c.objective === "BRAND_AWARENESS" ? {
+  impressions: fields.impressions, clicks: "LinkedIn-Klicks", ctr: fields.ctr,
+  landing_page_clicks: fields.landing_page_clicks, cpm: fields.cpm, spend: fields.spend,
+} : primaryFields;
+const moneyKeys = ["spend", "cpc", "landing_page_cpc", "cpm", "cost_per_conversion"];
+const metricValue = (c: Campaign, key: string) => `${number(value(c, key), moneyKeys.includes(key) ? c.currency : "count")}${["ctr", "landing_page_ctr"].includes(key) && value(c,key) != null ? " %" : ""}`;
+export function LinkedInAdsHero() {
+  return <><div className="li-mast"><div><small>Sonio AG</small><h1>LinkedIn Ads Cockpit.</h1></div><span>Marketing · Paid Social</span></div>
+    <section className="li-hero"><img src={asset("brand/sonio-blog-header.jpg")} alt="Berglandschaft mit Fahrer und Zielflagge"/><div><h2>Gezielt sichtbar. Wirkung im Blick.</h2><p>Kampagnen verstehen. Marketing gezielt steuern.</p></div></section></>;
+}
 export function AdsCampaigns({ demo, actions }: { demo: boolean; actions?: ReactNode }) {
   const query = useQuery({
     queryKey: ["linkedin-ads-campaigns", demo],
@@ -92,7 +122,7 @@ export function AdsCampaigns({ demo, actions }: { demo: boolean; actions?: React
     start: d.start,
     end: d.end,
     currency: "CHF",
-    values: { impressions: 42000, clicks: 420, spend: 840, conversions: 12 },
+    values: { impressions: 42000, clicks: 420, spend: 840, landing_page_clicks: 350, conversions: 12 },
     ctr: 1,
     cpc: 2,
     first_activity: null,
@@ -166,7 +196,7 @@ export function AdsCampaigns({ demo, actions }: { demo: boolean; actions?: React
     <section className="ads-campaigns" aria-label="LinkedIn Ads Kampagnen">
       <div className="section-heading">
         <div>
-          <h2>Kampagnen</h2>
+          <h2>Kampagnen &amp; Wirkung.</h2>
           <p>{d.campaigns.length} Kampagnen</p>
           <p>
             {date(d.start)} bis {date(d.end)} <PeriodInfo>Kennzahlen der letzten 365 Tage, unabhängig vom Kampagnenstart. Der aktuelle Tag ist unvollständig. Fehlende Werte erscheinen als «—».</PeriodInfo>
@@ -181,6 +211,7 @@ export function AdsCampaigns({ demo, actions }: { demo: boolean; actions?: React
         </p>
       )}
 
+      <p className="ads-intro">Sichtbarkeit schaffen, Interesse gewinnen, Ergebnisse einordnen. Jede Kampagne wird anhand ihres Ziels und ihrer eingesetzten Mittel betrachtet.</p>
       {!campaigns.length && <p>Noch keine Kampagnen geladen.</p>}
       <div className="ads-campaign-list">
         {displayCampaigns.map((c) => (
@@ -216,17 +247,10 @@ export function AdsCampaigns({ demo, actions }: { demo: boolean; actions?: React
                 Geplante Laufzeit: {date(c.start)} –{" "}
                 {c.end ? date(c.end) : "ohne festes Enddatum"}
               </p>
-              <dl>
-                {Object.entries(fields).map(([key, label]) => (
-                  <div key={key} className={key === "spend" || key === "cpc" ? "campaign-cost" : undefined}>
-                    <dt>{label}</dt>
-                    <dd>
-                      {number(
-                        value(c, key),
-                        key === "spend" || key === "cpc" ? c.currency : "count",
-                      )}
-                      {key === "ctr" && c.ctr != null ? " %" : ""}
-                    </dd>
+              <dl className="ads-primary-kpis">
+                {Object.entries(campaignFields(c)).map(([key, label]) => (
+                  <div key={key} className={key === "spend" ? "campaign-cost" : undefined}>
+                    <dt>{label}</dt><dd>{metricValue(c,key)}</dd>
                   </div>
                 ))}
               </dl>
@@ -238,7 +262,9 @@ export function AdsCampaigns({ demo, actions }: { demo: boolean; actions?: React
                     : "Für die letzten 365 Tage liefert LinkedIn keine Kennzahlen zu dieser Kampagne."}
               </p>
               <details>
-                <summary>Ergebnisse einordnen</summary>
+                <summary>Details &amp; Einordnung</summary>
+                <dl className="ads-secondary-kpis">{["clicks", "ctr", "cpc", "landing_page_ctr", "landing_page_cpc", "cpm", "conversions", "cost_per_conversion"].filter(key => !(key in campaignFields(c))).map(key => <div key={key}><dt>{fields[key as keyof typeof fields]}</dt><dd>{metricValue(c,key)}</dd></div>)}</dl>
+                <p>Website-Zielaktionen sind die von LinkedIn zugerechneten Website-Conversions. Die konkrete Aktion ist noch nicht verifiziert; deshalb werden sie nicht als Anmeldungen oder Leads bezeichnet. Landingpage-Klicks sind keine nachgewiesenen Website-Sitzungen.</p>
                 <p>
                   {c.objective === "BRAND_AWARENESS"
                     ? "Das Ziel ist Markenbekanntheit. Impressionen zeigen die Ausspielung; Klicks und CPC sind ergänzende Signale. Ohne Reichweite und Häufigkeit lässt sich die Bekanntheitswirkung nicht abschliessend beurteilen."
@@ -270,6 +296,7 @@ export function AdsCampaigns({ demo, actions }: { demo: boolean; actions?: React
           ? `Letzter erfolgreicher Abruf: ${new Date(d.last_success).toLocaleString("de-CH")}`
           : "Noch kein erfolgreicher Abruf."}
       </p>
+      <RecommendationTeaser/>
     </section>
   );
 }

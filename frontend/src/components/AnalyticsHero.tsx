@@ -1,0 +1,3 @@
+import {asset} from '../staticDemo';
+import '../analytics-cockpit.css';
+export function AnalyticsHero(){return <><div className="marketing-mast"><h1>Website Insights.</h1></div><section className="marketing-hero"><img src={asset('brand/sonio-blog-header.jpg')} alt="Sonio Berglandschaft mit Fahrer und Zielflagge"/><div><h2>Gefunden werden. Interesse wecken.</h2><p>Verstehen, welche Inhalte Menschen zu Sonio bringen – und was sie dort bewegt.</p></div></section><p className="directory-intro">Von der ersten Suche bis zur vertieften Beschäftigung: Die Website-Auswertung verbindet Zugriffsquellen, erkennbare KI-Besuche und die Nutzung der Inhalte. Themen auswählen, Ergebnisse einordnen und nächste Schritte für das Marketing ableiten.</p></>}

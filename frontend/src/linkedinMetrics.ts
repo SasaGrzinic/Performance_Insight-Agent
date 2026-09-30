@@ -50,3 +50,13 @@ export function aggregateLinkedIn(data: (Dashboard | undefined)[]) {
     ]),
   );
 }
+
+/** Missing values and zero baselines never imply a percentage change. */
+export function metricTrend(current: unknown, previous: unknown, points = false): {value?: number; direction: "up" | "down" | "flat"; label: string} {
+  if (!finite(current) || !finite(previous)) return {direction: "flat", label: "Kein Vergleich verfügbar"};
+  if (!points && previous === 0) return current === 0
+    ? {value: 0, direction: "flat", label: "Unverändert gegenüber null im Vormonat."}
+    : {direction: "flat", label: "Vorperiode: 0; Prozentänderung nicht berechenbar"};
+  const value = points ? current - previous : (current - previous) / previous * 100;
+  return {value, direction: value > 0 ? "up" : value < 0 ? "down" : "flat", label: points ? "Differenz in Prozentpunkten." : "Relative Veränderung gegenüber dem Vormonat."};
+}

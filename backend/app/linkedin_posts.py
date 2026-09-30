@@ -2,7 +2,7 @@
 
 import re
 from datetime import datetime, timezone
-from urllib.parse import parse_qs, urlsplit
+from urllib.parse import parse_qs, quote, urlsplit
 
 from sqlalchemy import select
 
@@ -23,7 +23,7 @@ VIDEO_FIELDS = {
 }
 
 
-def fetch_posts(start, end, s):
+def fetch_posts(start, end, s, videos_only=False):
     require(s.linkedin_organization_id)
     if not re.fullmatch(r"[1-9][0-9]*", s.linkedin_organization_id):
         raise ProviderError("Ungültige Unternehmensseiten-ID.")
@@ -69,6 +69,14 @@ def fetch_posts(start, end, s):
                 if article
                 else "text"
             )
+            if videos_only and kind != "video":
+                continue
+            images = content.get("multiImage", {}).get("images", [])
+            image_urn = (
+                article.get("thumbnail")
+                or media.get("id")
+                or (images[0].get("id") if images else None)
+            )
             text = p.get("commentary", "")
             posts[urn] = {
                 "id": urn,
@@ -84,6 +92,7 @@ def fetch_posts(start, end, s):
                 "metrics": {},
                 "video_status": "not_applicable",
                 "metric_scope": "lifetime",
+                "media_urn": image_urn,
             }
         links = page.get("paging", {}).get("links", [])
         next_link = next((link for link in links if link.get("rel") == "next"), None)
@@ -160,12 +169,19 @@ def fetch_posts(start, end, s):
     return list(posts.values())
 
 
-def sync_posts(db, start, end, s):
+def sync_posts(db, start, end, s, videos_only=False):
     state = db.get(ChannelState, "linkedin_posts") or ChannelState(channel="linkedin_posts")
     try:
-        posts = fetch_posts(start, end, s)
+        posts = fetch_posts(start, end, s, videos_only=True) if videos_only else fetch_posts(start, end, s)
+        media_posts = [p for p in posts if p.get("media_urn")]
+        if media_posts:
+            enrich_images(media_posts, s)
         for data in posts:
             record = db.get(LinkedInPost, data["id"]) or LinkedInPost(id=data["id"])
+            if not data.get("image_url") and record.data:
+                data["image_url"] = record.data.get("image_url")
+                if record.data.get("image_source"):
+                    data["image_source"] = record.data["image_source"]
             record.organization = data["organization"]
             record.published_at = data["published_at"]
             record.data = data
@@ -206,3 +222,31 @@ def post_response(db, month, s):
         "last_success": state.last_success.isoformat() if state and state.last_success else None,
         "posts": [{**p.data, "updated_at": p.updated_at.isoformat()} for p in records],
     }
+
+
+def enrich_images(posts, s):
+    headers = linkedin_headers(s)
+    cache = {}
+    for post in posts:
+        urn = post.get("media_urn") or ""
+        if not re.fullmatch(r"urn:li:(image|video):[A-Za-z0-9_-]+", urn):
+            continue
+        if urn not in cache:
+            endpoint = "videos" if urn.startswith("urn:li:video:") else "images"
+            try:
+                data = request(
+                    "GET",
+                    "https://api.linkedin.com/rest/" + endpoint + "/" + quote(urn, safe=""),
+                    headers=headers,
+                ).json()
+                url = data.get("thumbnail") if endpoint == "videos" else data.get("downloadUrl")
+                host = urlsplit(url or "").hostname or ""
+                cache[urn] = (
+                    url
+                    if urlsplit(url or "").scheme == "https"
+                    and (host.endswith(".licdn.com") or host.endswith(".licdn-ei.com"))
+                    else None
+                )
+            except ProviderError:
+                cache[urn] = None
+        post["image_url"] = cache[urn]

@@ -1,0 +1,8 @@
+import {useState} from 'react';
+import {ChannelIcon} from './ui';
+import type {Channel,Recommendation} from '../types';
+import {channelEntries} from '../recommendationContent';
+export function ChannelRecommendations({channels,items,onSelect,initialChannels=[]}:{channels:Channel[];items:Recommendation[];onSelect:(r:Recommendation)=>void;initialChannels?:string[]}){
+ const [filter,setFilter]=useState(initialChannels);
+ return <section className="compact-recommendations"><div className="section-heading"><h2>Empfehlungen nach Kanal</h2></div><p>Priorisierte Handlungshinweise und ergänzende, ausdrücklich gekennzeichnete Beispiele. Beispiele sind keine Analyse der aktuellen Performance.</p><div className="channel-selector" role="group" aria-label="Empfehlungen nach Kanal filtern"><button aria-pressed={!filter.length} onClick={()=>setFilter([])}>Alle Kanäle</button>{channels.map(c=><button key={c.id} aria-pressed={filter.includes(c.id)} onClick={()=>setFilter([c.id])}>{c.name}</button>)}</div>{channels.filter(c=>!filter.length||filter.includes(c.id)).map(c=>{const list=channelEntries(c.id,items);return <section className="compact-channel" key={c.id}><header><div className="channel-title"><ChannelIcon id={c.id} size={30}/><h3>{c.name}</h3></div><span>{list.length} nächste Schritte</span></header><div className="compact-rec-grid">{list.map(({recommendation:r,example},i)=><article key={i}><small>{example?'Beispiel · vor Umsetzung prüfen':'Aus Kennzahlen / Analyse'}</small><h4>{r.title}</h4><p>{r.action}</p><button onClick={()=>onSelect(r)}>{example?'Beispiel ansehen':'Einordnung ansehen'}</button></article>)}</div>{!list.length&&<p>Noch keine Empfehlungen für diesen Kanal.</p>}</section>})}</section>;
+}

@@ -52,14 +52,58 @@ def sync_channel(db, channel, start, end):
                 start, end, get_settings(), include_campaigns=True
             )
             account_urn = f"urn:li:sponsoredAccount:{account['id']}"
+            previous_images = {
+                c.id: c.data
+                for c in db.scalars(
+                    select(LinkedInCampaign).where(LinkedInCampaign.account == account_urn)
+                ).all()
+            }
             db.execute(delete(LinkedInCampaign).where(LinkedInCampaign.account == account_urn))
             for urn, campaign in campaign_items.items():
                 metadata = {
                     key: campaign.get(key)
-                    for key in ("name", "status", "objectiveType", "runSchedule")
+                    for key in (
+                        "name",
+                        "status",
+                        "objectiveType",
+                        "runSchedule",
+                        "image_url",
+                        "image_source",
+                    )
                 }
+                if not metadata.get("image_url"):
+                    for key in ("image_url", "image_source"):
+                        metadata[key] = previous_images.get(urn, {}).get(key)
                 metadata["currency"] = account["currency"]
                 db.add(LinkedInCampaign(id=urn, account=account_urn, data=metadata))
+        elif channel == "mailchimp":
+            from datetime import date
+
+            from .mailchimp_campaigns import enrich_mailing_images, fetch_year
+            from .models import MailchimpCampaign
+
+            start = date(2026, 1, 1)
+            end = min(
+                datetime.now(ZoneInfo(get_settings().report_timezone)).date(), date(2026, 12, 31)
+            )
+            records, campaigns = fetch_year(get_settings(), end)
+            previous_campaigns = {c.id: c.data for c in db.scalars(select(MailchimpCampaign)).all()}
+            enrich_mailing_images(campaigns, previous_campaigns, get_settings())
+            current_ids = {item["id"] for item in campaigns}
+            for previous in db.scalars(select(MailchimpCampaign)).all():
+                if (
+                    previous.data.get("send_time", "").startswith("2026-")
+                    and previous.id not in current_ids
+                ):
+                    previous.data = {**previous.data, "active_in_snapshot": False}
+            for item in campaigns:
+                item["active_in_snapshot"] = True
+                existing = db.get(MailchimpCampaign, item["id"])
+                if existing:
+                    existing.data = item
+                    existing.updated_at = now()
+                else:
+                    db.add(MailchimpCampaign(id=item["id"], data=item))
         else:
             records = fetch_channel(channel, start, end)
         query = delete(Metric).where(

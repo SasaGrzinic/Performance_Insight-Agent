@@ -1,3 +1,4 @@
+import { AnalyticsInfo } from "./AnalyticsInfo";
 import { KpiExplainer } from "./KpiExplainer";
 import {
   multiMetricSeries,
@@ -101,15 +102,15 @@ function metricValue(value: number | undefined, key: string) {
 }
 
 export function PostImage({ post }: { post: Pick<Post, "image_url"> }) {
-  const [failed, setFailed] = useState(false);
-  return post.image_url && !failed ? (
+  const [failed, setFailed] = useState<string | null>(null);
+  return post.image_url && failed !== post.image_url ? (
     <img
       className="post-main-image"
       src={post.image_url}
       alt=""
       loading="lazy"
       referrerPolicy="no-referrer"
-      onError={() => setFailed(true)}
+      onError={() => setFailed(post.image_url || null)}
     />
   ) : (
     <span className="post-image-unavailable">Kein Hauptbild verfügbar</span>
@@ -350,6 +351,7 @@ export function PerformanceExplorer({
   channel,
   demo,
   showPosts = true,
+  compact = false,
   onOpenPosts,
   onMonth,
 }: {
@@ -357,10 +359,12 @@ export function PerformanceExplorer({
   channel: string;
   demo: boolean;
   showPosts?: boolean;
+  compact?: boolean;
   onOpenPosts?: () => void;
   onMonth?: (month: string) => void;
 }) {
   const c = data.channels.find((c) => c.id === channel) || data.channels[0];
+  const [advanced, setAdvanced] = useState(false);
   const [selectedMetrics, setMetrics] = useState<string[]>([]);
   const validMetrics = selectedMetrics.filter((key) => c.fields[key]);
   const metrics = validMetrics.length ? validMetrics : [c.primary];
@@ -396,7 +400,8 @@ export function PerformanceExplorer({
     })),
   });
   const datasets = [data, ...queries.map((q) => q.data)];
-  const points = multiMetricSeries(months, datasets, c.id, metrics);
+  const tooltipMetrics = c.id === "analytics" ? Object.keys(c.fields) : metrics;
+  const points = multiMetricSeries(months, datasets, c.id, tooltipMetrics);
   const lineKeys = months.flatMap((m) => metrics.map((key) => `${m}|${key}`));
   const chartPoints =
     scale === "relative" ? relativeSeries(points, lineKeys) : points;
@@ -412,7 +417,7 @@ export function PerformanceExplorer({
 
   return (
     <div className="performance-explorer">
-      <section className="panel performance-panel">
+      <section className={`panel performance-panel ${compact ? "li-compact-chart" : ""}`}>
         <div className="panel-heading">
           <div>
             <h2>Performance im Vergleich</h2>
@@ -447,7 +452,8 @@ export function PerformanceExplorer({
                 />
               </label>
             )}
-            <label>
+            {compact && <label>Kennzahl<select aria-label="Kennzahl im Verlauf" value={metric} onChange={(e) => setMetrics([e.target.value])}>{Object.keys(c.fields).map((key) => <option key={key} value={key}>{metricLabel(key)}</option>)}</select></label>}
+            <label className={compact ? "li-scale-control" : undefined}>
               Darstellung
               <select
                 aria-label="Skalierung im Verlauf"
@@ -531,6 +537,9 @@ export function PerformanceExplorer({
               </div>
             </details>
           </div>
+          {compact && <button className="li-advanced-toggle" type="button" aria-expanded={advanced} onClick={() => setAdvanced(!advanced)}>Weitere Kennzahlen &amp; Darstellung</button>}
+          {(!compact || advanced) && <div className="li-advanced-metrics">
+          {compact && <label>Darstellung<select aria-label="Skalierung zusätzlicher Kennzahlen" value={scale} onChange={(e) => setScale(e.target.value)}><option value="absolute">Absolute Werte</option><option value="relative">Verlauf relativ zum Höchstwert</option></select></label>}
           <fieldset className="metric-picker">
             <legend>
               Kennzahlen gemeinsam anzeigen <span>Bis zu 4 auswählen</span>
@@ -562,7 +571,7 @@ export function PerformanceExplorer({
                 </label>
               ))}
             </div>
-          </fieldset>
+          </fieldset></div>}
           <div className="month-legend">
             {months.map((m, i) => (
               <span key={m}>
@@ -698,7 +707,7 @@ export function PerformanceExplorer({
                                       </span>
                                     </div>
                                     {(demo || c.id !== "linkedin_organic") &&
-                                      metrics.map((key) => (
+                                      tooltipMetrics.map((key) => (
                                         <div
                                           className="tooltip-metric"
                                           key={key}
@@ -723,6 +732,8 @@ export function PerformanceExplorer({
                                           </strong>
                                         </div>
                                       ))}
+                                    {c.id === "analytics" && <div className="tooltip-metric"><span>Engagement-Rate</span><strong>{typeof point?.[`${month}|sessions`] === 'number' && Number(point[`${month}|sessions`]) > 0 && typeof point?.[`${month}|engaged_sessions`] === 'number' ? number(Number(point[`${month}|engaged_sessions`])/Number(point[`${month}|sessions`])*100)+' %' : '—'}</strong></div>}
+                                    {c.id === "analytics" && <small>Tageswerte · Engagement-Rate: engagierte Sitzungen ÷ Sitzungen.</small>}
                                     {!demo &&
                                       c.id === "linkedin_organic" &&
                                       (q.isPending ? (
@@ -816,6 +827,7 @@ export function PerformanceExplorer({
                           <span>
                             <i style={{ background: metricColor(key) }} />
                             {metricLabel(key)}
+                            {c.id === "analytics" && <AnalyticsInfo metric={key} label={metricLabel(key)} monthly/>}
                           </span>
                           <strong>
                             {number(ch?.values[key], ch?.units[key])}
@@ -850,7 +862,7 @@ export function PerformanceExplorer({
               </p>
             </>
           )}
-          {!demo && c.id === "linkedin_organic" && (
+          {!demo && c.id === "linkedin_organic" && (!compact || day !== null) && (
             <section
               className="day-inspector"
               aria-label="Beiträge zum ausgewählten Tag"

@@ -77,6 +77,323 @@ Diese Grenzen sind keine versteckten Live-Funktionen: Fehlende Verbindungen werd
 
 Der Nutzer sieht weiterhin nur einen Teil der Postüberschriften im Diagramm (nach dem Importabgleich). Vollständigkeit der UI-Zuordnung ist deshalb nicht abschliessend abgenommen. Bei Wiederaufnahme konkrete fehlende Titel/Zeiträume mit Tooltip und Beitragsliste abgleichen; der Importabgleich allein schliesst den UI-Fehler nicht aus. Aktuell auf Nutzerwunsch YouTube als nächsten Integrationsschritt vorbereiten.
 
+## Umsetzung der Produktdesign-Prüfung
+
+- Übersicht auf kompakte Monatskennzahlen, Einordnung und Verlauf konzentriert.
+  Vollständige Beitragskarten bleiben in der Detailansicht erreichbar; doppelte
+  leere KI-Empfehlungsflächen entfernt. Exportauswahl bleibt erhalten.
+- Vergleiche nennen Monat und Vorperiodenwert; laufende Monatsvergleiche nennen
+  zusätzlich das Vergleichs-Enddatum. Vergleichstext mindestens 12 px.
+- Persistente Auswahl von Beitragsmonat und Veröffentlichungstag unter dem
+  Diagramm. Alle geladenen Beiträge des ausgewählten Datums erscheinen dort;
+  Vergleichsmonate sind unabhängig vom Berichtsmonat auswählbar.
+- Kanal-Tageswerte und Beitragswerte seit Veröffentlichung separat beschriftet.
+  Mobile verwendet den persistenten Bereich statt eines verdeckenden Tooltips.
+  Dekorative mathematische Unicode-Schriften in Titeln werden nur für die Anzeige
+  normalisiert; Quelldaten und CSV-Titel bleiben unverändert.
+- Live-Browserprüfung: August/Julivergleich, zwei Beiträge am 6. August und zwei
+  am 3. Juli im Vergleichsmonat, CSV-Auswahl. LinkedIn meldete API-Begrenzung;
+  vorhandene Daten mit Abrufstand wurden angezeigt, kein neuer Import behauptet.
+- Desktop 1280 px und Mobile 390 px visuell geprüft. Unabhängiger Finish-Reviewer
+  beanstandete fehlenden Innenabstand im Analysebereich; korrigiert und anhand
+  beider neuen Aufnahmen als behoben bestätigt (Disposition: ship, Umfang: Fix).
+- Zwölf Frontend-Tests, TypeScript-Prüfung und Produktionsbuild erfolgreich.
+  Neuer Test schützt Titel-Normalisierung inklusive Akzenten und Emoji.
+  Backend unverändert. Automatischer Impeccable-Detektor wegen fehlender Engine
+  nicht verfügbar. Keine vollständige WCAG-Abnahme.
+- Frühere Behauptung fehlender Posttitel ist damit nicht für sämtliche Zeiträume
+  abschliessend geklärt; die neue Auswahl macht die Zuordnung überprüfbar.
+
+### Headerbild, Kanal-Logos und mehrere Diagrammkennzahlen — 24.09.2026
+
+- Vorhandenes Sonio-Websitefoto lokal eingebunden, Herkunft in `frontend/public/brand/ASSETS.md` und JPEG-Kommentar dokumentiert. Kanalmarken lokal; Events/QR behalten funktionale Icons ohne erfundenen Anbieter.
+- Performance unterstützt 1–4 Kennzahlen und weiterhin bis zu vier Monate. Kennzahlenfarbe bleibt stabil; Monate unterscheiden sich durch Linienarten. Absolute Werte gruppieren sich nach Einheit; relative Darstellung skaliert jede Monats-/Kennzahllinie auf ihren eigenen Höchstwert. Tooltip, Tagdetails und Monatsergebnisse bleiben Originalwerte. Fehlend bleibt eine Lücke, echte Null bleibt Null.
+- Live-Browser: zwei Kennzahlen × August/Juli = vier Linien; vier Kennzahlen × zwei Monate = acht Linien, fünfte Auswahl deaktiviert. 6. August zeigt weiterhin beide Posttitel und beide Tageskennzahlen. Kanalansicht zeigt LinkedIn-Logo mit Kanalnamen im Header.
+- Desktop (Standardbreite 1224) und Mobile (390) visuell geprüft. Desktop absolute/mobile relative Darstellung erfasst unter `.impeccable/review/header-metrics-{desktop,mobile}.png`; mobiler Seitenüberlauf geprüft: keiner. Temporäre Viewport-Anpassung zurückgesetzt.
+- 14 Frontend-Tests erfolgreich (darunter neue Mehrfachkennzahl-Ausrichtung und relative Skalierung), TypeScript und Vite-Produktionsbuild erfolgreich. Keine Backend- oder API-Berechtigungsänderung. LinkedIn-Rate-Limit besteht; vorhandener Datenstand bleibt sichtbar.
+- Impeccable-Detektor versucht, mangels installierter Engine 0.1.5/Cache-Schreibrecht nicht ausführbar; keine automatisierte Design-Abnahme behauptet.
+- Unabhängige Abschlussprüfung: `ship` für die beiden gelieferten Ansichten; keine belegten materiellen Darstellungsfehler. Ergänzender Browser-Funktionstest auf separater, danach geschlossener Demo-Seite bei 390 px: vier Kennzahlen, vier Kurven, zwei Achsen; Erläuterung «Anzahl links · CHF rechts», kein Seitenüberlauf. Kein echter Google-Ads-Zugriff dadurch behauptet.
+
+### Kanalübersicht und vollflächiger Bildheader — 24.09.2026
+
+- Übersicht als Einstieg mit allen acht Kanalprodukten, vorhandenen Markenlogos (Events/QR ohne definierten Anbieter: Funktionssymbole), Status, bis zu drei verfügbaren Kennzahlen und letztem Abruf. Verbundene Kanäle zuerst. Fehlende Werte werden nicht erfunden.
+- LinkedIn-KPI-Streifen, PerformanceExplorer und vollständige Posts nicht mehr auf der Übersicht; bestehende Kanaldetails behalten Analysen und Mehrfachvergleich. Direkte Verweise auf Follower und Posts ergänzen die LinkedIn-Detailseite.
+- Nutzerkorrekturen umgesetzt: explizit das Artikel-Headerbild, nicht das Autorenporträt. Übersicht mit vollflächigem Foto, Titel «MARKETING PERFORMANCE & INSIGHT»; Monat und Aktualisierung in eigener Werkzeugzeile ausserhalb des Bildheaders. Alte ungenutzte Fotodateien entfernt; neue Quelle im JPEG und ASSETS.md dokumentiert.
+- Browser: acht Übersichtseinträge, kein PerformanceExplorer auf Übersicht, null Buttons/Inputs im Header. LinkedIn-Karte öffnet richtige Überschrift und Diagramm; YouTube öffnet eigene Detailansicht; Rückweg funktioniert. Mobile390 ohne Seitenüberlauf, Desktop1224 und Mobile visuell erfasst in `.impeccable/review/channel-overview-{desktop,mobile}.png`.
+- Erneut 14 Frontend-Tests, TypeScript und Produktionsbuild erfolgreich. Keine Backendänderungen, keine neue Datenanbindung oder Synchronisierung ausgelöst.
+- Unabhängige Abschlussprüfung der gelieferten Desktop-/Mobile-Aufnahmen: `ship`, keine sichtbaren Blocker. Keine vollständige Accessibility-Zertifizierung; Fokus/Fehlerzustände und Kontrast wurden dabei nicht separat messtechnisch geprüft.
+
+### Agententext, Top-3-Vorschau und aktueller Monat — 24.09.2026
+
+- Übersicht nutzt den aktuellen Monat in der konfigurierten Berichtszeitzone, mit Minutenprüfung auch beim Monatswechsel. Historische Auswahl bleibt in Detailansichten. Datumsauswahl und «Abgeschlossener Monat» entfallen auf der Übersicht; Aktualisierung steht neben dem Kanalstatus.
+- Erklärung direkt unter dem Header aus dem bisherigen Projektauftrag formuliert; keine separate Challenge-Datei gefunden. Top-3-Bereich vor Kanälen: verfügbare Empfehlungen nach Priorität sortiert; ohne Empfehlungen ausdrücklich gewünschte grafische Vorschau mit drei Platzhaltern, ohne erfundene Befunde und ohne erneuten OpenRouter-Einrichtungshinweis.
+- Frontend lädt den gespeicherten Dashboard-Stand jede Minute; das ist keine Zusage sekundengenauer Provider-Echtzeit. Karten zeigen letzten erfolgreichen Abruf inklusive Uhrzeit. Keine Backend-Sync-Frequenz geändert.
+- Browser: September2026, null Datumsinputs auf Übersicht, drei Vorschaukarten; Desktop1224/Mobile390 geprüft, kein mobiler Seitenüberlauf. Aufnahmen `.impeccable/review/overview-recommendations-{desktop,mobile}.png`. Unabhängige visuelle Abschlussprüfung ohne wesentliche Befunde.
+- 15 Frontend-Tests inkl. Monats-/Jahreswechsel in Berichtszeitzone, TypeScript und Vite-Build erfolgreich.
+
+### Kompakte blaue Übersichtskarten — 24.09.2026
+
+- Empfehlungen nach die vollständige Kanalliste verschoben. Empfehlungssymbole auf42px, Kanallogos auf44px vergrössert. Kartenabstände reduziert, illustrative Beleg-Platzhalterlinien entfernt. Drei Blautöne unterscheiden Karten; dunkle Empfehlung nutzt weisse Schrift. Daten und Navigation unverändert.
+- Desktop1224 und Mobile390 visuell geprüft (`compact-blue-desktop.png`/`compact-blue-mobile.png` in `.impeccable/review/`). TypeScript und Produktionsbuild erfolgreich; keine neue fachliche Datenlogik und keine zusätzlichen Tests erforderlich.
+
+### Navigation, Video Performance und Zugang — 24.09.2026
+
+- Hauptnavigation: Übersicht, Kanäle, Insights & Empfehlungen, Video Performance, Reports. Follower und vollständige LinkedIn-Posts bleiben über Kanaldetails erreichbar; Verwaltungsnavigation separat erhalten.
+- Neue Videoansicht trennt LinkedIn-Videobeiträge (Gesamtwerte seit Veröffentlichung inklusive Ø Betrachtungsdauer) von YouTube-Monatskennzahlen. `videosOnly` erzwingt Videofilter, statt bloss vorauszuwählen. YouTube weiterhin pausiert und ohne vorgetäuschte Daten.
+- Browser: exakte Navigationsreihenfolge, zwei Plattformbereiche, keine «Alle Posts»-Umschaltung in Videoansicht; September enthält einen LinkedIn-Videobeitrag mit Aufrufen, Wiedergabezeit und Durchschnitt. Desktop1224/Mobile390 geprüft, kein mobiler Seitenüberlauf; `.impeccable/review/video-performance-{desktop,mobile}.png`.
+- Bestehender Master-Admin-/Einladungsmechanismus erhalten, Teamtext präzisiert. Vier gezielte Backendtests auf temporärer Testdatenbank erfolgreich: Authpflicht, einmalige Einladung/Viewer-Rechte, abgelaufene Einladung, Schutz des Master-Admins vor Deaktivierung. TypeScript und Produktionsbuild erfolgreich. Keine Nutzer eingeladen oder Zugriffsrechte geändert.
+- LinkedIn Ads auf Nutzerwunsch pausiert. Bedingungen nicht angenommen und Advertising-Antrag nicht abgesendet; Account-ID bleibt als gewünschtes Ziel dokumentiert.
+
+### 24.09.2026 – Getrennte LinkedIn-Ads-Autorisierung
+
+- Advertising API Development Tier der App 266496062 im Entwicklerportal geprüft.
+- Eigene Ads-Token-/Client-Konfiguration, ohne Fallback auf Organic-Zugang.
+- 11 LinkedIn-Connector-Tests erfolgreich, einschliesslich getrennter Token-Nutzung,
+  fehlendem Ads-Token und Refresh mit ausschliesslich Ads-App-Zugangsdaten.
+- Ruff-Prüfung der vier betroffenen Python-Dateien erfolgreich.
+- Live-Konto-/Währungsprüfung und Import warten auf den erneuten OAuth-Login.
+
+### 24.09.2026 – Ads-Liveimport abgeschlossen
+
+- OAuth abgeschlossen, eigenständige Ads-Zugangsdaten geschützt gespeichert.
+- Refresh-Austausch und Konto 514253005 live geprüft: Sonio AG (622072), CHF.
+- 365 Tage (25.09.2025–24.09.2026) kampagnenweise importiert: 40 Messwerte,
+  10 Januartage, Kampagne 475515244. 33'500 Impressionen, 70 Klicks, CHF 499.95.
+- Rollierendes 365-Tage-Fenster in regulärer manueller/geplanter Synchronisation.
+- Kontozuordnung, Kampagnenpagination, Datumsgrenzen, fremde Kampagnen,
+  Duplikate, getrennte Token und Rest.li-Projektionen getestet.
+- Vollständige Backend-Suite: 55 Tests bestanden. Ruff für betroffene Dateien bestanden.
+- API, Worker und bestehender Scheduler mit neuer Konfiguration neu gestartet.
+- Live-Dashboard im Browser: LinkedIn Ads, Januar 2026; alle vier Summen geprüft.
+- Vollständiger kampagnenbezogener Erstexport unter `.local/LinkedIn-Ads-letzte-365-Tage.csv`.
+- Keine neuen Frontend-Komponenten oder Kampagnennamenliste implementiert;
+  aktuelle Oberfläche zeigt Monatskennzahlen und Tagesverlauf, CSV auch Kampagnennamen.
+
+### 24.09.2026 – Monatsunabhängige Ads-Kampagnenansicht
+
+- Migration 003 lokal angewendet; 5 echte Kampagnentitel samt Ziel, Status,
+  Laufzeit und Währung mit 365-Tage-Statistiken importiert.
+- Neue geschützte API; Aggregation über Monatsgrenzen, 365-Tage-Grenze,
+  fehlende Daten und nicht authentifizierter Zugriff getestet.
+- Backend: 57 Tests bestanden; TypeScript und Produktionsbuild erfolgreich.
+- Browser bestätigt 5 benannte Kampagnen, echte Werte der Januar-Kampagne,
+  keine Ads-Monatsauswahl und keinen Vergleichsgraphen. Desktop/Mobile erfasst.
+
+### Lokale Organic-Verfeinerung, 25.09.2026
+- Headerbeschreibungen, kompakte KPIs, Monatsauswahl im Vergleich als Mehrfach-Dropdown.
+- Originalbilder über LinkedIn-Medien-API, Tooltip mit Post-Gesamtwerten für Impressionen/Klicks; Postliste mit Bildern und Datum aufsteigend.
+- TypeScript und Vite-Build erfolgreich; 9 LinkedIn-Post-Tests bestanden.
+- Browser: 14 September-Beiträge, erster Beitrag 02.09.; zwei Monate überlagert; mobile Ansicht 390px ohne Seitenüberlauf, Originalbilder geladen.
+- Automatische Sicherheitsprüfung lehnte eine Löschung alter Post-Datensätze ab; keine Löschung implementiert, gespeicherte Posts bleiben erhalten.
+- Änderungen lokal, noch nicht auf GitHub Pages veröffentlicht.
+
+### Ads-Motive und KPI-Hilfe, 25.09.2026
+- Erneuter lesender Analytics-Abruf 26.09.2025–25.09.2026: weiterhin nur eine Kampagne mit Messwerten. Keine fehlenden Realwerte ergänzt.
+- 16 Creatives, fünf Kampagnen; pro Kampagne ein Originalmotiv über organisationsgeprüften Beitrag geladen. Alle fünf Bilder im Browser erfolgreich geladen.
+- Kompakte Ads-Zeilen, fette KPI-Titel, Suche entfernt. Eine ausdrücklich fiktive Ansichtskampagne, ausgeschlossen aus Exporten und Backend/KI.
+- KPI-Dropdown in allen Kanal-Erläuterungen sowie Post-/Videoansicht. Ads-CTR und GA4-Sitzungen im Browser geprüft, 390px ohne Seitenüberlauf.
+- TypeScript/Vite erfolgreich; 10 Ads-Tests bestanden. Optionaler Motivabruf darf fehlgeschlagenen Abruf oder fehlende Organic-Konfiguration ohne Verlust bestehender Bilder überstehen.
+- API-Grundlage: https://learn.microsoft.com/en-us/linkedin/marketing/integrations/ads/account-structure/create-and-manage-creatives
+- Nur lokal aktualisiert; kein Pages-Deployment.
+
+### Mailchimp-Anbindung, 25.09.2026
+API bestätigte Sonio AG. Kampagnen- und Report-Endpunkte lesend erreichbar. Erster Sync des laufenden Monats erfolgreich: 15 Messwerte, ChannelState connected. Lokales Backend mit neuer Konfiguration neu gestartet. Keine Schlüsselwerte ausgegeben oder ins Repository übernommen; .env und .local/preview.db git-ignoriert. Endgültige KPI-Auswahl bleibt offen.
+
+### Mailchimp-Jahresübersicht 2026
+39 gesendete Mailings über API gefunden; 4 Test-/Vorlagensendungen ausgeschlossen.
+35 Mailings, 15 Gruppen, 105 vorläufige Kennzahlen importiert. Migration 004 lokal
+angewandt. Fünf Tests zu Gruppierung, fehlenden Reports, Testausschluss und
+unvollständiger Pagination bestanden. TypeScript/Produktionsbuild erfolgreich.
+Browser: September + Events sowie Suchbegriff Swiss zeigen die passenden Gruppen;
+390px ohne Seitenüberlauf. Fachliche KPI-Festlegung weiterhin offen.
+
+Mailing-Leitbilder: 35/35 Bild-URLs aus versendetem HTML ermittelt (erstes grosses
+Inhaltsbild, Logos/Icons/Pixel ausgeschlossen). Mailchimp-HTML wird nicht gerendert,
+nur erlaubte HTTPS-Bildhosts. Bestehende URLs werden beim Sync wiederverwendet.
+Acht Mailchimp-Tests bestanden, inklusive Pixel-/Logo-/Hostfilter und optionalem
+Bild-Timeout. Build/TypeScript erfolgreich. Dropdown aktuell September zuerst,
+Ganzes Jahr zuletzt; Gruppen nach letztem Versand und Sendungen absteigend.
+Desktop/Mobile (390px) ohne horizontalen Überlauf geprüft.
+
+Mailchimp-KPI-Erweiterung: Live-Import für 35 Mailings erfolgreich. Neun gezielte
+Tests bestanden (Rate/Null/fehlend enthalten), TypeScript/Vite-Build erfolgreich.
+Browserprüfung zeigt Klick-/Zustellrate direkt, aufklappbare Detailwerte; Mobile
+390px ohne Überlauf. API-Raten nicht als summierbare Metrics importiert.
+
+## YouTube-Zugang — 25.09.2026
+
+- Bestehenden OAuth-Client und vorhandene Google-Anmeldung genutzt; Zielkanal
+  @sonio-channel_2023 vor Token-Speicherung via Data API verifiziert.
+- September 2026 live importiert: 63 Messwerte (21 Tageszeilen), 32’355 Aufrufe,
+  9’854 Wiedergabeminuten, 0 gewonnene Abonnenten. Das ist der gelieferte
+  Analytics-Datenstand, keine Garantie für Echtzeit-Vollständigkeit.
+- API, Worker und Scheduler mit aktualisierter Konfiguration neu gestartet.
+- Browser: Übersicht zeigt 4 von 8 verbunden; YouTube-Detailseite zeigt echte
+  Kennzahlen und Tagesverlauf. OAuth-Erfolgsfenster geschlossen.
+- Keine UI-/Adapterlogik geändert; keine zusätzlichen Unit-Tests nötig.
+- Noch offen: detaillierte Video-KPIs und Freigabe für dauerhaften Betrieb
+  ausserhalb des Google-Testmodus. Frühere Pausen-/Zugangshinweise sind überholt.
+
+### YouTube-Videothek — 25.09.2026
+
+- Lesender Live-Abruf: 80 Videos und 8 Playlists; 38 Videos mit gelieferten
+  Kennzahlen für September 2026. Dies ist ein beobachteter Abrufstand, keine feste
+  Erwartung für spätere Abfragen. Zugriffsquellen ebenfalls live erfolgreich abgerufen.
+- Zwei gezielte Backend-Tests bestanden: Upload-Pagination mit fehlenden Werten
+  gegenüber echten Nullwerten sowie Ablehnung eines fremden autorisierten Kanals.
+  TypeScript-Prüfung und Produktionsbuild erfolgreich.
+- Ansicht mit Monats-, Playlist- und Videofilter, Vorschaubildern, sieben
+  Monatskennzahlen und aufklappbaren Zugriffsquellen ergänzt. Bestehende Sonio-Blautöne
+  und kompakte Zeilen beibehalten; keine neue Designidentität eingeführt.
+- Öffentliche Demo ohne Live-Videodetails. Keine Zugangsdaten in UI oder Dokumentation.
+- Browser: Playlistfilter «EVENTS», Videoauswahl «Zoo2026» und Öffnen der
+  Zugriffsquellen erfolgreich geprüft. Mobile-Prüfung siehe UI-Abschluss unten.
+  Google-Testmodus und weiterführende Format-/Sprachsegmentierung bleiben offen.
+
+YouTube UI-Abschluss: Monatsdropdown September → August → September erfolgreich
+geprüft; Playlist EVENTS und Einzelvideo Zoo-Event 2026 auswählbar. Desktop1224
+und Mobile390 erfasst, mobile Seitenbreite383 ohne horizontalen Überlauf.
+Finish-Review: Aktualisieren-Button an Sonio-Stil angepasst, Nachkontrolle «ship».
+TypeScript und Vite-Build bestanden. Impeccable-Detektor wegen fehlender lokal
+installierter Engine nicht ausführbar; visuelle Prüfung direkt erfolgt.
+
+YouTube-KPI-Ausrichtung: gemeinsames CSS-Grid mit Subgrid für Beschriftungen und
+Zahlen. Desktop1224: alle sieben Zahlen exakt auf y1170; Mobile390: je zwei
+Zahlen auf gleicher Höhe, kein horizontaler Überlauf (383px Inhaltsbreite).
+
+Korrektur Nutzerbezug: Gemeint war die YouTube-Kachel in der Übersicht.
+Auch `.channel-entry-values` teilt nun Beschriftungs-/Zahlenzeilen per Subgrid.
+Browser bestätigt gleiche Höhe beider YouTube-Werte: Desktop y1258, Mobile y1912.
+
+### YouTube-Videolänge, Gesamtwerte und bestätigte Monatsnullen — 25.09.2026
+
+- Data API um `contentDetails.duration` und verfügbare Gesamtwerte aus
+  `statistics` für Aufrufe, Likes und Kommentare ergänzt. Gesamtwerte erscheinen
+  separat von Monats-KPIs; Länge steht beim Veröffentlichungsdatum.
+- Fehlende Videozeilen im dimensionsbezogenen Monatsbericht werden mit einzelnen
+  Monatsberichten geprüft. Nur explizit gelieferte Nullwerte werden übernommen;
+  fehlende Antworten bleiben fehlend. Bei null Aufrufen aus der Einzelabfrage
+  bleiben durchschnittliche Dauer und durchschnittlicher Anteil leer.
+- Live-Abruf: Monatswerte und Videolängen für 80 von 80 Videos. Beispiel
+  Miguel-Testimonial: September 0 Aufrufe, seit Veröffentlichung 7 Aufrufe,
+  Länge 30 Sekunden. Die früher dokumentierten 38 Videos bezogen sich auf den
+  dimensionsbezogenen Bericht vor den ergänzenden Einzelabfragen.
+- Zwei gezielte Backend-Tests, TypeScript und Produktionsbuild erfolgreich. Browser: korrekte
+  Monats-/Gesamtwerttrennung und Länge geprüft; Mobile390 ohne horizontalen
+  Überlauf. Desktop-/Mobile-Abschlussreview: «ship».
+  Erklärtexte zu allen sieben Video-KPIs erweitert.
+- Keine Änderung der Sonio-Design-Tokens oder der öffentlichen Demo-Datentrennung.
+
+
+### YouTube-Veröffentlichungsmonat — vorrangige Nutzerentscheidung 25.09.2026
+
+- Monatsauswahl filtert jetzt Veröffentlichungen in Europe/Zurich. Kennzahlen und
+  Zugriffsquellen gelten seit Veröffentlichung bis heute. Frühere Einträge zu
+  Monatskennzahlen und separater Gesamtwertezeile beschreiben den abgelösten Stand.
+- Aufrufe, Likes und Kommentare: aktuelle Data-API-Bestände. Übrige Werte: Analytics,
+  möglicherweise verzögert. Eigener Cache `youtube:published:` trennt alte Monatsdaten.
+- Zwei Regressionstests bestanden: Januarvideo bei Septemberauswahl ausgeschlossen;
+  Septembervideo bis 25. Oktober abgefragt statt nur bis Monatsende.
+- Live und im Browser bestätigt: Juli zeigt zwei Videos; Miguel-Testimonial zeigt
+  aktuell 7 Aufrufe, Ø Betrachtungsdauer 21 Sekunden und Videolänge 30 Sekunden.
+- TypeScript und Produktionsbuild erfolgreich. Desktop-/Mobile-Abschlussreview
+  inklusive Zeitbezug: «ship».
+
+Website-Quervergleich DE/FR am 25.09.2026: 58 Einträge, 54 eindeutige YouTube-IDs, alle im 80er-Import enthalten. Romandie/Charlie-Chaplin-Film unter Juni 2025 live bestätigt. Einzelabgleich: YOUTUBE_WEBSITE_AUDIT.md.
+
+## GA4-Anbindung 25.09.2026
+
+- Lesender Live-Zugriff auf Property358384645 bestätigt; 168 Tagesmesswerte
+  aus August/September2026 importiert. September:1592 Sitzungen,1405 engagierte
+  Sitzungen,4602 Schlüsselereignisse (Momentaufnahme).
+- Browser zeigt GA4-KPIs, Tagesdiagramm und Vorperiodenvergleich.
+- Separate Tokenkonfiguration erhält YouTube-Autorisierung. Keine Secrets
+  protokolliert oder veröffentlicht. Bestehende Google-Testmodusgrenze bleibt.
+
+
+### GA4-Seitenauswertung — 25.09.2026
+
+- 17 eindeutige vorgegebene URLs: 14 Kampagnen und drei Vorstellungsseiten.
+  Identische Business-Continuity-URL für DE/FR einmal erfasst; bereinigte exakte
+  Pfade und Sonio-Hosts gefiltert, keine CMS-Vorschauparameter übernommen.
+- Live September: 12 von 17 Seiten mit gelieferten Daten, darunter alle drei
+  Vorstellungsseiten. Fehlende Berichtszeilen bleiben fehlend.
+- Zwei gezielte Tests, TypeScript und Produktionsbuild erfolgreich.
+- Browser: Vorstellungsseite Fitim mit 5 Seitenaufrufen, 3 Besuchern, 4 Sitzungen
+  und Ø 35,33 aktiven Sekunden je Besucher korrekt angezeigt. Mobile390 ohne
+  horizontalen Überlauf. Keine Live-Seitendaten in der öffentlichen Demo.
+
+### GA4-Inhaltsauswertung — 25.09.2026
+
+- Live-Abruf für September und begrenzte Vorperiode: 17 Kompetenzseiten,
+  76 Blogartikel, 39 Newsartikel und 48 Customer Stories. Dies ist eine
+  Momentaufnahme der beobachteten GA4-Pfade, kein vollständiges Website-Inventar.
+- Vier gezielte Backend-Tests für Inhalte und Kampagnenseiten bestanden.
+  Inhaltsregressionen prüfen Kategorien, Pagination, Titelwahl, getrennte
+  Pfadkennzahlen, fehlende Werte und die begrenzte Vorperiode.
+- TypeScript-Prüfung und Vite-Produktionsbuild bestanden; Ruff für das neue
+  Inhaltsmodul und dessen Tests bestanden.
+- Browserprüfung auf Desktop und bei 390 px mobiler Breite: kein horizontaler
+  Seitenüberlauf. Inhaltsbereich, Einzelseitenwahl und Erweiterung der Liste
+  sind in der bestehenden Analytics-Ansicht integriert; Monatswechsel setzt
+  über den React-Schlüssel die Inhaltsauswahl zurück.
+- Bestehende Sonio-Gestaltung anhand von `PRODUCT.md`, `DESIGN.md`,
+  `AnalyticsContent.tsx` und den wiederverwendeten Analytics-Styles abgeglichen:
+  blaue Kennzahlen/Links, Red Hat Display und vorhandene Formulare/Seitenzeilen.
+  Keine Änderung der Design-Tokens oder von `DESIGN.md`.
+
+
+### GA4-Veröffentlichungsansicht — 25.09.2026
+
+Diese Prüfung betrifft die neue Auswahl nach Veröffentlichungsmonat/-jahr und
+Gesamtkennzahlen seit Veröffentlichung bis heute. Sie ersetzt die frühere
+Monatssemantik der oben beschriebenen Seitendetails, nicht den Kanalverlauf.
+
+- Live-Momentaufnahmen: Juni 2026 mit fünf Blogartikeln, Kampagnenjahr 2026 mit
+  acht Seiten und Vorstellungsseitenjahr 2026 mit zwei Seiten; alle lieferten
+  Kennzahlen. Das sind beobachtete Ergebnisse, keine festen Erwartungen.
+- Beim geprüften Artikel vom 14. September wurden sechs Quellen, zwei Länder
+  und zehn Regionen geliefert. Einzelne ältere öffentliche Seiten bleiben ohne
+  abrufbare Metadaten oder bestätigtes Datum; Vollständigkeit nicht behauptet.
+- Zehn gezielte Backend-Tests für Inhalte, Kampagnen und Bereiche einschliesslich
+  Zugriffsschutz bestanden. TypeScript und Vite-Produktionsbuild bestanden;
+  Ruff für das neue Bereichsmodul und dessen Tests bestanden.
+- Desktop und Mobile im Browser geprüft; Originalbilder geladen. Bei 390 px
+  mobiler Breite 383 px Scrollbreite und kein horizontaler Seitenüberlauf.
+  Vollseitenaufnahmen: `.impeccable/review/analytics-cohort-desktop.png` und
+  `.impeccable/review/analytics-cohort-mobile.png`.
+- Unabhängiges Review der neuen Sektion: Freigabe im geprüften Umfang, keine
+  Befunde. Bestehende Sonio-Gestaltung mit `PRODUCT.md`, `DESIGN.md` und den
+  Komponenten abgeglichen; keine Änderung von Design-Tokens oder `DESIGN.md`.
+- Dokumentiert sind lokale Prüfungen. Daraus folgt kein bestätigter
+  Produktions-, Docker- oder CI-Lauf. Vor Trackingbeginn bleiben Daten
+  unverfügbar; unbekannte Veröffentlichungsdaten werden separat ausgewiesen.
+
+### 25.09.2026 – Bereich «Blick hinter die Kulissen»
+Sieben gezielte GA4-Area-Tests bestanden, inklusive DE/FR-Abgrenzung zum Blog.
+TypeScript und Vite-Build bestanden. Browser: eigener Bereich mit zwei September-
+Artikeln (DE/FR) und Gesamtkennzahlen, «September 2026» bei den obersten KPIs;
+unter der Sitzungs-Summe bei nur einem Monat keine erneute Monatsbeschriftung.
+
+### 25.09.2026 – Monatsquellen und Geo
+Zwei gezielte Tests für Zeitraum, Pagination, Länder-/Regionsdimensionen und
+Zugriffsschutz bestanden; TypeScript/Vite bestanden. Live-Browser: Monatsquellen
+und 40 Länder geladen, Regionswechsel funktioniert. Desktop/Mobile visuell geprüft;
+390 px ohne horizontalen Überlauf (scrollWidth 383). Sitzungen und Besucher klar
+getrennt; Datenschutz-/Aggregationshinweise bleiben sichtbar.
+
+### 25.09.2026 – KI-Quellen statt geografischer Herkunft
+Elf gezielte Tests bestanden: Monats-/Gesamtzeitraum, Pagination, geschützte
+Endpoints und konservative KI-Domainzuordnung inklusive negativer Treffer.
+TypeScript und Vite-Build bestanden. Länder-/Regionsabfragen entfernt.
+Referenz: https://developers.google.com/analytics/devguides/reporting/data/v1/api-schema
+und https://help.openai.com/en/articles/12627856-publishers-and-developers-faq.
+
+### 26.09.2026 – automatischer LinkedIn-Videoimport nach Tagesreset
+- Vollständige Provider-Pagination für Sonio 622072, Veröffentlichungszeitraum ab 2003 bis Abrufdatum: 121 organische Video-Beiträge lokal gespeichert (zuvor 4).
+- 118 Vorschaubilder; Video-Status 50 available / 71 partial; 53 Beiträge mit geliefertem video_views-Wert. Fehlende Kennzahlen bleiben fehlend; kein vollständiger Statistikbestand behauptet.
+- Keine Veröffentlichung, keine zusätzlichen Worker/Scheduler gestartet. Browserprüfung durch abgelaufene Sitzung begrenzt; Datenbankbestand geprüft.
+
 ## 2026-09-29 – Dashboard und Login Designbranch
 
 - `npm test`: 19/19 erfolgreich, einschliesslich zwei neuer Regressionstests für
@@ -103,3 +420,61 @@ Der Nutzer sieht weiterhin nur einen Teil der Postüberschriften im Diagramm (na
 - Browserprüfung nutzt abgefangene API-Antworten mit Test-Posts, nicht Live-Kontodaten.
   Echte LinkedIn-Berechtigungen, Zieltracking, Backend/Docker und Produktion wurden
   hier nicht erneut getestet. Fehlende Zielklicks werden als «—» angezeigt.
+
+### Einheitliche Zitate — 30.09.2026
+Alle vorhandenen Seitenzitate (Übersicht, Kanalübersicht, LinkedIn Organic, YouTube) verwenden EditorialQuote und editorial-quote.css. Zitattexte/Quellen bleiben erhalten; zentrierte Typografie, blaue Anführungszeichen und Autoren-/Rollenzeile sind gemeinsam definiert. Überholte marketing-quote/li-quote-Regeln entfernt. TypeScript und Vite-Build bestanden (bestehende Bundlewarnung). LinkedIn und Übersicht visuell auf Desktop verglichen; Übersicht bei 390 px ohne horizontalen Überlauf geprüft. Keine Veröffentlichung.
+
+### Analytics-Infoboxen — 30.09.2026
+Alltagssprachliche AnalyticsInfo-Erklärungen an den vorhandenen Monats-KPIs, Seitenkennzahlen, Herkunftsgruppen, KI-Zugriffen und Detailaktionen ergänzt. Monat/Gesamtstand werden explizit unterschieden; fehlend ist nicht null. GEO-Block entsprechend benannt. Hover, Fokus und Antippen öffnen; Escape und Fokusverlust schliessen. Mobile Darstellung als lesbares Kästchen am unteren Bildschirmrand. Keine neuen Messwerte oder Tracking-Zusagen. TypeScript und Vite-Build erfolgreich (bekannte Bundlewarnung). Live-Browser: Sitzungsinfo am Desktop sowie GEO-Info bei 390 px geöffnet, Escape-Schliessen bestätigt.
+
+### Analytics-Designabgleich — 30.09.2026
+Gemeinsamer grosser Hero ohne Logo, blaue KPI-/Inhaltskarten, SEO-Zitat und GEO-Raster mit sieben expliziten KI-Quellen umgesetzt. Quellen ohne gelieferte Berichtszeile bleiben «—». Diagramm-Hover zeigt alle drei importierten Tages-KPIs und berechnet zusätzlich Engagement-Rate nur bei vorhandenen Werten und positivem Nenner. Live geprüft am 2.9.: 84 Sitzungen, 78 engagierte Sitzungen, 260 Schlüsselereignisse, 92.86 %. Die Linienauswahl bleibt unabhängig. Zentrale horizontale Aktionsleiste in DESIGN.md festgehalten. TypeScript und Build erfolgreich (bestehende Bundlewarnung). Desktop-Hero/GEO/Hover visuell geprüft, Mobile 390 px ohne horizontalen DOM-Überlauf; Titel/Aktionszeile für kleine Displays getrennt. Keine Veröffentlichung.
+
+### Analytics-Inhaltsraster — 30.09.2026
+Alle Analytics-Bereiche verwenden ein gemeinsames zweispaltiges Inhaltsraster; unter 761 px eine Spalte. Bilder stehen flächig über Titel und kompaktem 2×2-KPI-Raster. Detailaufschlüsselungen bleiben innerhalb ihrer Kachel einspaltig. TypeScript erfolgreich; Live-Vorstellungsseiten mit fünf Karten, Desktop zwei Spalten à 565.5 px, Mobile 390 px eine Spalte 345 px ohne horizontalen Überlauf geprüft.
+
+### 30.09.2026 – Analytics: Kennzahlen verstehen
+- Analytics übernimmt die blaue Auswahlfläche und helle Erklärfläche der bestehenden YouTube-Kennzahlenhilfe. Andere Kanäle behalten ihre Darstellung.
+- TypeScript und Vite-Produktionsbuild erfolgreich; bestehende Bundle-Grössenwarnung bleibt.
+- Lokale Browseransicht und Wechsel zu «Engagierte Sitzungen» geprüft. Das gemeinsame Layout enthält den bestehenden einspaltigen Breakpoint bei 650 px; die Browser-Viewport-Prüfung lieferte weiterhin Desktopbreite und ist daher kein bestätigter Mobile-Test.
+
+### 30.09.2026 – Analytics KPI-Hilfe und GEO-Auswahl
+- KPI-Kacheln mit blauen Flächen, umlaufender Kontur und linker blauer Kante. Info-Symbole ohne weisse Hintergrundflächen; Tastaturfokus bleibt sichtbar. Infoboxen um Interpretation und Vorperiodenvergleich ergänzt; Quellen-Details und Diagrammsummen ebenfalls mit Info.
+- GEO zeigt ausschliesslich ChatGPT, Claude, Copilot und Perplexity. Summe und sichtbare Quelldomains sind auf diese Auswahl begrenzt; Import/Klassifikation weiterer Dienste bleiben erhalten.
+- Frischer lesender GA4-Abgleich 01.–30.09.2026: 38 sessionSource-Zeilen, ChatGPT 6 Sitzungen (chatgpt.com); keine zugeordneten Zeilen für Claude, Copilot oder Perplexity. Keine gemeldeten Datenschutzschwellen oder Other-Row-Datenverluste. Bing und Microsoft Teams nicht als Copilot klassifiziert.
+- TypeScript/Build erfolgreich vor abschliessender reiner Hintergrundfarben-Korrektur; lokale Browserprüfung bestätigt vier GEO-Kacheln, KPI-Konturen, geöffnete Erklärung und transparente Info-Buttons. Keine Veröffentlichung.
+
+### 30.09.2026 – Website-Bereiche und Vormonatsvergleich
+- Navigation: Kompetenzfelder, Services, Blogartikel, Newsartikel, Blick hinter die Kulissen, Vorstellungsseiten, Customer Stories, Videos, Kampagnen.
+- Kompetenzfelder entsprechen exakt den fünf Hauptseiten der aktuellen sonio.com-Navigation. Services erfasst die Sitemap-Pfade unter /services/, Videos /video und Unterseiten. DE/FR bleiben getrennt; Sprachfilter ergänzt. Dauerhafte Bereiche starten mit «Alle», damit ältere Veröffentlichungen nicht verschwinden.
+- Lesender Live-Abgleich: fünf deutsche Kompetenzseiten und 27 deutsche Services-Seiten lieferten GA4-Kennzahlen; Videoseiten ebenfalls abgefragt. Bestehende API/Worker/Scheduler-Gruppe geordnet neu gestartet, keine zusätzliche Gruppe.
+- Seitengesamtstand bleibt seit Veröffentlichung. Separater Vergleich: aktueller Kalendermonat bis heute gegen Vormonat; bei laufendem Teilmonat gleich lange Vorperiode, bei abgeschlossenem Monat vollständiger Vormonat. Fehlende Werte bleiben fehlend; null Vorwert ergibt keine Prozentquote. Monatswerte werden unabhängig vom Veröffentlichungsfilter abgefragt.
+- 11 gezielte GA4-Bereichstests bestanden, Ruff für geänderte Bereichslogik/Tests sowie TypeScript und Frontend-Build erfolgreich (bestehende Bundle-Warnung). Kompetenzfelder live im Browser mit fünf Karten und September/August-Vergleich geprüft.
+
+### 30.09.2026 – Kompakte Services und Unterbereiche
+- Services-Karten stellen Monatswerte samt Vormonatstendenz kompakt dar; Gesamtstand seit Veröffentlichung ist aufklappbar. Keine Bilder in den Einzelkarten.
+- Filter entsprechend sonio.com: Alle, Consulting, Professional Services, Support Services, Sonio Cloud, Managed Services. Unterseiten zählen exakt nach Pfadpräfix; DE/FR bleiben über den Sprachfilter verfügbar. Historischer Sonio-Cloud-Pfad ebenfalls unter Sonio Cloud, nicht doppelt unter Managed Services.
+- Live-Browser: 27 deutsche Seiten aufgeteilt in 4/3/4/2/14; Consulting-Filter zeigt die vier passenden Seiten. Aufklappen der Gesamtwerte und TypeScript-Prüfung erfolgreich.
+
+### 30.09.2026 – Empfehlungen als gemeinsamer Seitenabschluss
+- Übersicht, Kanalverzeichnis, LinkedIn Organic, YouTube, Video Insights und Analytics: zwei Empfehlungskacheln unmittelbar vor dem bestehenden Zitat. LinkedIn Ads erhält denselben Empfehlungsabschluss.
+- Zentrale Empfehlungsquelle priorisiert vorhandene Analyse-/Kennzahlenhinweise; fehlende Einträge werden ausschliesslich mit ausdrücklich gekennzeichneten Gestaltungsbeispielen ergänzt. Keine neuen KI-Ergebnisse vorgetäuscht.
+- Empfehlungsseite zeigt vier bis sechs Einträge pro Kanal; Weiterleitung aus einem Kanal setzt den entsprechenden Filter, «Alle Kanäle» bleibt erreichbar. Bezugsmonat ist am Teaser sichtbar.
+- TypeScript und Produktionsbuild erfolgreich; bestehende Bundle-Grössenwarnung. Desktopansicht mit zwei blauen Karten vor dem Zitat geprüft.
+
+### 2026-09-30 — Mailchimp Marketing-Ansicht
+- Bestehende Mailing-Gruppierung/Filter erhalten. Neues Leitbild aus dem neuesten Mailing, vier Haupt-KPIs (Zugestellt, Klickende, Klickrate, Abmelderate), Infoboxen, zweispaltige Mailing-Kacheln, aufklappbare Zustell-/Öffnungswerte, Wissensbereich, zwei Empfehlungen vor gemeinsamem Zitat.
+- Summen nur bei vollständigen Kennzahlen; Quoten nach Zustellungen gewichtet. Auswahl umfasst zugehörige Sendungen auch ausserhalb des Versandmonats, klar beschriftet. Keine kanalübergreifend eindeutigen Personen behauptet.
+- Neuer geschützter Mailchimp-Insights-Endpunkt: paginierte Linkberichte, Top 3 nach Klickenden, keine Subscriber-Daten. Link-Query/Fragment werden vor Ausgabe entfernt. Bot-Filterstand ausdrücklich unbekannt.
+- GA4-Zuordnung nur bei Sonio-Link mit `utm_medium=email` und eindeutiger Mailchimp-ID im Kampagnennamen; keine Titelähnlichkeits-Heuristik. GA4-Sitzungen/engagierte Sitzungen separat seit Versand, fehlende Berichtszeilen bleiben fehlend.
+- Live gelesen: neuester Swiss-IT-Forum-Resend ohne geklickte Links; Zoo-Dankesmailing Top 3 mit 62/31/4 Klickenden. Beide ohne eindeutige UTM-Kennung, deshalb keine zugeschätzten Website-Besuche.
+- 14 gezielte Backendtests bestanden; TypeScript und Vite-Build bestanden (bestehende Chunk-Grössenwarnung). Desktop-Browser: echte Mailingwerte, Bilder und Linkdetails geprüft, kein Seitenüberlauf.
+- Übersicht: Kanal-Kacheln in zwei dunkleren Blautönen von hellen KPI-Flächen abgegrenzt. Kein Deployment.
+- Mobile390 im Browser geprüft: einspaltige Mailing-Kacheln, Dokumentbreite383px, kein horizontaler Überlauf. Infobuttons öffnen nun auch beim ersten Tippen/Klick statt durch Fokus und Klick sofort wieder zu schliessen.
+- Mailchimp-Bildkorrektur: gemeinsamer Sonio-Hero ohne separate Abdunklung; Mailingbilder ohne feste Bildhöhe im Original-Seitenverhältnis. Drei geladene Bilder im Desktop-DOM auf unverzerrte Proportionen geprüft und Screenshot bestätigt; TypeScript erfolgreich.
+
+### 2026-09-30 — Gesamter Stand vor GitHub-Sicherung
+- 101 Backendtests auf isolierter temporärer SQLite-Testdatenbank bestanden; keine Vorschau-/Produktionsdatenbank verwendet.
+- 24 Frontendtests, TypeScript und Vite-Produktionsbuild bestanden. Bestehende Bundle-Grössenwarnung sowie zwei Testclient-Deprecation-Warnungen bleiben.
+- Ruff-Importsortierung bereinigt; Backend-Lint erfolgreich. Offene Dateien gegen lokale Geheimniswerte und gängige Credential-Muster geprüft, keine Treffer. `.env` und `.local/` bleiben ignoriert.
+- Zielbranch `design/sonio-dashboard-login`. Branch-Push ist kein Deployment der GitHub-Pages-Demo auf `main`; Remote-CI und Containerprüfung sind getrennt zu bestätigen.

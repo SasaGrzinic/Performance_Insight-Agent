@@ -1,0 +1,9 @@
+.editorial-quote{margin:54px auto 36px;padding:0 18px;max-width:850px;text-align:center;color:#173d62}
+.editorial-quote blockquote{margin:0;padding:0;border:0;background:none;font-family:inherit;font-size:clamp(23px,2.5vw,30px);font-weight:500;line-height:1.5;font-style:normal;letter-spacing:-.015em}
+.editorial-quote blockquote>span{color:#0075d9;font-size:1.35em;line-height:1;padding:0 .16em;vertical-align:middle}
+.editorial-quote figcaption{margin-top:18px;display:flex;flex-direction:column;align-items:center;gap:5px;font-size:14px;line-height:1.5;font-style:normal;color:#526779}
+.editorial-quote figcaption a{color:#173d62;font-weight:700;text-decoration:none}
+.editorial-quote figcaption a:hover{text-decoration:underline}
+.editorial-quote figcaption>.editorial-quote-source{font-size:12px;font-weight:400;color:#526779}
+.editorial-quote a:focus-visible{outline:3px solid #0075d9;outline-offset:4px}
+@media(max-width:650px){.editorial-quote{margin:40px auto 28px;padding:0 8px}}

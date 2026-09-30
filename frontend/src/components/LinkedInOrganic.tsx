@@ -1,6 +1,8 @@
-import { useState, type ReactNode } from "react";
-import { useQueries } from "@tanstack/react-query";
-import { Info, ExternalLink } from "lucide-react";
+import {RecommendationTeaser} from "./RecommendationTeaser";
+import { EditorialQuote } from './EditorialQuote';
+import { useState, useId, type ReactNode } from "react";
+import { useQueries, useQuery } from "@tanstack/react-query";
+import { Info, ExternalLink, Play, SlidersHorizontal, TrendingUp, TrendingDown, Minus } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -17,6 +19,7 @@ import {
   engagement,
   finite,
   yearMonths,
+  metricTrend,
 } from "../linkedinMetrics";
 import type { Dashboard, Analysis, Recommendation } from "../types";
 import {
@@ -24,16 +27,17 @@ import {
   PostImage,
   type PostsResponse,
 } from "./PerformanceExplorer";
-import { OverviewRecommendations } from "./MarketingOverview";
 import "../linkedin-organic.css";
 
 function Help({ children }: { children: ReactNode }) {
+  const id = useId();
+  const [open, setOpen] = useState(false);
   return (
-    <span className="li-help">
-      <button aria-label="Kennzahl erklären" type="button">
+    <span className="li-help" data-open={open} onKeyDown={(e) => { if (e.key === "Escape") { setOpen(false); e.currentTarget.querySelector("button")?.blur(); } }} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) setOpen(false); }}>
+      <button aria-label="Kennzahl erklären" type="button" aria-describedby={id} aria-expanded={open} onClick={() => setOpen(!open)}>
         <Info size={14} />
       </button>
-      <span role="tooltip">{children}</span>
+      <span id={id} role="tooltip">{children}</span>
     </span>
   );
 }
@@ -41,10 +45,12 @@ function Tile({
   label,
   value,
   help,
+  tendency,
 }: {
   label: string;
   value: string;
   help: string;
+  tendency?: ReactNode;
 }) {
   return (
     <div className="li-tile">
@@ -53,15 +59,21 @@ function Tile({
         <Help>{help}</Help>
       </div>
       <strong>{value}</strong>
+      {tendency}
     </div>
   );
+}
+function Tendency({current, previous, points = false, label, context}: {current: unknown; previous: unknown; points?: boolean; label?: string; context: string}) {
+  const change = metricTrend(current, previous, points);
+  const Icon = change.direction === "up" ? TrendingUp : change.direction === "down" ? TrendingDown : Minus;
+  return <span className="li-tendency"><Icon size={12} aria-hidden="true" /><span>{label && `${label}: `}{change.value === undefined ? change.label : `${change.value > 0 ? "+" : ""}${number(change.value)} ${points ? "PP" : "%"}`}<span className="li-tendency-period"> zum Vormonat</span></span><Help>{context} {change.label}</Help></span>;
 }
 const fmt = (v: unknown) => (finite(v) ? number(v) : "—");
 export function LinkedInHero() {
   return (
     <>
       <div className="li-mast">
-        <h1>Dein LinkedIn Cockpit.</h1>
+        <div><small>Sonio AG</small><h1>Dein LinkedIn Cockpit.</h1></div><span>Marketing · Organic</span>
       </div>
       <section className="li-hero">
         <img
@@ -83,10 +95,7 @@ export function LinkedInHero() {
 export function LinkedInOrganic({
   data,
   demo,
-  analysis,
   onMonth,
-  onRecommendation,
-  onAll,
   actions,
 }: {
   data: Dashboard;
@@ -103,6 +112,9 @@ export function LinkedInOrganic({
   const [format, setFormat] = useState("all"),
     [ranking, setRanking] = useState("watch"),
     [trend, setTrend] = useState("impressions");
+  const [expandedPostsFor, setExpandedPostsFor] = useState<string | null>(null);
+  const postSelection = `${year ? "year" : "month"}:${data.month}:${format}`;
+  const showAllPosts = expandedPostsFor === postSelection;
   const months = year ? yearMonths() : [data.month];
   const queries = useQueries({
     queries: months.map((month) => ({
@@ -119,6 +131,13 @@ export function LinkedInOrganic({
       enabled: !demo,
     })),
   });
+  const audience = useQuery({
+    queryKey: ["linkedin-audience", demo, data.month],
+    queryFn: () => api<{current: {value: number; observed_at: string} | null; status: string; message: string}>(`/linkedin/audience?month=${data.month}`),
+    enabled: !demo,
+    refetchInterval: 60000,
+  });
+  const followerSnapshot = audience.data?.current;
   const channel = data.channels.find((c) => c.id === "linkedin_organic")!;
   const datasets = year ? queries.map((q) => q.data) : [data];
   const values = year ? aggregateLinkedIn(datasets) : channel.values;
@@ -130,6 +149,8 @@ export function LinkedInOrganic({
       postQueries.flatMap((q) => q.data?.posts || []).map((p) => [p.id, p]),
     ).values(),
   ];
+  const filteredPosts = posts.filter(p => format === "all" || p.kind === format).sort((a, b) => a.published_at.localeCompare(b.published_at));
+  const displayedPosts = showAllPosts ? filteredPosts : filteredPosts.slice(0, 5);
   const videos = posts.filter((p) => p.kind === "video");
   const loading = !demo && postQueries.some((q) => q.isPending),
     failed = !demo && postQueries.some((q) => q.isError);
@@ -152,6 +173,16 @@ export function LinkedInOrganic({
     finite(views) && views > 0 && finite(watch)
       ? watch / views / 1000
       : undefined;
+  const comparisonContext = `Vergleich ${data.period_start} bis ${data.period_end} mit ${data.comparison_month}-01 bis ${data.comparison_end}. ${data.partial ? "Laufender Monat: Vormonat auf denselben Kalendertag begrenzt." : "Abgeschlossene Monatszeiträume."}`;
+  const tendencies = year ? [] : [
+    <Tendency current={values.impressions} previous={channel.previous.impressions} context={comparisonContext} />,
+    <Tendency current={engagement(values)} previous={engagement(channel.previous)} points context={comparisonContext} />,
+    <span className="li-tendency-pair"><Tendency label="Kommentare" current={values.comments} previous={channel.previous.comments} context={comparisonContext} /><Tendency label="Reposts" current={values.shares} previous={channel.previous.shares} context={comparisonContext} /></span>,
+    <Tendency current={values.followers_organic} previous={channel.previous.followers_organic} context={comparisonContext} />,
+    <Tendency current={values.clicks} previous={channel.previous.clicks} context={comparisonContext} />,
+    <Tendency current={values.likes} previous={channel.previous.likes} context={comparisonContext} />,
+  ];
+  const postsAvailable = !demo && !loading && !failed && postQueries.every(q => q.data?.last_success);
   const cards = [
     [
       "Impressionen",
@@ -169,7 +200,7 @@ export function LinkedInOrganic({
       "Kommentare und Reposts separat. Aktivität bedeutet nicht automatisch Zustimmung.",
     ],
     [
-      "Neue Follower",
+      "Follower & neue Follower",
       fmt(values.followers_organic),
       "Organische Zugewinne, keine Nettoveränderung. Bezahlte Zugewinne sind ausgeschlossen.",
     ],
@@ -198,7 +229,7 @@ export function LinkedInOrganic({
           onClick={() => setChoose(!choose)}
           aria-expanded={choose}
         >
-          Kennzahlen wählen
+          Kennzahlen wählen <SlidersHorizontal size={15} />
         </button>
       </div>
       {choose && (
@@ -220,7 +251,7 @@ export function LinkedInOrganic({
       )}
       <section id="li-impact">
         <div className="li-heading">
-          <h2>Sichtbarkeit &amp; Relevanz.</h2>
+          <div className="li-impact-title"><h2>Sichtbarkeit &amp; Relevanz.</h2><span className="li-post-count">{postsAvailable ? `${number(posts.length)} ${posts.length === 1 ? "Post" : "Posts"}` : loading ? "Posts werden geladen …" : "Postanzahl nicht verfügbar"}<Help>Veröffentlichte Beiträge im ausgewählten Zeitraum: {period}. Gezählt werden eindeutig importierte Beiträge. {postQueries.some(q => q.data?.status !== "connected") ? "Letzter importierter Stand; Aktualisierung derzeit eingeschränkt." : ""}</Help></span></div>
           <label className="li-period">
             <span className="sr-only">Auswertungszeitraum</span>
             <select
@@ -253,7 +284,13 @@ export function LinkedInOrganic({
           {cards.map(
             ([label, value, help], i) =>
               visible[i] && (
-                <Tile key={label} label={label} value={value} help={help} />
+                i === 3 ? <div className="li-tile li-follower-pair" key={label}>
+                  <div className="li-follower-values">
+                    <div><span>Follower gesamt <Help>Aktuellster tatsächlich beobachteter Gesamtbestand, organisch und bezahlt. {followerSnapshot ? `Stand ${new Date(followerSnapshot.observed_at).toLocaleString("de-CH", {timeZone: "Europe/Zurich"})}.` : "Noch kein Gesamtbestand verfügbar."} Kein rekonstruierter historischer Monatsbestand. {audience.data?.status !== "connected" ? audience.data?.message : ""}</Help></span><strong>{demo ? "—" : fmt(followerSnapshot?.value)}</strong><small>Aktueller Bestand</small></div>
+                    <div><span>Neue Follower <Help>{help} Zeitraum: {period}.</Help></span><strong>{value}</strong><small>Organisch · {period}</small>{tendencies[i]}</div>
+                  </div>
+                  {audience.isError && <small role="alert">Gesamtbestand konnte nicht aktualisiert werden. <button type="button" onClick={() => audience.refetch()}>Erneut laden</button></small>}
+                </div> : <Tile key={label} label={label} value={value} help={help} tendency={tendencies[i]} />
               ),
           )}
         </div>
@@ -263,7 +300,7 @@ export function LinkedInOrganic({
         </details>
       </section>
       <section>
-        <h2>Entwicklung im Vergleich.</h2>
+        <div className="li-heading"><h2>Entwicklung im Vergleich.</h2><small>{year ? "Monatsverlauf · laufendes Jahr" : "Gleiche Kalendertage · Monatswerte"}</small></div>
         {year ? (
           <>
             <label>
@@ -321,21 +358,16 @@ export function LinkedInOrganic({
             demo={demo}
             onMonth={onMonth}
             showPosts={false}
+            compact
           />
         )}
       </section>
       <section id="li-posts">
         <div className="li-heading">
           <h2>Deine Inhalte im Vergleich.</h2>
-          <label>
-            Format{" "}
-            <select value={format} onChange={(e) => setFormat(e.target.value)}>
-              <option value="all">Alle Beiträge</option>
-              <option value="video">Videos</option>
-              <option value="article">Link-Beiträge</option>
-              <option value="image">Bilder</option>
-            </select>
-          </label>
+          <div className="li-format-filters" role="group" aria-label="Beitragsformat">
+            {[["all", "Alle"], ["video", "Videos"], ["article", "Link-Beiträge"], ["image", "Bilder"]].map(([value, label]) => <button key={value} type="button" aria-pressed={format === value} onClick={() => setFormat(value)}>{label}</button>)}
+          </div>
         </div>
         <p className="li-note">
           Veröffentlicht: {period} · Beitragswerte seit Veröffentlichung{" "}
@@ -363,34 +395,17 @@ export function LinkedInOrganic({
             hinterlegt.
           </p>
         )}
-        <div className="li-post-list">
-          {posts
-            .filter((p) => format === "all" || p.kind === format)
-            .map((p) => (
-              <article key={p.id}>
-                <PostImage post={p} />
-                <div>
-                  <a href={p.url} target="_blank" rel="noreferrer">
-                    {readablePostTitle(p.title)} <ExternalLink size={13} />
-                  </a>
-                  <small>
-                    {new Date(p.published_at).toLocaleDateString("de-CH")} ·
-                    Stand {new Date(p.updated_at).toLocaleDateString("de-CH")}
-                  </small>
-                </div>
-                <dl>
-                  <div>
-                    <dt>Impressionen</dt>
-                    <dd>{fmt(p.metrics.impressions)}</dd>
-                  </div>
-                  <div>
-                    <dt>Klicks</dt>
-                    <dd>{fmt(p.metrics.clicks)}</dd>
-                  </div>
-                </dl>
-              </article>
-            ))}
+        <div className="li-table-panel" role="region" aria-label="Beitragskennzahlen" tabIndex={0}>
+          <table id="li-post-list" className="li-table"><thead><tr><th>Beitrag / Thema</th><th>Impressionen</th><th>Klicks</th><th>Engagement <Help>Interaktionen geteilt durch Impressionen. Gesamtwerte seit Veröffentlichung, keine Monatsrate.</Help></th><th>Kommentare / Reposts</th></tr></thead>
+          <tbody>{displayedPosts.map((p) => <tr key={p.id}>
+            <td><div className="li-post-cell"><PostImage post={p} /><div><a href={p.url} target="_blank" rel="noreferrer">{readablePostTitle(p.title)} <ExternalLink size={12}/></a><small>{new Date(p.published_at).toLocaleDateString("de-CH", {timeZone:"Europe/Zurich"})} · Stand {new Date(p.updated_at).toLocaleDateString("de-CH")}</small></div></div></td>
+            <td>{fmt(p.metrics.impressions)}</td><td>{fmt(p.metrics.clicks)}</td><td>{finite(engagement(p.metrics)) ? `${number(engagement(p.metrics))} %` : "—"}</td><td>{fmt(p.metrics.comments)} / {fmt(p.metrics.shares)}</td>
+          </tr>)}</tbody></table>
+          <p className="li-note">Beitragsalter und Format beim Vergleich berücksichtigen. Gesamtwerte nicht zu Monatswerten addieren.</p>
         </div>
+        {filteredPosts.length > 5 && <button type="button" className="button" aria-expanded={showAllPosts} aria-controls="li-post-list" onClick={() => setExpandedPostsFor(showAllPosts ? null : postSelection)}>
+          {showAllPosts ? "Nur die ersten 5 Posts anzeigen" : `Alle ${filteredPosts.length} Posts anzeigen`}
+        </button>}
         {!loading && !failed && !demo && !posts.length && (
           <p>Keine Beiträge im geladenen Zeitraum.</p>
         )}
@@ -398,8 +413,8 @@ export function LinkedInOrganic({
       <section id="li-videos">
         <div className="li-heading">
           <h2>Aufmerksamkeit, die bleibt.</h2>
-          <label>
-            Video im Fokus{" "}
+          <label className="li-winner-choice">
+            Stärkstes Video nach{" "}
             <select
               value={ranking}
               onChange={(e) => setRanking(e.target.value)}
@@ -409,6 +424,7 @@ export function LinkedInOrganic({
               <option value="views">Videoaufrufe</option>
             </select>
           </label>
+
         </div>
         <p className="li-note">
           Videos veröffentlicht: {period} · Gesamtwerte seit Veröffentlichung{" "}
@@ -425,42 +441,9 @@ export function LinkedInOrganic({
               rel="noreferrer"
               aria-label={`Video auf LinkedIn ansehen: ${readablePostTitle(winner.title)}`}
             >
-              <PostImage key={winner.id} post={winner} />
+              <PostImage key={winner.id} post={winner} /><span className="li-play"><Play size={22} aria-hidden="true"/></span><span className="li-poster-label">Originalvideo auf LinkedIn</span>
             </a>
-            <div>
-              <h3>{readablePostTitle(winner.title)}</h3>
-              <p>
-                Stärkstes Video nach{" "}
-                {ranking === "watch"
-                  ? "gesamter Betrachtungsdauer"
-                  : ranking === "average"
-                    ? "durchschnittlicher Betrachtungsdauer"
-                    : "Videoaufrufen"}
-              </p>
-              <div className="li-winner-kpis">
-                <Tile
-                  label="Betrachtungsdauer"
-                  value={
-                    finite(winner.metrics.watch_time_ms)
-                      ? `${number(winner.metrics.watch_time_ms / 60000)} Min.`
-                      : "—"
-                  }
-                  help="Gesamtwert seit Veröffentlichung."
-                />
-                <Tile
-                  label="Ø Betrachtungsdauer"
-                  value={
-                    finite(averageWatchSeconds(winner.metrics))
-                      ? `${number(averageWatchSeconds(winner.metrics))} Sek.`
-                      : "—"
-                  }
-                  help="Wiedergabezeit geteilt durch qualifizierte Videoaufrufe."
-                />
-              </div>
-              <a href={winner.url} target="_blank" rel="noreferrer">
-                Video auf LinkedIn ansehen <ExternalLink size={14} />
-              </a>
-            </div>
+
           </div>
         ) : (
           <p>
@@ -496,54 +479,16 @@ export function LinkedInOrganic({
             help="Zielspezifisches Linktracking noch nicht angebunden. Klicks sind keine Website-Sitzungen."
           />
         </div>
+        {!!videos.length && <div className="li-table-panel" role="region" aria-label="Videokennzahlen" tabIndex={0}><table className="li-table"><thead><tr><th>Video</th><th>Aufrufe</th><th>Gesamte Betrachtung</th><th>Ø Betrachtung</th></tr></thead><tbody>{videos.map((p) => <tr key={p.id}><td><div className="li-post-cell"><PostImage post={p}/><div><a href={p.url} target="_blank" rel="noreferrer">{readablePostTitle(p.title)}</a><small>{new Date(p.published_at).toLocaleDateString("de-CH", {timeZone:"Europe/Zurich"})} · Stand {new Date(p.updated_at).toLocaleDateString("de-CH")}</small></div></div></td><td>{fmt(p.metrics.video_views)}</td><td>{finite(p.metrics.watch_time_ms) ? `${number(p.metrics.watch_time_ms / 60000)} Min.` : "—"}</td><td>{finite(averageWatchSeconds(p.metrics)) ? `${number(averageWatchSeconds(p.metrics))} Sek.` : "—"}</td></tr>)}</tbody></table><p className="li-note">Videolänge und relativer Betrachtungsanteil erst bei verlässlicher Datenquelle verfügbar.</p></div>}
       </section>
       <section id="li-website">
-        <h2>Von Interesse zu Besuch.</h2>
-        <p>
-          Website-Beitrag noch nicht zuordenbar{" "}
-          <Help>
-            Für eine belastbare Zuordnung benötigen wir GA4-Sitzungen mit
-            konsistenten LinkedIn-UTM-Parametern. Bis dahin keine Schätzwerte.
-          </Help>
-        </p>
+        <div className="li-heading"><h2>Was auf der Website ankommt.</h2><small>Zuordnung noch einzurichten</small></div>
+        <div className="li-website-panel"><div className="li-website-kpis">
+          <Tile label="Besuche aus LinkedIn Organic" value="—" help="Erst nach verifizierter GA4-/UTM-Zuordnung verfügbar. LinkedIn-Klicks sind keine Website-Besuche."/>
+          <Tile label="Davon engagierte Sitzungen" value="—" help="Anzahl und Anteil an den zugeordneten Besuchen. Die notwendige Zuordnung ist noch offen."/>
+        </div><p className="li-note">Nach verifizierter GA4-/UTM-Zuordnung. <Help>Für eine belastbare Zuordnung benötigen wir GA4-Sitzungen mit konsistenten LinkedIn-UTM-Parametern. Bis dahin keine Schätzwerte.</Help></p></div>
       </section>
-      <OverviewRecommendations
-        analysis={
-          year
-            ? { status: "unavailable", summary: "", recommendations: [] }
-            : analysis
-              ? {
-                  ...analysis,
-                  recommendations: analysis.recommendations.filter(
-                    (r) => r.channel === "linkedin_organic",
-                  ),
-                }
-              : undefined
-        }
-        channels={data.channels}
-        onSelect={onRecommendation}
-        onAll={onAll}
-      />
-      {year && (
-        <p className="li-note">
-          Empfehlungen für das ganze Jahr sind noch nicht berechnet.
-          Monatsauswahl für verfügbare Empfehlungen verwenden.
-        </p>
-      )}
-      <blockquote className="li-quote">
-        <span>“</span> Attention is priceless and trust is worth even more{" "}
-        <span>”</span>
-        <cite>
-          <a
-            href="https://seths.blog/2025/12/building-blocks-of-marketing/"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Seth Godin
-          </a>
-          <small>Marketingautor und Unternehmer</small>
-        </cite>
-      </blockquote>
+      <RecommendationTeaser/><EditorialQuote text="Attention is priceless and trust is worth even more" author="Seth Godin" role="Marketingautor und Unternehmer" source="https://seths.blog/2025/12/building-blocks-of-marketing/"/>
     </div>
   );
 }

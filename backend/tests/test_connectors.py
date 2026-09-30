@@ -29,6 +29,7 @@ def response(data):
 def test_google_ads_preserves_fractional_conversions_and_currency():
     settings = SimpleNamespace(
         google_ads_customer_id="123-456",
+        google_ads_refresh_token="ads-only",
         google_ads_developer_token="test",
         google_ads_login_customer_id="",
         google_ads_api_version="v25",
@@ -63,7 +64,7 @@ def test_google_ads_preserves_fractional_conversions_and_currency():
 
 
 def test_ga4_maps_daily_additive_metrics():
-    settings = SimpleNamespace(ga4_property_id="12345")
+    settings = SimpleNamespace(ga4_property_id="12345", ga4_refresh_token="analytics-only")
     payload = {
         "rowCount": 1,
         "rows": [
@@ -74,10 +75,11 @@ def test_ga4_maps_daily_additive_metrics():
         ],
     }
     with (
-        patch("app.connectors.google_token", return_value="test"),
+        patch("app.connectors.google_token", return_value="test") as token,
         patch("app.connectors.request", return_value=response(payload)),
     ):
         rows = analytics(START, END, settings)
+    token.assert_called_once_with(settings, "analytics-only")
     assert {r["key"]: r["value"] for r in rows} == {
         "sessions": 20,
         "engaged_sessions": 10,
@@ -289,3 +291,12 @@ def test_analysis_reused_only_for_unchanged_values(db):
         db.commit()
         refresh_analysis(db, "2026-08")
         assert call.call_count == 2
+
+
+def test_google_ads_never_uses_shared_google_token():
+    from app.connectors import NotConfigured
+    settings = SimpleNamespace(google_ads_customer_id="123", google_ads_refresh_token="", google_refresh_token="youtube-only")
+    with patch("app.connectors.google_token") as token:
+        with pytest.raises(NotConfigured, match="separat autorisieren"):
+            google_ads(START, END, settings)
+        token.assert_not_called()

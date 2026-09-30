@@ -1,0 +1,137 @@
+"""One-off, loopback-only Google Ads authorization; never log codes or tokens."""
+
+import base64
+import hashlib
+import hmac
+import os
+import secrets
+import time
+from http.cookies import SimpleCookie
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from pathlib import Path
+from urllib.parse import parse_qs, urlencode, urlsplit
+
+import httpx
+from dotenv import dotenv_values, set_key
+
+ROOT = Path(__file__).resolve().parents[1]
+REDIRECT = 'http://127.0.0.1:8766/oauth/callback'
+SCOPES = (
+    'https://www.googleapis.com/auth/adwords',
+)
+
+
+def main():
+    env = dotenv_values(ROOT / '.env')
+    if not env.get('GOOGLE_CLIENT_ID') or not env.get('GOOGLE_CLIENT_SECRET'):
+        raise SystemExit('Google client credentials are missing.')
+    state = secrets.token_urlsafe(32)
+    session = secrets.token_urlsafe(32)
+    verifier = secrets.token_urlsafe(64)
+    challenge = base64.urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest()).rstrip(b'=')
+    deadline = time.monotonic() + 1800
+    completed = False
+    started = False
+
+    class Handler(BaseHTTPRequestHandler):
+        def log_message(self, *args):
+            pass
+
+        def reply(self, status, body='', **headers):
+            self.send_response(status)
+            self.send_header('Content-Type', 'text/html; charset=utf-8')
+            self.send_header('Cache-Control', 'no-store')
+            self.send_header('Referrer-Policy', 'no-referrer')
+            self.send_header('Content-Security-Policy', "default-src 'none'")
+            for key, value in headers.items():
+                self.send_header(key.replace('_', '-'), value)
+            self.end_headers()
+            self.wfile.write(body.encode())
+
+        def do_GET(self):
+            nonlocal completed, started
+            if self.headers.get('Host') != '127.0.0.1:8766':
+                return self.reply(400, 'Invalid host.')
+            if time.monotonic() > deadline or completed:
+                return self.reply(410, 'Autorisierung beendet. Assistent neu starten.')
+            url = urlsplit(self.path)
+            if url.path == '/start':
+                started = True
+                location = 'https://accounts.google.com/o/oauth2/v2/auth?' + urlencode({
+                    'client_id': env['GOOGLE_CLIENT_ID'], 'redirect_uri': REDIRECT,
+                    'response_type': 'code', 'scope': ' '.join(SCOPES),
+                    'access_type': 'offline', 'prompt': 'consent', 'state': state,
+                    'code_challenge': challenge.decode(), 'code_challenge_method': 'S256',
+                })
+                return self.reply(302, Location=location,
+                                  Set_Cookie=f'sonio_oauth={session}; HttpOnly; SameSite=Lax; Path=/; Max-Age=1800')
+            if url.path != '/oauth/callback':
+                return self.reply(404, 'Not found.')
+            query = parse_qs(url.query)
+            cookie = SimpleCookie()
+            cookie.load(self.headers.get('Cookie', ''))
+            value = cookie.get('sonio_oauth')
+            if (not started or not value or not hmac.compare_digest(value.value, session)
+                    or len(query.get('state', [])) != 1
+                    or not hmac.compare_digest(query['state'][0], state)):
+                return self.reply(400, 'Ungültige OAuth-Sitzung.')
+            if 'error' in query or len(query.get('code', [])) != 1:
+                return self.reply(400, 'Freigabe nicht erteilt. Keine Zugangsdaten gespeichert.')
+            try:
+                with httpx.Client(timeout=30) as client:
+                    response = client.post('https://oauth2.googleapis.com/token', data={
+                        'client_id': env['GOOGLE_CLIENT_ID'],
+                        'client_secret': env['GOOGLE_CLIENT_SECRET'],
+                        'code': query['code'][0], 'code_verifier': verifier,
+                        'grant_type': 'authorization_code', 'redirect_uri': REDIRECT,
+                    })
+                    response.raise_for_status()
+                    token = response.json()
+                    if not set(SCOPES).issubset(set(token.get('scope', '').split())):
+                        raise ValueError('Missing scopes')
+                    if not token.get('refresh_token'):
+                        raise ValueError('Missing refresh token')
+                    headers = {'Authorization': 'Bearer ' + token['access_token']}
+                    if env.get('GOOGLE_ADS_DEVELOPER_TOKEN'):
+                        headers['developer-token'] = env['GOOGLE_ADS_DEVELOPER_TOKEN']
+                    if env.get('GOOGLE_ADS_LOGIN_CUSTOMER_ID'):
+                        headers['login-customer-id'] = env['GOOGLE_ADS_LOGIN_CUSTOMER_ID'].replace('-', '')
+                    # Verify only the explicitly selected Sonio advertising account.
+                    response = client.post('https://googleads.googleapis.com/v25/customers/9325395786/googleAds:search',
+                        headers=headers, json={'query':'SELECT customer.id, customer.descriptive_name FROM customer LIMIT 1'})
+                    if response.is_error:
+                        body = response.json().get('error', {})
+                        codes = []
+                        for detail in body.get('details', []):
+                            if detail.get('reason'):
+                                codes.append(detail['reason'])
+                            for item in detail.get('errors', []):
+                                codes.extend(item.get('errorCode', {}).values())
+                        safe_codes = [c for c in codes if isinstance(c, str) and c.replace('_', '').isalnum()]
+                        print('Ads-Prüfung: HTTP', response.status_code, ','.join(safe_codes), flush=True)
+                    response.raise_for_status()
+                os.chmod(ROOT / '.env', 0o600)
+                set_key(ROOT / '.env', 'GOOGLE_ADS_REFRESH_TOKEN', token['refresh_token'])
+                set_key(ROOT / '.env', 'GOOGLE_ADS_CUSTOMER_ID', '9325395786')
+                os.chmod(ROOT / '.env', 0o600)
+                completed = True
+                print('Sonio-Werbekonto verifiziert. Refresh-Token lokal gespeichert.', flush=True)
+                return self.reply(200, '<h1>Sonio Google Ads verbunden</h1><p>Das Werbekonto wurde verifiziert. Sie können dieses Fenster schliessen.</p>',
+                                  Set_Cookie='sonio_oauth=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0')
+            except (httpx.HTTPError, ValueError, KeyError, OSError):
+                # Provider responses may contain credentials; never display exceptions.
+                print('Autorisierung konnte nicht verifiziert werden; kein Token gespeichert.', flush=True)
+                return self.reply(400, '<h1>Verbindung nicht bestätigt</h1><p>Bitte Google-Ads-Freigabe und Zugriff auf das Sonio-Werbekonto prüfen. Den Assistenten für einen neuen Versuch neu starten.</p>')
+
+    server = HTTPServer(('127.0.0.1', 8766), Handler)
+    server.timeout = 1
+    print('OAuth bereit: http://127.0.0.1:8766/start (30 Minuten)', flush=True)
+    try:
+        while time.monotonic() < deadline and not completed:
+            server.handle_request()
+    finally:
+        server.server_close()
+
+
+if __name__ == '__main__':
+    main()

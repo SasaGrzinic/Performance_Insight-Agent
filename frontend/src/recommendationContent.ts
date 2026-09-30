@@ -1,0 +1,23 @@
+import type {Recommendation} from "./types";
+export const examples:Record<string,[string,string][]>= {
+ analytics:[['Kampagnenwege prüfen','Eine Landingpage auswählen und Quellen sowie weiterführende Seitenaufrufe prüfen.'],['Blog-Einstiege verbessern','Bei einem Blogartikel den Einstieg und einen passenden weiterführenden Link testen.'],['Downloads nachvollziehen','Prüfen, ob Downloads als Ereignisse erfasst und dem richtigen Inhalt zugeordnet werden.'],['KI-Verweise beobachten','Erkennbare KI-Quellen separat ansehen; unbekannte Herkunft nicht der KI zurechnen.']],
+ linkedin_organic:[['Video-Einstieg testen','Bei einem neuen Video die Kernaussage in den ersten Sekunden zeigen.'],['Themenserie entwickeln','Ein gut aufgenommenes Thema mit einem ergänzenden Fachbeitrag fortsetzen.'],['Links klar platzieren','Einen eindeutigen Link mit konkretem Nutzen im Beitrag testen.'],['Dialog fördern','Einen Fachbeitrag mit einer konkreten Frage abschliessen und Antworten auswerten.']],
+ linkedin:[['Zielgruppen getrennt prüfen','Kampagnen nach Ziel und Zielgruppe beurteilen, statt pauschal miteinander zu vergleichen.'],['Anzeigenmotiv testen','Zwei Motive bei gleichem Text und gleicher Zielgruppe testen.'],['Kosten einordnen','Ausgaben und Ergebnis je Kampagne gemeinsam mit dem Kampagnenziel prüfen.'],['Landingpage abstimmen','Versprechen der Anzeige und Einstieg der Landingpage aufeinander abstimmen.']],
+ youtube:[['Playlists strukturieren','Zusammengehörige Videos in thematischen Playlists bündeln.'],['Vorschaubild testen','Ein klares Motiv mit gut lesbarer Kernaussage ausprobieren.'],['Einstieg kürzen','Bei einem Video die Einleitung straffen und später die Betrachtungsdauer prüfen.'],['Nächstes Video anbieten','Im Abspann ein inhaltlich passendes Folgevideo verlinken.']],
+ mailchimp:[['Betreff gezielt testen','Zwei Betreffvarianten bei vergleichbaren Empfängergruppen testen.'],['Hauptlink hervorheben','Einen klaren Hauptaufruf statt mehrerer gleich gewichteter Aktionen verwenden.'],['Reminder abstimmen','Reminder inhaltlich auf das Initialmailing abstimmen und separat auswerten.'],['Mobile Lesbarkeit prüfen','Mailing auf dem Smartphone prüfen: Schrift, Bilder und klickbare Flächen.']],
+ google_ads:[['Suchbegriffe prüfen','Nach der Anbindung irrelevante Suchanfragen identifizieren und Ausschlüsse prüfen.'],['Anzeigentext testen','Zwei klar unterscheidbare Nutzenargumente bei gleichem Ziel testen.'],['Zielaktionen prüfen','Vor Optimierungen kontrollieren, welche Aktionen tatsächlich gemessen werden.'],['Budget nach Ziel prüfen','Budget und Ergebnisse je Kampagnenziel gemeinsam beurteilen.']],
+ events:[['Anmeldeweg vereinfachen','Formular auf unnötige Pflichtfelder und mobile Bedienbarkeit prüfen.'],['Quellen kennzeichnen','Einladungslinks pro Kanal eindeutig markieren.'],['Reminder planen','Einen passenden Reminder-Zeitpunkt vor dem Event festlegen.'],['Nachbereitung verbinden','Dankesmail mit passendem weiterführendem Inhalt vorbereiten.']],
+ qr:[['Codes getrennt einsetzen','Pro Platzierung einen eigenen Tracking-Code verwenden.'],['Zielseite mobil prüfen','Die Zielseite auf einem Smartphone öffnen und den nächsten Schritt prüfen.'],['Platzierungen vergleichen','Scans je Standort bei vergleichbarer Einsatzdauer betrachten.'],['Links vor Einsatz testen','Jeden Code vor Druck und Veröffentlichung auf das korrekte Ziel prüfen.']]
+};
+
+export type RecommendationEntry={recommendation:Recommendation;example:boolean};
+export function channelEntries(channel:string,items:Recommendation[]):RecommendationEntry[]{
+ const actual=items.filter(r=>r.channel===channel).sort((a,b)=>({high:0,medium:1,low:2}[a.priority]-{high:0,medium:1,low:2}[b.priority])).slice(0,6);
+ const entries:RecommendationEntry[]=actual.map(recommendation=>({recommendation,example:false}));
+ for(const [title,action] of examples[channel]||[]){
+  if(entries.length>=Math.max(4,actual.length))break;
+  if(actual.some(r=>r.title===title))continue;
+  entries.push({example:true,recommendation:{title,action,channel,priority:'medium',observation:'Gestaltungsbeispiel – nicht aus aktuellen Kennzahlen abgeleitet.',caveat:'Vor Umsetzung anhand der tatsächlichen Kanaldaten und Ziele prüfen.',evidence:[]}});
+ }
+ return entries;
+}

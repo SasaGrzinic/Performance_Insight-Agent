@@ -131,3 +131,65 @@ def test_campaign_summary_crosses_months_and_preserves_missing(db):
 
 def test_ads_campaign_endpoint_requires_login(client):
     assert client.get("/api/linkedin/ads/campaigns").status_code == 401
+
+
+def test_campaign_image_rejects_other_organization():
+    from app.linkedin_ads import enrich_campaign_images
+
+    known = {"urn:li:sponsoredCampaign:1": {}}
+    creative = {
+        "campaign": "urn:li:sponsoredCampaign:1",
+        "account": "urn:li:sponsoredAccount:514253005",
+        "content": {"reference": "urn:li:share:123"},
+    }
+    with (
+        patch("app.linkedin_ads.linkedin_headers", return_value={}),
+        patch(
+            "app.linkedin_ads.request",
+            side_effect=[
+                response({"elements": [creative]}),
+                response(
+                    {
+                        "author": "urn:li:organization:999",
+                        "content": {"media": {"id": "urn:li:image:abc"}},
+                    }
+                ),
+            ],
+        ),
+        patch("app.linkedin_posts.enrich_images") as enrich,
+    ):
+        enrich_campaign_images(known, settings())
+    enrich.assert_not_called()
+    assert not known["urn:li:sponsoredCampaign:1"].get("image_url")
+
+
+def test_campaign_image_failure_does_not_invent_or_change_values():
+    from app.linkedin_ads import enrich_campaign_images
+
+    known = {"urn:li:sponsoredCampaign:1": {"name": "Real campaign"}}
+    with (
+        patch("app.linkedin_ads.linkedin_headers", return_value={}),
+        patch("app.linkedin_ads.request", side_effect=ProviderError("unavailable")),
+    ):
+        enrich_campaign_images(known, settings())
+    assert known == {"urn:li:sponsoredCampaign:1": {"name": "Real campaign"}}
+
+
+def test_landing_page_clicks_are_distinct_and_missing_is_not_zero():
+    elements = [
+        {"pivotValues": ["urn:li:sponsoredCampaign:1"],
+         "dateRange": {"start": {"year": 2026, "month": 9, "day": day}},
+         "clicks": 10, **extra}
+        for day, extra in [(1, {"landingPageClicks": 4}), (2, {})]
+    ]
+    with (
+        patch("app.linkedin_ads.linkedin_headers", return_value={}),
+        patch("app.linkedin_ads.campaigns", return_value=(
+            {"id": 514253005, "currency": "CHF"}, {"urn:li:sponsoredCampaign:1": {}})),
+        patch("app.linkedin_ads.request", return_value=response({"elements": elements})),
+    ):
+        rows = fetch(date(2026, 9, 1), date(2026, 9, 2), settings())
+    landing = [r for r in rows if r["key"] == "landing_page_clicks"]
+    assert len(landing) == 1
+    assert landing[0]["value"] == 4
+    assert len([r for r in rows if r["key"] == "clicks"]) == 2
