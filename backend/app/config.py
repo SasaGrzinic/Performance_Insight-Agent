@@ -34,6 +34,7 @@ class Settings(BaseSettings):
     google_client_id: str = ""
     google_client_secret: str = ""
     google_refresh_token: str = ""
+    gsc_refresh_token: str = ""
     ga4_property_id: str = ""
     ga4_refresh_token: str = ""
     google_ads_refresh_token: str = ""

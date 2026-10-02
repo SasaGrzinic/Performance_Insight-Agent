@@ -5,6 +5,7 @@ import App from "./App";
 import { ApiError } from "./api";
 import "./styles.css";
 import "./marketing-design.css";
+import "./harmonized-design.css";
 const client = new QueryClient({
   defaultOptions: {
     queries: {

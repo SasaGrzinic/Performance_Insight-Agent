@@ -1,5 +1,6 @@
 import {RecommendationTeaser} from "./RecommendationTeaser";
 import { EditorialQuote } from './EditorialQuote';
+import { asset } from '../staticDemo';
 import { useState, useId, type ReactNode } from "react";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { Info, ExternalLink, Play, SlidersHorizontal, TrendingUp, TrendingDown, Minus } from "lucide-react";
@@ -300,7 +301,7 @@ export function LinkedInOrganic({
         </details>
       </section>
       <section>
-        <div className="li-heading"><h2>Entwicklung im Vergleich.</h2><small>{year ? "Monatsverlauf · laufendes Jahr" : "Gleiche Kalendertage · Monatswerte"}</small></div>
+        <div className="li-heading"><h2>Entwicklung im Vergleich. <Help>Der Verlauf zeigt Organisationswerte im jeweiligen Zeitraum. Monatsvergleiche legen dieselben Kalendertage übereinander. Ein laufender Monat ist unvollständig; spätere Tage dürfen nicht mit einem vollständigen Vormonat gleichgesetzt werden. Die Werte sind nicht einzelnen Beiträgen zuzurechnen.</Help></h2><small>{year ? "Monatsverlauf · laufendes Jahr" : "Gleiche Kalendertage · Monatswerte"}</small></div>
         {year ? (
           <>
             <label>
@@ -364,7 +365,7 @@ export function LinkedInOrganic({
       </section>
       <section id="li-posts">
         <div className="li-heading">
-          <h2>Deine Inhalte im Vergleich.</h2>
+          <h2>Deine Inhalte im Vergleich. <Help>Die Auswahl bezieht sich auf den Veröffentlichungszeitraum. Jeder Beitrag zeigt den verfügbaren Gesamtstand seit Veröffentlichung. Ältere Beiträge hatten mehr Zeit, Aufrufe und Klicks zu sammeln. Diese Zahlen sind keine Monatsleistung und nicht mit den Tageswerten der Seite gleichzusetzen.</Help></h2>
           <div className="li-format-filters" role="group" aria-label="Beitragsformat">
             {[["all", "Alle"], ["video", "Videos"], ["article", "Link-Beiträge"], ["image", "Bilder"]].map(([value, label]) => <button key={value} type="button" aria-pressed={format === value} onClick={() => setFormat(value)}>{label}</button>)}
           </div>
@@ -488,7 +489,7 @@ export function LinkedInOrganic({
           <Tile label="Davon engagierte Sitzungen" value="—" help="Anzahl und Anteil an den zugeordneten Besuchen. Die notwendige Zuordnung ist noch offen."/>
         </div><p className="li-note">Nach verifizierter GA4-/UTM-Zuordnung. <Help>Für eine belastbare Zuordnung benötigen wir GA4-Sitzungen mit konsistenten LinkedIn-UTM-Parametern. Bis dahin keine Schätzwerte.</Help></p></div>
       </section>
-      <RecommendationTeaser/><EditorialQuote text="Attention is priceless and trust is worth even more" author="Seth Godin" role="Marketingautor und Unternehmer" source="https://seths.blog/2025/12/building-blocks-of-marketing/"/>
+      <RecommendationTeaser/><EditorialQuote portrait={asset('brand/portraits/maya-angelou-v1.png')} text="You can’t use up creativity. The more you use, the more you have." author="Maya Angelou" role="Schriftstellerin und Bürgerrechtlerin" source="https://www.themarginalian.org/2013/09/06/what-is-creativity/"/>
     </div>
   );
 }

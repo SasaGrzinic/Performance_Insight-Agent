@@ -353,3 +353,12 @@ Analytics nutzt den gemeinsamen grossen Bildheader ohne Kanal-Logo/Fahnenoverlay
 Sonio-blaue KPI-/Inhaltsflächen und den gemeinsamen EditorialQuote-Abschluss.
 GEO listet alle unterstützten KI-Quellen offen; fehlende Berichtszeilen als «—»
 mit Erklärung statt erfundenen Nullen darstellen.
+
+## Gemeinsame Flächenrollen – 02.10.2026
+`frontend/src/harmonized-design.css` bündelt die Harmonisierung bestehender Seiten:
+- Kennzahlen: Weiss, Kontur #bbcbd9, Zahlen #0063b8; blaue Übersichtssignale bleiben.
+- Aktive Filter/Navigation: #0063b8, Weiss; zusätzlich Gewicht/Unterkante als Signal.
+- Empfehlungen/Prüfansätze: #f2ebdf und #e8decd, Text #173d62.
+- Infoboxen: #173d62/Weiss, identische Abstände und Form; bestehende Interaktionen.
+- Bildwelt, Datenlogik, Kanalrouten und Zitattexte bleiben bestehen. Porträts folgen
+  als separater Entwurf nach der Harmonisierung, noch nicht integriert.

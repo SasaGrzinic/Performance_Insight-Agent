@@ -478,3 +478,121 @@ Alle Analytics-Bereiche verwenden ein gemeinsames zweispaltiges Inhaltsraster; u
 - 24 Frontendtests, TypeScript und Vite-Produktionsbuild bestanden. Bestehende Bundle-Grössenwarnung sowie zwei Testclient-Deprecation-Warnungen bleiben.
 - Ruff-Importsortierung bereinigt; Backend-Lint erfolgreich. Offene Dateien gegen lokale Geheimniswerte und gängige Credential-Muster geprüft, keine Treffer. `.env` und `.local/` bleiben ignoriert.
 - Zielbranch `design/sonio-dashboard-login`. Branch-Push ist kein Deployment der GitHub-Pages-Demo auf `main`; Remote-CI und Containerprüfung sind getrennt zu bestätigen.
+
+### Übersicht-Monatsauswahl und erneuter Datenabgleich Anfang Oktober 2026
+- Übersicht folgt jetzt dem gewählten Monat statt ihn auf den laufenden Monat zu erzwingen. Kompaktes Dropdown für die letzten zwölf Monate; Kennzahlen, Vergleich, Empfehlungen und CSV verwenden denselben Berichtsmonat. TypeScript erfolgreich, Browserwechsel Oktober → September verifiziert.
+- Manueller Gesamt-Sync erfolgreich abgeschlossen; Analytics, LinkedIn Organic/Ads, Mailchimp und YouTube aktualisiert. YouTube-Veröffentlichungscache 2026 separat erneuert: 13 Videos im Jahr, eines im Oktober. Tagesstatistik der YouTube-API zuletzt bis 29.09.; kein Ersatz fehlender Oktoberwerte durch Lifetime-Zahlen. Mailchimp letzter Versand am 18.09.; Oktoberübersicht deshalb ohne Mailchimp-Werte.
+- Google Ads: OAuth mit persönlichem Gmail-Konto bei Kontoprüfung HTTP403 USER_PERMISSION_DENIED; kein Refresh-Token gespeichert. Ads-Oberfläche mit marketing@sonio.com zeigt Sonio 932-539-5786. Erneuter OAuth-Vorgang mit diesem Unternehmenskonto wartet auf Nutzer-Identitätsbestätigung. Noch keine erfolgreiche Ads-Anbindung behauptet.
+
+### Google Ads – Verbindung bestätigt am 02.10.2026
+
+- Anmeldung mit marketing@sonio.com abgeschlossen; der OAuth-Helfer hat den Zugriff auf Sonio-Werbekonto 932-539-5786 über die API verifiziert und den separaten Ads-Refresh-Token lokal gespeichert.
+- Bestehende lokale API, Worker und Scheduler kontrolliert beendet und mit aktualisierter Konfiguration neu gestartet; keine parallelen Worker gestartet.
+- Sync-Job fa5bbafb-7776-4f4d-8aea-b745aec6e476 erfolgreich abgeschlossen: 128 Tagesmesswerte für September und den laufenden Oktober 2026. ChannelState `connected`, letzter Erfolg 02.10.2026 07:29 UTC.
+- September: 90'080 Impressionen, 3'067 Klicks, CHF 1'331.29 Ausgaben. Oktober bisher: 2'749 Impressionen, 83 Klicks, CHF 45.86 Ausgaben. Import enthält auch vom Werbekonto gemeldete Conversions; diese sind keine automatisch bestätigten Leads oder Verkäufe.
+- API-Abruf und Datenbankimport geprüft. Keine neue Frontend-Implementierung und kein öffentliches Deployment. Google-OAuth-Testmodus bleibt eine Betriebsgrenze.
+
+### Google-Ads-Cockpit – 02.10.2026
+
+- Neue geschützte Kampagnenansicht im bestehenden Sonio-Design: vier Hauptkennzahlen, Klick-/CTR-Rankings mit Bildvorschau bei Hover und Tastaturfokus, Zweierspalten, aufklappbare KPI-Details, Monats-/Typfilter, Empfehlungen und vorhandene EditorialQuote-Komponente.
+- Eigener lesender `/api/google-ads/campaigns`-Endpoint; strikt Konto 9325395786, serverseitiger Monatsfilter und einstündiger Cache mit letztem erfolgreichen Stand bei Abruffehlern. Keine zusätzlichen Metric-Zeilen, daher keine Doppelzählung des bestehenden Imports.
+- September live geprüft: 80 bekannte Kampagnen, elf mit Auslieferung. 3'067 Klicks, CHF 1'331.29 Kosten stimmen mit dem Kontoimport überein. Zehn Performance-Max-Kampagnen haben zugeordnete Bild-Assets; eine Suchkampagne echte Textbausteine. Motive als Beispiele gekennzeichnet, keine Behauptung einer exakt ausgespielten Anzeigenkombination.
+- CSV enthält gefilterte Kampagnen, Zeitraum, Währung und Abrufstand. Bestehendes CSV-Escaping genutzt. Demo fragt keine echten Kampagnendetails ab.
+- Zwei Regressionstests bestanden (Kennzahlen/Asset-Zuordnung und falsches Konto), Ruff, TypeScript und Vite-Build bestanden; bestehende Bundle-Grössenwarnung. Browser: Daten, Bilder (zehn geladen), Desktop und mobile Breite 390 ohne horizontalen Überlauf geprüft.
+- Offen: fachliche Conversion-Ziele prüfen; keine Aussage über qualifizierte Leads. Such-Impression-Share und GA4-Kampagnenqualität sind noch nicht Teil dieses ersten Entwurfs. Keine Veröffentlichung vorgenommen.
+
+### Search Console – Zugang bestätigt am 02.10.2026
+
+- API searchconsole.googleapis.com im bestehenden Projekt sonio-insights aktiviert; ausdrücklich freigegebener Scope webmasters.readonly mit marketing@sonio.com autorisiert.
+- scripts/search_console_oauth.py prüft ausschliesslich sc-domain:sonio.com vor Speicherung. Separater GSC_REFRESH_TOKEN und GSC_SITE_URL in lokaler .env (0600); bestehende Provider-Tokens bleiben erhalten. OAuth-State, PKCE und HttpOnly-Loopback-Cookie wie beim bestehenden Helfer.
+- Token-Erneuerung und Search-Analytics-Abfrage live geprüft: Websuche, 01.–30.09.2026, dataState=final: 734 Klicks, 10'021 Impressionen, CTR 7.3246 %, durchschnittliche Position 11.2464. Suchbegriffsabfrage mit Testlimit zehn lieferte zehn Zeilen; kein vollständiger Import behauptet.
+- Noch kein Search-Console-Dashboard, Scheduler-Import oder Keyword-Vorschlagsmodul umgesetzt. Google-Testmodus bleibt bestehen.
+
+## 2026-10-02 – Suchbegriffe & Potenziale
+- Eigener Navigationspunkt und Verweise aus Google Ads/Analytics. Geschützter
+  Endpoint `/api/search-insights`, Quellen organic/paid/keywords strikt getrennt,
+  Monatscache eine Stunde, manuelle Erneuerung und letzter Stand bei Fehlern.
+- September live abgerufen: 659 organische Suchbegriffe, 538 bezahlte
+  Suchanfragezeilen, vier Keyword-Zeilen. Suchanfragen sind nicht vollständig:
+  Google-Datenschutz und Berichtslimits; Anteile beziehen sich auf sichtbare
+  gefilterte Zeilen. Property-Summen werden nicht mit Query-Summen vermischt.
+- Sonio-Domain und Ads-Konto fest begrenzt. GSC verwendet separaten Refresh-Token;
+  Google-App im Testmodus bleibt eine Betriebsgrenze. Keine Kampagnenänderungen.
+- Monats-/Text-/Marken-/Kampagnentypfilter, Rankings mit Hover und Tastaturfokus,
+  Infoboxen, Detailtabelle, CSV und regelbasierte Prüfkandidaten. Keine KI-Analyse
+  und noch keine Keyword-Planner-Ideen/Suchvolumen. Kein geplanter Hintergrundjob
+  für diese Detailberichte; Abruf bei Aufruf beziehungsweise manueller Erneuerung.
+- Zwei isolierte Backendtests bestanden (Property-/Query-Trennung, Kosten und
+  fraktionale Conversions, falsches Ads-Konto abweisen). Ruff und TypeScript/Vite
+  bestanden; bestehende Chunkgrössenwarnung bleibt.
+- Browser: organische und bezahlte Daten sichtbar, Textfilter/Leerzustand geprüft,
+  Ranking-Tooltip per Tastatur sichtbar. Desktop und 390px ohne Seitenüberlauf;
+  Detailtabelle horizontal scrollbar. Lokale geschützte Ansicht, kein Deployment.
+
+## 2026-10-02 – Übersicht als Einstieg
+- Obere Monatskennzahlen mit erklärenden, per Hover/Fokus/Klick erreichbaren
+  Infoboxen und kräftigeren blauen Flächen. Untere Kanalkacheln zeigen ergänzende
+  Kennzahlen, niemals erneut den konfigurierten Primärwert; fehlend bleibt fehlend.
+- Direkte Einstiege zu Video Insights, Suchbegriffen und Empfehlungen. Neueste
+  importierte Veröffentlichung aus geschützter Video-Library nach Zeitstempel,
+  unabhängig vom KPI-Monat: Originalvorschau, Titel, Plattform und Datum. In Demo
+  keine echte Library-Abfrage. Fehler/Leerzustand statt erfundener Vorschau.
+- Browser bestätigt neuestes importiertes Video vom 1.10.2026, Vorschaubild geladen,
+  Infobox sichtbar und alle drei Weiterleitungen erfolgreich. Desktop und 390px
+  ohne horizontalen Seitenüberlauf. TypeScript und Vite bestanden (bekannte
+  Chunkgrössenwarnung). Kein öffentliches Deployment.
+
+## 2026-10-02 – Themencluster für Suchbegriffe
+- Acht auswählbare Themenkacheln mit Klicks und Impressionen. Alle Themen bleibt
+  verfügbar; Ranking, Kennzahlen, Potenziale und CSV folgen der Auswahl.
+- Konservative DE/FR/EN-Regeln anhand des Suchbegriffs, keine Ableitung aus dem
+  Kampagnennamen. Fachthemen vor Marke/generischem Service; mehrdeutige und
+  unbekannte Begriffe bleiben unter Weitere. Eine Zuordnung pro Zeile.
+- Details zunächst zehn Zeilen, um jeweils zehn erweiterbar. CSV enthält Thema.
+- Zwei Regressionstests für Sprachvarianten, Prioritäten, Mehrdeutigkeit und
+  Summenerhaltung bestanden. TypeScript und Vite bestanden (Chunkwarnung bleibt).
+- Browser: September organisch 659 Zeilen; Cloud-Auswahl 52 Zeilen und passende
+  Kennzahlen, Erweiterung 10 auf 20, Alle-Themen-Rückkehr geprüft. Mobile 390px
+  ohne Seitenüberlauf. Kein öffentliches Deployment.
+
+## 2026-10-02 – Suchansicht: Struktur und Einordnung
+- Filter in Zeitraum/Aktionen, Quelle und Eingrenzung gruppiert. Themenflächen
+  wechseln zwischen Sonio-Blau, Dunkelblau und Weiss; Kennzahlen/Ranking ruhiger.
+- Potenzialtexte explizit hell auf dunklem Grund, mit zusätzlichem Prüfschritt.
+- Auswählbare Lesehilfe für Sichtbarkeit, Interesse und Position/Ergebnis;
+  Bedeutung und mögliche nächste Prüfung getrennt, keine Ursachenbehauptungen.
+- Neues Such-Zitat von Lucy Sinclair und Debadeep Bandyopadhyay, Originalquelle:
+  https://business.google.com/uk/think/marketing-strategies/spot-intent-in-searches/
+- TypeScript und Vite erfolgreich (bestehende Chunkwarnung). Desktop visuell,
+  Lesehilfe per Klick und 390px ohne Seitenüberlauf geprüft. Kein Deployment.
+
+## 2026-10-02 – Empfehlungen: zusätzliche Bereiche
+- Suchbegriffe & Potenziale sowie Video Insights als eigene Auswahl und Abschnitte
+  mit je vier explizit gekennzeichneten redaktionellen Beispielen ergänzt.
+  Keine datenbasierte oder KI-generierte Analyse für diese Beispiele behauptet.
+- Direkte Navigation aus den Abschnitten zur jeweiligen Detailansicht; Modal
+  erhält den korrekten Bereichsnamen. Bestehende Kanalempfehlungen bleiben erhalten.
+- TypeScript/Vite bestanden, Suchbereich mit vier Kacheln im Browser verifiziert.
+
+## 2026-10-02 – Gemeinsame Designharmonisierung
+- Zentrale Flächenrollen für KPI-Kacheln, Empfehlungen, Filter, Navigation,
+  Aktionsgruppen und Infoboxen; Sandakzent ergänzt die Sonio-Blautöne.
+- Browserstichproben Empfehlungen, Übersicht, Google Ads und YouTube. Sandkacheln
+  und aktive Filter sichtbar, KPI-Infobox geprüft; rechtsbündige letzte KPI-Box
+  korrigiert. YouTube bei 390px ohne Seitenüberlauf, Aktionen nebeneinander.
+- TypeScript/Vite erfolgreich; vorhandene Chunkwarnung bleibt. Kein Deployment.
+- Kein vollständiger Test sämtlicher Zustände aller Seiten. Zitatwechsel und
+  Branson-Porträt sind nicht Teil dieses Durchgangs.
+
+### 2026-10-02 — Einheitliche Zitate und Porträts
+- Gemeinsames Layout in editorial-quote.css konsolidiert, widersprüchliche ältere Quote-Overrides entfernt. Porträts per CSS monochrom, 72 × 88 px Desktop / 60 × 76 px Mobile, Seitenverhältnis durch object-fit erhalten.
+- Quellen durch Autor-Link mit erklärendem Titel erreichbar; doppelte Quellenzeile neben Berufsbezeichnung entfernt.
+- Browser: alle 14 Inhaltsseiten jeweils mit einem Zitat und geladenem Porträt geprüft. Datenquellen, Team & Zugänge, Einstellungen: jeweils kein Zitat.
+- Mobile 390 px: Kanäle und längeres Reports-Zitat visuell geprüft, kein Überlauf des Zitatblocks. Desktop-Viewport anschliessend wiederhergestellt.
+- TypeScript-Build bestanden. Keine Daten-, Authentifizierungs- oder Deploymentänderung.
+
+### 2026-10-02 — GitHub-Sicherung des Tagesstands
+- Backend: 105 Tests bestanden, isolierte temporäre Testdatenbank; zwei bestehende Deprecation-Warnungen.
+- Frontend: 26 Tests bestanden; TypeScript und Vite-Produktionsbuild bestanden (bestehende Chunk-Grössenwarnung).
+- Ruff: bestanden. 52 geänderte/neue Dateien vor Commit auf Übereinstimmungen mit lokalen Geheimnissen und private Schlüssel geprüft, keine Treffer. .env und .local bleiben ausgeschlossen.
+- Sicherung auf design/sonio-dashboard-login; kein Pages-Deployment beauftragt.

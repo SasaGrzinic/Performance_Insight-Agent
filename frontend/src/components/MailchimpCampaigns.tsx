@@ -171,7 +171,7 @@ export function MailchimpCampaigns({ demo, actions }: { demo: boolean; actions?:
         {q.data.last_success && <p className="muted">Datenstand: {new Date(q.data.last_success).toLocaleString('de-CH')}</p>}
       </section>
       <RecommendationTeaser/>
-      <EditorialQuote text="Marketing is the work of telling a story that changes people." author="Seth Godin" role="Marketingautor und Unternehmer" source="https://seths.blog/wp-content/uploads/2024/05/TMS4-Family-Tree-of-Marketing-v2.pdf"/>
+      <EditorialQuote portrait={asset('brand/portraits/stephen-king-v1.png')} text="All the arts depend upon telepathy to some degree, but I believe that writing offers the purest distillation." author="Stephen King" role="Schriftsteller" source="https://phsaplanguage.weebly.com/uploads/5/0/8/6/5086160/ap_2015_summer_reading.pdf" sourceLabel="Quelle: On Writing · What Writing Is"/>
 
     </section>
   );
@@ -202,7 +202,7 @@ function MailingTotals({mailings}:{mailings:Mailing[]}){
  const sum=(key:string)=>mailings.length && mailings.every(m=>m.values[key]!=null)?mailings.reduce((n,m)=>n+m.values[key]!,0):null;
  const delivered=sum('delivered'), clicks=sum('unique_clicks'), unsubscribed=sum('unsubscribed');
  const values={delivered,unique_clicks:clicks,click_rate:delivered&&clicks!=null?clicks/delivered*100:null,unsubscribe_rate:delivered&&unsubscribed!=null?unsubscribed/delivered*100:null};
- return <section className="mc-totals" aria-label="Kennzahlen der ausgewählten Mailings"><MailingMetrics values={values}/><p>{mailings.length} Mailings in der Auswahl · Gesamtstand seit Versand. Klickende je Mailing gezählt; Quoten nach Zustellungen gewichtet. Zugehörige Sendungen aus anderen Monaten sind enthalten.</p></section>
+ return <section className="mc-totals" aria-label="Kennzahlen der ausgewählten Mailings"><MailingMetrics values={values}/><p><PeriodInfo label="Gesamtübersicht der Mailings erklärt">Empfänger werden je Mailing gezählt. Dieselbe Person kann deshalb in mehreren Mailings mehrfach vorkommen. Klick- und Abmeldequote werden aus den aufsummierten Werten und Zustellungen berechnet, nicht als einfacher Durchschnitt der Mailingquoten. Die Zahlen zeigen den Gesamtstand seit Versand; zugehörige Sendungen anderer Monate können enthalten sein.</PeriodInfo> {mailings.length} Mailings in der Auswahl · Gesamtstand seit Versand. Klickende je Mailing gezählt; Quoten nach Zustellungen gewichtet. Zugehörige Sendungen aus anderen Monaten sind enthalten.</p></section>
 }
 function MailingCard({mailing:m}:{mailing:Mailing}){
  const [open,setOpen]=useState(false);

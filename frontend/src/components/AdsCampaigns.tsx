@@ -3,6 +3,7 @@ import "../linkedin-ads.css";
 import { PeriodInfo } from "./PeriodInfo";
 import { KpiExplainer } from "./KpiExplainer";
 import { asset, demoCampaigns } from "../staticDemo";
+import { EditorialQuote } from './EditorialQuote';
 import { useState, cloneElement, isValidElement, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Download } from "lucide-react";
@@ -50,6 +51,19 @@ const objectives: Record<string, string> = {
   ENGAGEMENT: "Interaktionen",
   VIDEO_VIEW: "Videoaufrufe",
   LEAD_GENERATION: "Lead-Generierung",
+};
+const adsHelp: Record<string,string> = {
+ impressions: 'Anzahl der Anzeigeneinblendungen. Mehrere Einblendungen können dieselbe Person betreffen; dies ist keine eindeutige Reichweite.',
+ clicks: 'Von LinkedIn gezählte Anzeigenklicks. Je nach Format können auch Interaktionen innerhalb von LinkedIn enthalten sein. Nicht gleich Website-Besuche.',
+ ctr: 'LinkedIn-Klicks geteilt durch Impressionen. Die Klickrate beschreibt Resonanz, nicht die Qualität der Website-Besuche. Ziel und Anzeigenformat berücksichtigen.',
+ landing_page_clicks: 'Klicks zur hinterlegten Zielseite. Ein Klick garantiert keine in Analytics erfasste Sitzung, etwa wegen Ladeabbrüchen oder fehlender Einwilligung.',
+ landing_page_ctr: 'Landingpage-Klicks geteilt durch Impressionen. Zeigt den Anteil der Einblendungen, der zu einem Klick zur Zielseite führt.',
+ landing_page_cpc: 'Ausgaben geteilt durch Landingpage-Klicks. Ohne solche Klicks kein berechenbarer Wert. Keine Kosten pro Lead.',
+ cpc: 'Ausgaben geteilt durch LinkedIn-Klicks. Ein günstiger Klick belegt noch keinen wertvollen Kontakt.',
+ cpm: 'Ausgaben je 1’000 Einblendungen. Hilft bei der Einordnung der Ausspielungskosten, misst aber keine Bekanntheitssteigerung.',
+ conversions: 'Von LinkedIn zugerechnete Website-Zielaktionen. Die konkrete Aktion muss geprüft werden; diese Zahl ist nicht automatisch die Anzahl von Leads oder Anmeldungen.',
+ cost_per_conversion: 'Ausgaben geteilt durch zugerechnete Website-Zielaktionen. Nur bei vergleichbaren und überprüften Zielen sinnvoll; ohne Zielaktionen nicht berechenbar.',
+ spend: 'Werbeausgaben in der Kontowährung für den ausgewiesenen Zeitraum. Produktions- und Agenturkosten sind nicht enthalten.',
 };
 const primaryFields = {
   impressions: "Impressionen",
@@ -250,7 +264,7 @@ export function AdsCampaigns({ demo, actions }: { demo: boolean; actions?: React
               <dl className="ads-primary-kpis">
                 {Object.entries(campaignFields(c)).map(([key, label]) => (
                   <div key={key} className={key === "spend" ? "campaign-cost" : undefined}>
-                    <dt>{label}</dt><dd>{metricValue(c,key)}</dd>
+                    <dt>{label} <PeriodInfo label={`${label} erklärt`}>{adsHelp[key]}</PeriodInfo></dt><dd>{metricValue(c,key)}</dd>
                   </div>
                 ))}
               </dl>
@@ -263,7 +277,7 @@ export function AdsCampaigns({ demo, actions }: { demo: boolean; actions?: React
               </p>
               <details>
                 <summary>Details &amp; Einordnung</summary>
-                <dl className="ads-secondary-kpis">{["clicks", "ctr", "cpc", "landing_page_ctr", "landing_page_cpc", "cpm", "conversions", "cost_per_conversion"].filter(key => !(key in campaignFields(c))).map(key => <div key={key}><dt>{fields[key as keyof typeof fields]}</dt><dd>{metricValue(c,key)}</dd></div>)}</dl>
+                <dl className="ads-secondary-kpis">{["clicks", "ctr", "cpc", "landing_page_ctr", "landing_page_cpc", "cpm", "conversions", "cost_per_conversion"].filter(key => !(key in campaignFields(c))).map(key => <div key={key}><dt>{fields[key as keyof typeof fields]} <PeriodInfo label={`${fields[key as keyof typeof fields]} erklärt`}>{adsHelp[key]}</PeriodInfo></dt><dd>{metricValue(c,key)}</dd></div>)}</dl>
                 <p>Website-Zielaktionen sind die von LinkedIn zugerechneten Website-Conversions. Die konkrete Aktion ist noch nicht verifiziert; deshalb werden sie nicht als Anmeldungen oder Leads bezeichnet. Landingpage-Klicks sind keine nachgewiesenen Website-Sitzungen.</p>
                 <p>
                   {c.objective === "BRAND_AWARENESS"
@@ -297,6 +311,7 @@ export function AdsCampaigns({ demo, actions }: { demo: boolean; actions?: React
           : "Noch kein erfolgreicher Abruf."}
       </p>
       <RecommendationTeaser/>
+      <EditorialQuote portrait={asset('brand/portraits/steve-jobs-v1.png')} text="You’ve got to start with the customer experience and work backwards to the technology." author="Steve Jobs" role="Apple-Mitgründer" source="https://allaboutstevejobs.com/videos/misc/wwdc_1997_closing_chat"/>
     </section>
   );
 }

@@ -1,3 +1,5 @@
+import {SearchInsights,SearchHero} from "./components/SearchInsights";
+import {GoogleAds,GoogleAdsHero} from "./components/GoogleAds";
 import {RecommendationContext, RecommendationTeaser} from "./components/RecommendationTeaser";
 import {AnalyticsHero} from './components/AnalyticsHero';
 import {EditorialQuote} from './components/EditorialQuote';
@@ -5,6 +7,7 @@ import {AnalyticsInfo} from './components/AnalyticsInfo';
 import { ChannelDirectory } from "./components/ChannelDirectory";
 import { LinkedInHero, LinkedInOrganic } from "./components/LinkedInOrganic";
 import {ChannelRecommendations} from "./components/ChannelRecommendations";
+import {recommendationAreas} from './recommendationContent';
 import {metricRecommendations} from "./recommendations";
 import { PeriodInfo } from "./components/PeriodInfo";
 import { AnalyticsMonthlySources } from "./components/AnalyticsMonthlySources";
@@ -27,6 +30,9 @@ import type { FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   OverviewHighlights,
+  OverviewExplore,
+  overviewSecondaryMetric,
+  overviewMetricHelp,
   MarketingQuote,
   channelMetricLabel,
 } from "./components/MarketingOverview";
@@ -77,6 +83,7 @@ import type {
 import { Modal, ChannelIcon, Change, Loading, Empty } from "./components/ui";
 
 type View =
+  | "search"
   | "videos"
   | "audience"
   | "posts"
@@ -93,6 +100,7 @@ const navigation: { id: View; label: string; icon: typeof LayoutDashboard }[] =
   [
     { id: "overview", label: "Übersicht", icon: LayoutDashboard },
     { id: "channel-directory", label: "Kanäle", icon: ChartNoAxesCombined },
+    { id: "search", label: "Suchbegriffe & Potenziale", icon: ChartNoAxesCombined },
     { id: "videos", label: "Video Insights", icon: Play },
     { id: "recommendations", label: "Empfehlungen", icon: Lightbulb },
     { id: "reports", label: "Reports", icon: FileText },
@@ -103,6 +111,7 @@ const adminNav: { id: View; label: string; icon: typeof Plug }[] = [
   { id: "settings", label: "Einstellungen", icon: Settings2 },
 ];
 const titles: Record<View, string> = {
+  search: "Suchbegriffe & Potenziale",
   videos: "Video Insights",
   audience: "Entwicklung der Community.",
   posts: "Wirkung der Beiträge.",
@@ -110,7 +119,7 @@ const titles: Record<View, string> = {
   channels: "Jeder Kanal. Seine Wirkung.",
   "channel-directory": "Alle Kanäle. Klar im Blick.",
   insights: "Aus Zahlen werden nächste Schritte.",
-  recommendations: "Empfehlungen nach Kanal.",
+  recommendations: "Empfehlungen im Überblick.",
   reports: "Marketing Performance, Monat für Monat.",
   sources: "Alle Daten an einem Ort.",
   team: "Gute Entscheidungen sind Teamwork.",
@@ -171,13 +180,8 @@ function App() {
         sync_interval_minutes: number;
       }>("/config/public"),
   });
-  const month =
-    view === "overview"
-      ? currentReportingMonth(
-          now,
-          publicConfig.data?.timezone || "Europe/Zurich",
-        )
-      : selectedMonth;
+  const currentMonth = currentReportingMonth(now, publicConfig.data?.timezone || "Europe/Zurich");
+  const month = selectedMonth;
   const data = useQuery({
     queryKey: ["dashboard", demo, month],
     refetchInterval: demo ? false : 60000,
@@ -454,20 +458,6 @@ function App() {
             ))}
         </nav>
         <div className="sidebar-bottom">
-          <div className="report-reminder">
-            <span className="reminder-icon">
-              <CalendarDays size={19} />
-            </span>
-            <strong>Nächster Monatsreport</strong>
-            <p>
-              Am 3. des Monats.
-              <br />
-              Zahlen, Einordnung, nächste Schritte.
-            </p>
-            <button onClick={() => changeView("reports")}>
-              Reports ansehen <ArrowRight size={15} />
-            </button>
-          </div>
           <div className="profile">
             <span className="avatar">
               {demo ? "SM" : me.data?.username.slice(0, 2).toUpperCase()}
@@ -549,7 +539,7 @@ function App() {
               </section>
               <p className="marketing-pitch">Der Marketing Performance &amp; Insight Agent bündelt die Kanalzahlen, macht Entwicklungen verständlich und unterstützt bei der Priorisierung der nächsten Schritte – für weniger Reporting-Aufwand und fundierte Marketingentscheidungen.</p>
             </>
-          ) : view === "channel-directory" ? <><div className="marketing-mast"><h1>Marketingkanäle.</h1></div><section className="marketing-hero"><img src={asset("brand/sonio-blog-header.jpg")} alt="Berglandschaft mit Fahrer und Zielflagge"/><div><h2>Alle Kanäle. Klar im Blick.</h2><p>Entwicklungen erkennen. Gezielt tiefer einsteigen.</p></div></section><p className="directory-intro">Die Marketingkanäle auf einen Blick: Die wichtigsten Monatszahlen und ihre Entwicklung zeigen, wo sich ein genauerer Blick lohnt. Im jeweiligen Kanal stehen weitere Kennzahlen, Inhalte und vertiefte Auswertungen bereit.</p></> : view === "channels" && channel === "mailchimp" ? <MailchimpHero /> : view === "channels" && channel === "analytics" ? <AnalyticsHero /> : view === "videos" ? <VideoInsightsHero /> : view === "channels" && channel === "linkedin_organic" ? <LinkedInHero /> : view === "channels" && channel === "linkedin" ? <LinkedInAdsHero /> : view === "channels" && channel === "youtube" ? <YouTubeHero /> : (
+          ) : view === "search" ? <SearchHero/> : view === "channel-directory" ? <><div className="marketing-mast"><h1>Marketingkanäle.</h1></div><section className="marketing-hero"><img src={asset("brand/sonio-blog-header.jpg")} alt="Berglandschaft mit Fahrer und Zielflagge"/><div><h2>Alle Kanäle. Klar im Blick.</h2><p>Entwicklungen erkennen. Gezielt tiefer einsteigen.</p></div></section><p className="directory-intro">Die Marketingkanäle auf einen Blick: Die wichtigsten Monatszahlen und ihre Entwicklung zeigen, wo sich ein genauerer Blick lohnt. Im jeweiligen Kanal stehen weitere Kennzahlen, Inhalte und vertiefte Auswertungen bereit.</p></> : view === "channels" && channel === "google_ads" ? <GoogleAdsHero /> : view === "channels" && channel === "mailchimp" ? <MailchimpHero /> : view === "channels" && channel === "analytics" ? <AnalyticsHero /> : view === "videos" ? <VideoInsightsHero /> : view === "channels" && channel === "linkedin_organic" ? <LinkedInHero /> : view === "channels" && channel === "linkedin" ? <LinkedInAdsHero /> : view === "channels" && channel === "youtube" ? <YouTubeHero /> : (
             <div className="page-intro photographic-intro">
               {
                 <svg
@@ -630,7 +620,7 @@ function App() {
                           : view === "sources"
                             ? "Verbindungen verwalten, Daten prüfen und Anmeldelisten importieren."
                             : view === "recommendations"
-                              ? "Empfehlungen nach Kanälen bündeln, nächste Schritte priorisieren und gezielt umsetzen."
+                              ? "Empfehlungen nach Kanälen und Themenbereichen bündeln, nächste Schritte priorisieren und gezielt umsetzen."
                             : view === "insights"
                               ? "Nachvollziehbare Interpretationen. Konkrete Handlungsempfehlungen."
                               : view === "reports"
@@ -642,7 +632,7 @@ function App() {
               </div>
             </div>
           )}
-          {view !== "overview" && view !== "videos" && !inlineChannelActions && dashboardActions}
+          {view !== "search" && view !== "overview" && view !== "videos" && !inlineChannelActions && dashboardActions}
           {demo && (
             <div className="demo-banner">
               <Info size={16} />
@@ -686,7 +676,7 @@ function App() {
               <>
                 {view === "overview" && (
                   <>
-                    <OverviewHighlights dashboard={d} />
+                    <OverviewHighlights dashboard={d} periodControl={<label className="overview-period-select"><CalendarDays size={16} aria-hidden="true"/><select aria-label="Monat der Übersicht" value={month} onChange={e=>setMonth(e.target.value)}>{Array.from({length:12},(_,i)=>{const [y,m]=currentMonth.split('-').map(Number);const value=new Date(Date.UTC(y,m-1-i,1)).toISOString().slice(0,7);return <option key={value} value={value}>{monthName(value)}</option>})}{month < new Date(Date.UTC(Number(currentMonth.slice(0,4)),Number(currentMonth.slice(5,7))-12,1)).toISOString().slice(0,7) && <option value={month}>{monthName(month)}</option>}</select><PeriodInfo>{month===currentMonth?'Aktueller Monat bis zum letzten verfügbaren Datenstand.':'Monatswerte für den ausgewählten Zeitraum.'} Kennzahlen, Vergleich und CSV folgen dieser Auswahl. Fehlende Werte werden nicht durch ältere Zahlen ersetzt.</PeriodInfo></label>} />
                     <ChannelOverview
                       actions={
                         <div className="overview-channel-actions">
@@ -732,7 +722,7 @@ function App() {
                         <span>
                           {demo
                             ? "Illustrative Monatswerte für die Präsentation. Keine Live-Aktualisierung."
-                            : "Aktueller Monat · Anzeige wird jede Minute neu geladen."}
+                            : `${month === currentMonth ? "Aktueller Monat" : "Ausgewählter Monat"} · Anzeige wird jede Minute neu geladen.`}
                           Datenstand je Kanal gemäss letztem erfolgreichen
                           Abruf; die Schnittstellen können verzögert liefern.
                         </span>
@@ -745,6 +735,7 @@ function App() {
                         changeView("channels");
                       }}
                     />
+                    <OverviewExplore demo={demo} onOpen={changeView}/>
                     <RecommendationTeaser/>
                     <MarketingQuote />
                   </>
@@ -765,6 +756,7 @@ function App() {
                     />
                   </label>
                 )}
+                {view === "search" && <SearchInsights demo={demo}/>}
                 {view === "videos" && <VideoInsights demo={demo} actions={dashboardActions} onChannel={id=>{setChannel(id);changeView("channels")}} />}
                 {view === "audience" && <Audience month={month} demo={demo} />}
                 {view === "posts" && (
@@ -780,6 +772,8 @@ function App() {
                     >
                       <ChevronLeft size={16} /> Alle Kanäle im Überblick
                     </button>
+                    {["google_ads","analytics"].includes(channel)&&<button className="text-button" onClick={()=>changeView("search")}>Suchbegriffe &amp; Potenziale öffnen</button>}
+                    {channel === "google_ads" && <GoogleAds month={month} onMonth={setMonth} demo={demo} />}
                     {isAds && (
                       <AdsCampaigns demo={demo} actions={dashboardActions} />
                     )}
@@ -798,7 +792,7 @@ function App() {
                       channel !== "linkedin_organic" &&
                       !isAds &&
                       channel !== "mailchimp" &&
-                      channel !== "youtube" && (
+                      channel !== "youtube" && channel !== "google_ads" && (
                         <>
                           <div className="section-heading">
                             <div className="channel-title">
@@ -916,12 +910,14 @@ function App() {
                             </p>
                           </section>
                           )}
-                          {selected.id === "analytics" && <><RecommendationTeaser/><EditorialQuote text="Marketing is the work of telling a story that changes people." author="Seth Godin" role="Marketingautor und Unternehmer" source="https://seths.blog/wp-content/uploads/2024/05/TMS4-Family-Tree-of-Marketing-v2.pdf"/></>}
+                          {selected.id === "qr" && <EditorialQuote portrait={asset("brand/portraits/neil-armstrong-v2.png")} text="That’s one small step for [a] man, one giant leap for mankind." author="Neil Armstrong" role="Astronaut" source="https://www.nasa.gov/history/SP-4225/documentation/brief-history/history.htm"/>}
+                          {selected.id === "events" && <EditorialQuote portrait={asset("brand/portraits/tina-turner-v1.png")} text="It’s for the people and it’s for the song and it’s for the moment." author="Tina Turner" role="Sängerin und Bühnenikone" source="https://www.cbsnews.com/news/proud-tina-a-life-well-lived/"/>}
+                          {selected.id === "analytics" && <><RecommendationTeaser/><EditorialQuote portrait={asset('brand/portraits/michelle-obama-v1.png')} text="Success isn’t about how much money you make, it’s about the difference you make in people’s lives." author="Michelle Obama" role="Autorin und ehemalige First Lady" source="https://obamawhitehouse.archives.gov/the-press-office/2012/09/05/remarks-first-lady-democratic-national-convention/"/></>}
                         </>
                       )}
                   </>
                 )}
-                {view === "recommendations" && <ChannelRecommendations initialChannels={recommendationScope} channels={d.channels} items={recommendationAnalysis?.recommendations||[]} onSelect={setRec}/>}
+                {view === "recommendations" && <><ChannelRecommendations onOpenArea={changeView} initialChannels={recommendationScope} channels={d.channels} items={recommendationAnalysis?.recommendations||[]} onSelect={setRec}/><EditorialQuote portrait={asset('brand/portraits/roger-federer-v1.png')} text="When you lose every second point, on average, you learn not to dwell on every shot." author="Roger Federer" role="Tennislegende und Unternehmer" source="https://home.dartmouth.edu/news/2024/06/2024-commencement-address-roger-federer"/></>}
                 {view === "insights" && (
                   <>
                     <div className="analysis-summary">
@@ -984,6 +980,7 @@ function App() {
                   />
                 )}
                 {view === "reports" && (
+                  <>
                   <Reports
                     timezone={publicConfig.data?.timezone || "Europe/Zurich"}
                     hour={publicConfig.data?.report_hour ?? 8}
@@ -996,6 +993,8 @@ function App() {
                     onCreate={() => startJob("/reports")}
                     onNotice={setNotice}
                   />
+                  <EditorialQuote portrait={asset("brand/portraits/bill-gates-v1.png")} text="You can achieve amazing progress if you set a clear goal and find a measure that will drive progress toward that goal." author="Bill Gates" role="Microsoft-Mitgründer" source="https://www.gatesfoundation.org/ideas/annual-letters/annual-letter-2013"/>
+                  </>
                 )}
                 {view === "team" && isAdmin && (
                   <Team demo={demo} onNotice={setNotice} />
@@ -1047,7 +1046,7 @@ function App() {
           <div className="rec-detail">
             <div className="detail-label">
               <ChannelIcon id={rec.channel} />
-              <span>{d?.channels.find((c) => c.id === rec.channel)?.name}</span>
+              <span>{d?.channels.find((c) => c.id === rec.channel)?.name || recommendationAreas.find(c=>c.id===rec.channel)?.name}</span>
               <span className={"priority " + rec.priority}>
                 {rec.priority === "high"
                   ? "Hohe Priorität"
@@ -1206,16 +1205,14 @@ function ChannelOverview({
                   : c.status === "error"
                     ? "Verbindung prüfen"
                     : "Noch nicht verbunden";
-            const keys = [
-              ...new Set([c.primary, ...Object.keys(c.fields)]),
-            ].slice(0, 1);
+            const secondary = overviewSecondaryMetric(c);
+            const keys = secondary ? [secondary] : [];
             return (
-              <button
+              <article
                 key={c.id}
                 className={`channel-entry ${hasValues ? "has-data" : ""}`}
-                onClick={() => onSelect(c)}
-                aria-label={`${c.name} öffnen`}
               >
+                <button className="channel-entry-open" onClick={()=>onSelect(c)} aria-label={`${c.name} öffnen`}/>
                 <div className="channel-entry-heading">
                   <ChannelIcon id={c.id} size={44} />
                   <div>
@@ -1229,11 +1226,11 @@ function ChannelOverview({
                 >
                   {status}
                 </span>
-                {hasValues ? (
+                {hasValues && keys.length ? (
                   <dl className="channel-entry-values">
                     {keys.map((key) => (
                       <div key={key}>
-                        <dt>{channelMetricLabel(c, key)}</dt>
+                        <dt>{channelMetricLabel(c, key)} <PeriodInfo label={`${channelMetricLabel(c,key)} erklärt`}>{overviewMetricHelp(c,key)}</PeriodInfo></dt>
                         <dd>
                           {number(c.values[key], c.units[key])}
                           {c.units[key] && c.units[key] !== "count"
@@ -1245,7 +1242,7 @@ function ChannelOverview({
                   </dl>
                 ) : (
                   <p className="channel-entry-empty">
-                    {c.last_success || c.status === "connected"
+                    {hasValues && !keys.length ? 'Details und Entwicklung im Kanal ansehen.' : c.last_success || c.status === "connected"
                       ? `Keine Kennzahlen für ${monthName(month)} vorhanden.`
                       : "Nach der Anbindung erscheinen hier die Kennzahlen."}
                   </p>
@@ -1258,9 +1255,9 @@ function ChannelOverview({
                         ? monthName(month)
                         : "Einrichtung ausstehend"}
                   </span>
-                  <strong>Kanal ansehen</strong>
+
                 </div>
-              </button>
+              </article>
             );
           })}
       </div>

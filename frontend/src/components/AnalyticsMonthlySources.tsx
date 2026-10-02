@@ -1,3 +1,4 @@
+import {PeriodInfo} from './PeriodInfo';
 import {AnalyticsInfo} from './AnalyticsInfo';
 import {demoMonthlySources} from '../analyticsDemo';
 import {useQuery} from '@tanstack/react-query';
@@ -15,7 +16,7 @@ export function AnalyticsMonthlySources({month,demo}:{month:string;demo:boolean}
  const selectedEvidence=q.data?.ai.evidence.filter(p=>geoProviders.includes(p.provider))||[];
  const groups=[{name:'Organisch',value:0},{name:'Bezahlt',value:0},{name:'Direkt',value:0},{name:'E-Mail',value:0},{name:'Verweisende Websites',value:0},{name:'Weitere / nicht zugeordnet',value:0}];
  q.data?.sources.forEach(r=>{const i=organic.has(r.channel)?0:paid.has(r.channel)?1:r.channel==='Direct'?2:r.channel==='Email'?3:r.channel==='Referral'?4:5;groups[i].value+=r.sessions});
- return <section className="monthly-sources" aria-label="Zugriffsquellen im Monat"><h3>Woher kommen die Zugriffe? <span>{monthName(month)}</span></h3>{demo&&<p>Illustrative Beispieldaten – keine echten Kontozugriffe.</p>}{q.isPending?<p role="status">Zugriffsquellen werden geladen…</p>:q.isError?<div role="alert"><p>Zugriffsquellen konnten nicht geladen werden.</p><button className="button" onClick={()=>q.refetch()}>Erneut versuchen</button></div>:<>
+ return <section className="monthly-sources" aria-label="Zugriffsquellen im Monat"><h3>Woher kommen die Zugriffe? <PeriodInfo label="Zeitraum der Zugriffsquellen erklärt">Diese Quellen beziehen sich auf Sitzungen der gesamten GA4-Property im ausgewählten Monat, im laufenden Monat bis zum verfügbaren Datenstand. Die Seitenauswertung weiter unten zeigt dagegen Gesamtwerte seit Veröffentlichung. KI-Sitzungen sind bereits in den Quellen enthalten und werden nicht zusätzlich addiert.</PeriodInfo> <span>{monthName(month)}</span></h3>{demo&&<p>Illustrative Beispieldaten – keine echten Kontozugriffe.</p>}{q.isPending?<p role="status">Zugriffsquellen werden geladen…</p>:q.isError?<div role="alert"><p>Zugriffsquellen konnten nicht geladen werden.</p><button className="button" onClick={()=>q.refetch()}>Erneut versuchen</button></div>:<>
  <p>Sitzungen der gesamten GA4-Property · {new Date(q.data.start+'T12:00').toLocaleDateString('de-CH')} bis {new Date(q.data.end+'T12:00').toLocaleDateString('de-CH')}{q.data.partial?' · laufender Monat bis zum Datenstand':''}</p>
  {q.data.warning&&<p role="alert">{q.data.warning}</p>}
  <div className="monthly-origin-layout"><div className="monthly-origin-channels"><h4>Zugriffsquellen <AnalyticsInfo metric="Zugriffskanäle" label="Sitzungen und Quellenanteil" monthly/></h4><p>Sitzungen nach Kanal</p>

@@ -1,5 +1,10 @@
+import { useQuery } from '@tanstack/react-query';
+import { api } from '../api';
+import { asset } from '../staticDemo';
+import { PeriodInfo } from './PeriodInfo';
+import { readablePostTitle } from '../comparison';
 import { EditorialQuote } from './EditorialQuote';
-import { useId, useState } from "react";
+import { useId, useState, type ReactNode } from "react";
 
 import { ArrowRight, Info } from "lucide-react";
 import { number, monthName } from "../api";
@@ -19,7 +24,31 @@ export function channelMetricLabel(c: Channel, key: string) {
   };
   return labels[key] || c.fields[key] || key;
 }
-export function OverviewHighlights({ dashboard: d }: { dashboard: Dashboard }) {
+export function overviewMetricHelp(c: Channel, key: string) {
+  const help: Record<string,string> = {
+    impressions: 'Anzahl der Einblendungen. Eine Person kann mehrere Einblendungen erzeugen; dies ist keine eindeutige Reichweite.',
+    clicks: c.id === 'linkedin_organic' ? 'Klicks auf LinkedIn-Inhalte. Dazu können Interaktionen innerhalb von LinkedIn gehören; nicht gleichbedeutend mit Website-Besuchen.' : 'Klicks auf Anzeigen. Wiederholte Klicks sind möglich; Klicks allein belegen noch keine qualifizierten Anfragen.',
+    conversions: 'Im Werbekonto erfasste Zielaktionen. Welche Aktionen zählen, hängt vom eingerichteten Tracking ab; sie sind nicht automatisch Leads oder Verkäufe.',
+    sessions: 'Besuche auf der Website. Eine Person kann mehrere Sitzungen auslösen.',
+    engaged_sessions: 'Sitzungen mit mehr als zehn Sekunden Engagement, einem Schlüsselereignis oder mindestens zwei Seiten- beziehungsweise Bildschirmaufrufen.',
+    key_events: 'In Analytics als wichtig konfigurierte Ereignisse. Die Bedeutung hängt von der Tracking-Konfiguration ab.',
+    unique_clicks: 'Summe der klickenden Empfänger je Mailing. Wer in mehreren Mailings klickt, kann mehrfach zählen.',
+    emails_sent: 'Anzahl versendeter E-Mails. Dies sind weder eindeutig erreichte Personen noch garantiert zugestellte Nachrichten.',
+    unique_opens: 'Öffnende je Mailing. Automatische Abrufe und Datenschutzfunktionen können die Aussagekraft einschränken.',
+    views: 'Von YouTube gezählte Videoaufrufe im ausgewählten Zeitraum. Wiederholte Aufrufe sind möglich.',
+    watch_minutes: 'Gesamte Wiedergabezeit auf YouTube in Minuten während des ausgewählten Zeitraums.',
+    spend: 'Werbekosten im ausgewählten Zeitraum und in der angegebenen Kontowährung.',
+    registrations: 'Erfasste Eventanmeldungen aus den importierten Listen; nicht automatisch tatsächliche Teilnahmen.',
+    scans: 'Erfasste QR-Code-Aufrufe. Wiederholte Scans können mehrfach zählen.',
+    followers_gained: 'Hinzugewonnene Follower im Zeitraum. Abgänge werden hier nicht abgezogen; keine Nettoveränderung.',
+  };
+  return (help[key] || `${c.fields[key] || key}: gemeldeter Messwert des Kanals.`) + ' Fehlende Werte bleiben als Strich sichtbar.';
+}
+export function overviewSecondaryMetric(c: Channel) {
+  const choices: Record<string,string[]> = {linkedin_organic:['clicks','followers_gained'],google_ads:['clicks','spend'],linkedin:['clicks','spend'],analytics:['engaged_sessions','key_events'],mailchimp:['emails_sent','unique_opens'],youtube:['watch_minutes']};
+  return [...(choices[c.id] || []),...Object.keys(c.fields)].find(k => k !== c.primary && k in c.fields);
+}
+export function OverviewHighlights({ dashboard: d, periodControl }: { dashboard: Dashboard; periodControl?: ReactNode }) {
   const selected = d.channels.filter(c => c.status === "connected" || Object.values(c.values).some(v => Number.isFinite(v))).map(c => {
     const k=c.primary, v=c.values[k], p=c.previous[k];
     return {c,k,v,p,change:p>0&&Number.isFinite(v)?(v-p)/p*100:null,positive:v>p};
@@ -28,6 +57,7 @@ export function OverviewHighlights({ dashboard: d }: { dashboard: Dashboard }) {
     <section className="marketing-developments">
       <div className="section-heading">
         <h2>Kennzahlen im Überblick.</h2>
+        {periodControl}
         <span>
           {d.demo ? "Beispieldaten · " : ""}
           {monthName(d.month)} vs. {monthName(d.comparison_month)}
@@ -53,7 +83,7 @@ export function OverviewHighlights({ dashboard: d }: { dashboard: Dashboard }) {
               <strong>
                 {number(t.v)}
               </strong>
-              <span>{channelMetricLabel(t.c, t.k)}</span>
+              <span>{channelMetricLabel(t.c, t.k)} <PeriodInfo label={`${channelMetricLabel(t.c,t.k)} erklärt`}>{overviewMetricHelp(t.c,t.k)}</PeriodInfo></span>
               <small>
                 {t.change == null ? "Kein Vorperiodenvergleich" : `${number(Math.abs(t.change))} % ${t.positive ? "mehr" : "weniger"} als in der Vorperiode`}
               </small>
@@ -127,7 +157,7 @@ export function OverviewRecommendations({
   );
 }
 export function MarketingQuote() {
-  return <EditorialQuote text="Complexity is your enemy. Any fool can make something complicated. It is hard to keep things simple." author="Richard Branson" role="Founder, Virgin Group" source="https://www.linkedin.com/posts/rbranson_complexity-is-your-enemy-any-fool-can-activity-7372304006297296898-1Ces"/>;
+  return <EditorialQuote portrait={asset('brand/portraits/richard-branson-v1.png')} text="Complexity is your enemy. Any fool can make something complicated. It is hard to keep things simple." author="Richard Branson" role="Founder, Virgin Group" source="https://www.linkedin.com/posts/rbranson_complexity-is-your-enemy-any-fool-can-activity-7372304006297296898-1Ces"/>;
 }
 
 function NextStep({
@@ -166,4 +196,10 @@ function NextStep({
       </div>
     </div>
   );
+}
+
+export function OverviewExplore({demo,onOpen}:{demo:boolean;onOpen:(view:'videos'|'search'|'recommendations')=>void}) {
+ const q=useQuery({queryKey:['video-library'],queryFn:()=>api<{videos:{id:string;platform:string;title:string;published_at:string;image_url?:string}[]}>('/videos/library'),enabled:!demo,staleTime:60000});
+ const latest=[...(q.data?.videos||[])].filter(v=>Number.isFinite(Date.parse(v.published_at))).sort((a,b)=>Date.parse(b.published_at)-Date.parse(a.published_at))[0];
+ return <section className="overview-explore"><div className="section-heading"><div><h2>Aus Zahlen werden nächste Schritte.</h2><p>Inhalte entdecken, Suchinteresse verstehen und konkrete Massnahmen ableiten.</p></div></div><div className="overview-explore-grid"><article className="overview-video-entry"><button onClick={()=>onOpen('videos')} className="overview-video-image" aria-label="Video Insights öffnen">{latest?.image_url?<img src={latest.image_url} alt={readablePostTitle(latest.title)}/>:<span>{demo?'Videoportfolio entdecken':q.isPending?'Video wird geladen …':q.isError?'Vorschau derzeit nicht verfügbar':'Kein Vorschaubild verfügbar'}</span>}<span className="overview-video-badge">Video Insights <ArrowRight size={20}/></span></button><div><h3>{latest?readablePostTitle(latest.title):'Geschichten, die weiterwirken.'}</h3>{latest&&<small>Neueste importierte Veröffentlichung · {latest.platform==='youtube'?'YouTube':'LinkedIn'} · {new Date(latest.published_at).toLocaleDateString('de-CH',{timeZone:'Europe/Zurich'})}</small>}<p>LinkedIn und YouTube im Zusammenhang betrachten. Themen, Playlists und Videodetails entdecken.</p><button className="text-button" onClick={()=>onOpen('videos')}>Video Insights öffnen <ArrowRight size={16}/></button></div></article><div className="overview-explore-links"><button onClick={()=>onOpen('search')}><h3>Suchbegriffe &amp; Potenziale</h3><p>Was sucht die Zielgruppe? Organische und bezahlte Suche einordnen und neue Content-Ansätze erkennen.</p><span>Suchinteresse entdecken <ArrowRight size={18}/></span></button><button onClick={()=>onOpen('recommendations')}><h3>Empfehlungen</h3><p>Priorisierte Impulse nach Kanal bündeln und die nächsten Marketingentscheidungen vorbereiten.</p><span>Massnahmen vertiefen <ArrowRight size={18}/></span></button></div></div></section>;
 }

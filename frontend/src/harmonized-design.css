@@ -1,0 +1,43 @@
+/* Shared surface roles. Channel-specific imagery and chart colours stay intact. */
+:root{--sonio-surface:#fff;--sonio-canvas:#f7f8fa;--sonio-ink:#173d62;--sonio-line:#bbcbd9;--sonio-action:#0063b8;--sonio-sand:#f2ebdf;--sonio-sand-alt:#e8decd;--sonio-radius:12px}
+#root main :is(.kpi-card,.gad-summary>.gad-metric,.mc-totals>.mc-metrics>div,.search-kpis>div,.yt-overview>div){background:var(--sonio-surface);color:var(--sonio-ink);border:1px solid var(--sonio-line);border-radius:var(--sonio-radius);box-shadow:none}
+#root main :is(.kpi-value,.gad-summary dd,.yt-overview strong){color:var(--sonio-action);font-variant-numeric:tabular-nums}
+#root main :is(.kpi-top,.search-kpis dt,.gad-metric dt,.mc-metrics dt){font-weight:750}
+#root main :is(.recommendation-teaser-grid article,.compact-rec-grid article,.marketing-recommendations article,.search-potentials article){background:var(--sonio-sand);color:var(--sonio-ink);border:1px solid #d4c8b5;border-radius:var(--sonio-radius)}
+#root main :is(.recommendation-teaser-grid article,.compact-rec-grid article,.marketing-recommendations article,.search-potentials article):nth-child(even){background:var(--sonio-sand-alt)}
+#root main :is(.recommendation-teaser-grid article,.compact-rec-grid article,.marketing-recommendations article,.search-potentials article) :is(h3,h4,strong,p,small){color:var(--sonio-ink)}
+#root main .search-potential-action{border-color:#c4b69e}
+#root main .compact-channel{background:transparent;color:var(--sonio-ink);border-top:1px solid var(--sonio-line);border-radius:0;padding:24px 0}
+#root main .compact-channel>header{flex-wrap:wrap}
+#root main .compact-channel>header :is(h3,span){color:var(--sonio-ink)}
+#root main :is(.channel-selector,.analytics-area-selector,.li-format-filters,.vi-topic-buttons,.yt-playlist-buttons){gap:8px}
+#root main :is(.channel-selector,.analytics-area-selector,.li-format-filters,.vi-topic-buttons,.yt-playlist-buttons)>button{background:#fff;color:var(--sonio-ink);border:1px solid var(--sonio-line);border-radius:8px;min-height:40px;padding:9px 14px;font-size:13px;font-weight:650}
+#root main :is(.channel-selector,.analytics-area-selector,.li-format-filters,.vi-topic-buttons,.yt-playlist-buttons)>button:is(.selected,[aria-pressed=true]){background:var(--sonio-action);color:#fff;border-color:var(--sonio-action);box-shadow:inset 0 -3px 0 #173d62}
+#root main :is(.channel-selector,.analytics-area-selector,.li-format-filters,.vi-topic-buttons,.yt-playlist-buttons)>button:hover{border-color:var(--sonio-action)}
+#root main select{border-radius:8px;min-height:40px;font-size:13px;color:var(--sonio-ink)}
+#root main :is(.channel-action-toolbar,.gad-actions,.li-data-actions,.vi-actions,.overview-channel-actions,.search-actions){display:flex;flex-direction:row;align-items:center;flex-wrap:wrap;gap:10px}
+#root main :is(.channel-action-toolbar,.gad-actions,.li-data-actions,.vi-actions,.overview-channel-actions,.search-actions)>button{min-height:40px;font-size:13px;font-weight:650;border-radius:8px}
+#root :is(.period-info,.analytics-info)>button{width:28px;height:28px;border-radius:50%;background:transparent;color:inherit;display:inline-flex;align-items:center;justify-content:center;padding:0;min-height:28px}
+#root :is(.period-info-tooltip,.analytics-info-box){background:#173d62;color:#fff;border:0;border-radius:10px;padding:16px;font-size:13px;font-weight:400;line-height:1.6;box-shadow:0 8px 24px #12365c26}
+#root :is(.period-info-tooltip,.analytics-info-box) :is(p,strong,span){color:#fff}
+#root main :is(button,a,select,input,summary):focus-visible{outline:3px solid #0075d9;outline-offset:3px}
+#root main button:disabled{opacity:.55;cursor:not-allowed}
+#root .nav-item{border-radius:8px;min-height:44px;font-size:14px}
+#root .nav-item.active{background:#0063b8;color:#fff;font-weight:750}
+#root .nav-item.active:before{background:#90cbff}
+#root .sidebar .nav-item:hover{background:#c5def0;color:#173d62}
+#root .sidebar .nav-item.active:hover{background:#2478bd;color:#fff}
+#root .sidebar .report-reminder{background:#0063b8;color:#fff;border:1px solid #0063b8}
+#root .sidebar .report-reminder p{color:#fff}
+#root .sidebar .report-reminder :is(button,.reminder-icon){color:#fff}
+#root .nav-item:focus-visible{outline:3px solid #90cbff;outline-offset:2px}
+@media(max-width:600px){#root main :is(.recommendation-teaser-grid article,.compact-rec-grid article,.search-potentials article){padding:18px}#root main .compact-channel>header{align-items:flex-start}}
+#root main :is(.gad-summary,.search-kpis,.mc-metrics,.kpi-grid)>:last-child .period-info-tooltip{left:auto;right:0}
+#root main .gad-filter label:has(input[type=checkbox]){display:flex;align-items:center;gap:8px}
+#root main .gad-filter input[type=checkbox]{width:18px;height:18px;min-height:0;margin:0;accent-color:#0063b8}
+#root main .back-to-overview+.text-button{margin-left:20px}
+#root .nav-item>svg{flex-shrink:0}
+#root main :is(.li-kpis>.li-tile,.ads-primary-kpis>div){background:#fff;color:#173d62;border:1px solid #bbcbd9;border-radius:12px}
+#root main .ads-primary-kpis :is(dt,dd){color:#173d62}
+#root main .li-kpis>.li-tile strong{color:#0063b8}
+#root .li-help>button{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;padding:0}

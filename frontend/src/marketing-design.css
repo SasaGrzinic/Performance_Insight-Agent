@@ -623,3 +623,38 @@
 .view-overview .channel-overview .channel-entry:hover{background:#004984!important}
 .view-overview .channel-overview .channel-entry:focus-visible{outline:3px solid #0075d9;outline-offset:4px}
 .view-overview .channel-overview .channel-entry-empty{color:#e0efff}
+.view-overview .overview-period-select{display:flex;align-items:center;gap:8px;margin-left:auto;color:#075ca6;font-size:14px;font-weight:700}
+.view-overview .overview-period-select select{width:auto;max-width:220px;background:#e8f3ff;border:1px solid #a6cbed;border-radius:10px;padding:9px 30px 9px 12px;color:#173d62;font:inherit}
+.view-overview .overview-period-select select:focus-visible{outline:3px solid #0075d9;outline-offset:2px}
+@media(max-width:700px){.view-overview .marketing-developments>.section-heading{flex-wrap:wrap}.view-overview .overview-period-select{margin-left:0}}
+
+/* Overview: separate monthly signals from the routes into deeper analysis. */
+.view-overview .marketing-highlights{gap:12px}
+.view-overview .marketing-highlights article{background:#c6dff4;border:1px solid #96bfe0;border-radius:12px;padding:20px;color:#173d62;min-width:0}
+.view-overview .marketing-highlights article:nth-child(even){background:#b4d3ef}
+.view-overview .marketing-highlights strong{color:#123e66}
+.view-overview .marketing-highlights small,.view-overview .marketing-highlights .highlight-channel{color:#294e70}
+.view-overview .channel-entry{position:relative;text-align:left}
+.view-overview .channel-entry-open{position:absolute;inset:0;width:100%;border:0;background:transparent;border-radius:inherit;cursor:pointer;z-index:1}
+.view-overview .channel-entry .period-info{position:relative;z-index:2}
+.view-overview .channel-entry .period-info>button{color:inherit}
+.view-overview .channel-entry-open:focus-visible{outline:3px solid #78b7ef;outline-offset:4px}
+.overview-explore{margin:44px 0}
+.overview-explore-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:22px}
+.overview-video-entry{border-radius:14px;overflow:hidden;background:#dcecf9;color:#173d62}
+.overview-video-image{width:100%;display:block;position:relative;border:0;padding:0;aspect-ratio:16/9;background:#173d62;color:white;cursor:pointer}
+.overview-video-image img{width:100%;height:100%;object-fit:cover;display:block}
+.overview-video-badge{position:absolute;bottom:14px;left:14px;background:#075ca6;color:white;padding:10px 14px;border-radius:6px;display:flex;align-items:center;gap:16px;font-weight:700}
+.overview-video-entry>div{padding:22px}
+.overview-video-entry h3{margin:0 0 10px;font-size:22px}
+.overview-video-entry p,.overview-explore-links p{line-height:1.6;font-size:15px;max-width:60ch}
+.overview-explore-links{display:grid;gap:20px}
+.overview-explore-links>button{border:0;background:#075ca6;color:white;border-radius:14px;padding:28px;text-align:left;cursor:pointer;display:flex;flex-direction:column;align-items:flex-start}
+.overview-explore-links>button:nth-child(2){background:#173d62}
+.overview-explore-links h3{color:inherit;margin:0;font-size:25px}
+.overview-explore-links span{display:flex;gap:12px;align-items:center;margin-top:auto;font-weight:700}
+.overview-explore button:hover{filter:brightness(.95)}
+.overview-explore button:focus-visible{outline:3px solid #0075d9;outline-offset:4px}
+@media(max-width:760px){.overview-explore-grid{grid-template-columns:1fr}.overview-explore-links>button{padding:22px}.view-overview .marketing-highlights article{padding:16px}.overview-video-entry h3{font-size:20px}}
+.view-overview .overview-explore-links>button p{color:#e0efff}
+.view-overview .overview-period-select{display:flex;align-items:center;gap:8px}

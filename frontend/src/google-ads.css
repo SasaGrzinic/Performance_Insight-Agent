@@ -1,0 +1,61 @@
+.gad-page{--gad-blue:#0075d9;--gad-dark:#064e87;color:#1d1d1b}.gad-toolbar{align-items:center;gap:20px}.gad-toolbar label,.gad-filter label{font-weight:700}.gad-page select{padding:9px 30px 9px 12px;border:1px solid #b4cde4;border-radius:8px;background:#fff;color:#184c74;margin-left:8px;font:inherit;max-width:100%}.gad-actions{display:flex;gap:10px;flex-wrap:wrap}.gad-actions button{display:inline-flex;align-items:center;gap:7px;padding:10px 14px;font:inherit;font-size:13px;font-weight:700;border:1px solid #b4cde4;border-radius:8px;background:#e8f3ff;color:#064e87}.gad-filter{display:flex;align-items:center;justify-content:space-between;gap:15px;margin:20px 0;color:#34556f}.gad-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.gad-summary>.gad-metric{padding:22px 18px;background:#e8f3ff;border:1px solid #b3d4f1;border-radius:12px}.gad-summary>.gad-metric:last-child{background:#064e87;color:white}.gad-metric dt{display:flex;align-items:center;gap:6px;font-size:12px}.gad-metric dd{margin:9px 0 0;font-size:23px;font-weight:750;font-variant-numeric:tabular-nums}.gad-summary dd{font-size:clamp(23px,2.2vw,34px)}.gad-note{color:#476178;font-size:13px;max-width:85ch}.gad-rankings{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin:36px 0 45px}.gad-ranking{padding:24px;background:#e8f3ff;border-radius:14px}.gad-ranking:nth-child(2){background:#d9ecfb}.gad-ranking h2{font-size:23px;margin:0}.gad-ranking>p{color:#34556f;font-size:13px}.gad-rank{position:relative;margin-top:18px}.gad-rank>button{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px;width:100%;border:0;background:transparent;text-align:left;color:#163b59;padding:5px;font:inherit}.gad-rank>button>span:first-child{font-weight:700;overflow-wrap:anywhere}.gad-track{grid-column:1/-1;background:#c5dff4;height:12px;border-radius:3px;overflow:hidden}.gad-track>span{display:block;background:#0075d9;height:100%}.gad-rank small{grid-column:1/-1;font-size:12px}.gad-hover{display:none;position:absolute;z-index:20;bottom:80%;left:0;width:min(340px,100%);padding:14px;background:#064e87;color:#fff;border-radius:12px;box-shadow:0 8px 25px #1234;pointer-events:none}.gad-rank:hover .gad-hover,.gad-rank:focus-within .gad-hover{display:block}.gad-hover p{font-size:12px}.gad-campaigns{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:20px}.gad-campaigns>article{background:#e8f3ff;border:1px solid #b3d4f1;border-radius:14px;min-width:0;scroll-margin-top:30px}.gad-campaigns>article:nth-child(4n+2),.gad-campaigns>article:nth-child(4n+3){background:#d9ecfb}.gad-preview{border-radius:13px 13px 0 0;overflow:hidden;background:#f2f8ff}.gad-preview img{width:100%;max-height:280px;object-fit:contain;display:block}.gad-text-ad{padding:25px;min-height:145px}.gad-text-ad small{display:block;color:#46647d;font-size:11px}.gad-text-ad strong{display:block;color:#0063b8;font-size:21px;line-height:1.3;margin:10px 0}.gad-text-ad p{font-size:13px;margin:0}.gad-preview label{display:block;padding:8px 20px;font-size:12px}.gad-campaign-body{padding:23px}.gad-campaign-body h3{font-size:22px;line-height:1.3;margin:8px 0 20px;overflow-wrap:anywhere}.gad-campaign-body dl{display:grid;grid-template-columns:1fr 1fr;gap:20px}.gad-campaign-body summary{cursor:pointer;font-weight:700;color:#064e87;padding-top:12px}.gad-hover .is-compact img{max-height:130px}.gad-hover .gad-text-ad{min-height:0;padding:12px}.gad-hover .gad-text-ad strong{font-size:16px}.gad-page :focus-visible{outline:3px solid #0075d9;outline-offset:4px}.gad-page button:disabled{opacity:.55;cursor:not-allowed}@media(max-width:850px){.gad-summary{grid-template-columns:1fr 1fr}.gad-rankings,.gad-campaigns{grid-template-columns:1fr}.gad-filter,.gad-toolbar{align-items:flex-start;flex-direction:column}.gad-actions{flex-wrap:nowrap}.gad-actions button{font-size:12px;padding:9px}.gad-ranking{padding:18px}}
+.gad-page .gad-hover p{color:#fff}.gad-motif-caption{display:block;padding:6px 20px;color:#34556f;font-size:11px}.gad-rankings{align-items:start}.gad-ranking{max-height:690px;overflow:auto}.gad-hover{position:fixed;bottom:24px;left:auto;width:320px;max-width:calc(100vw - 40px)}@media(prefers-reduced-motion:reduce){.gad-page{scroll-behavior:auto}}
+
+/* Compact campaign overview; image previews reach the tooltip edges. */
+.gad-rankings{grid-template-columns:minmax(0,1fr);margin:28px 0 32px}
+.gad-ranking{max-height:none;padding:22px 24px}
+.gad-rank{margin-top:12px}
+.gad-track{height:9px}
+.gad-hover{padding:0;overflow:hidden}
+.gad-hover .gad-preview{background:transparent;border-radius:0}
+.gad-hover .is-compact img{height:auto;max-height:none;object-fit:initial}
+.gad-hover>strong{display:block;padding:12px 14px 0}
+.gad-page .gad-hover>p{padding:0 14px 12px;margin:6px 0 0;line-height:1.6}
+.gad-campaigns{gap:16px}
+.gad-campaigns>article{display:grid;grid-template-columns:130px minmax(0,1fr);align-items:start}
+.gad-campaigns .gad-preview{border-radius:13px 0 0 0;background:transparent}
+.gad-campaigns .gad-preview img{height:auto;max-height:none;object-fit:contain}
+.gad-campaigns .gad-motif-caption{padding:7px;font-size:10px;line-height:1.35}
+.gad-campaigns .gad-preview label{padding:8px;font-size:10px}
+.gad-campaigns .gad-preview select{margin:5px 0 0;padding:6px;max-width:100%;font-size:11px}
+.gad-campaigns .gad-text-ad{padding:12px;min-height:0}
+.gad-campaigns .gad-text-ad strong{font-size:13px;margin:6px 0}
+.gad-campaigns .gad-text-ad p{font-size:11px;line-height:1.4}
+.gad-campaign-body{padding:16px}
+.gad-campaign-body h3{font-size:17px;margin:6px 0 12px}
+.gad-campaign-body dl{gap:12px;margin:12px 0}
+.gad-campaign-body .gad-metric dd{font-size:19px;margin-top:4px}
+.gad-campaign-body .gad-metric dt{font-size:11px}
+.gad-campaign-body summary{font-size:12px;padding-top:4px}
+@media(max-width:1100px) and (min-width:851px){.gad-campaigns>article{grid-template-columns:95px minmax(0,1fr)}.gad-campaign-body{padding:12px}}
+@media(max-width:480px){.gad-campaigns>article{grid-template-columns:90px minmax(0,1fr)}.gad-campaign-body{padding:12px}.gad-ranking{padding:18px}.gad-campaign-body h3{font-size:16px}.gad-campaign-body .gad-metric dd{font-size:17px}}
+/* Denser campaign cards with a clear alternating Sonio palette. */
+.gad-campaigns{align-items:start;gap:14px}
+.gad-campaigns>article{grid-template-columns:88px minmax(0,1fr);background:#e8f3ff;border-color:#a9ceed}
+.gad-campaigns>article:nth-child(4n+2),.gad-campaigns>article:nth-child(4n+3){background:#075ca6;border-color:#075ca6;color:#fff}
+.gad-campaigns .gad-campaign-body{padding:12px 14px}
+.gad-campaigns .gad-campaign-body h3{font-size:15px;line-height:1.3;margin:5px 0 9px}
+.gad-campaigns .gad-campaign-body>small{font-size:10px}
+.gad-campaigns .gad-campaign-body dl{gap:8px 12px;margin:8px 0}
+.gad-campaigns .gad-metric dd{font-size:17px;margin-top:2px}
+.gad-campaigns .gad-metric dt{font-size:10px;gap:4px}
+.gad-campaigns .gad-campaign-body summary{font-size:11px;padding-top:2px}
+.gad-campaigns .gad-motif-caption{display:none}
+.gad-campaigns .gad-text-ad{padding:8px}
+.gad-campaigns .gad-text-ad strong{font-size:11px;line-height:1.35}
+.gad-campaigns .gad-text-ad p{display:none}
+.gad-campaigns .gad-text-ad small{font-size:9px}
+.gad-campaigns>article:nth-child(4n+2) h3,.gad-campaigns>article:nth-child(4n+3) h3,
+.gad-campaigns>article:nth-child(4n+2) .gad-campaign-body summary,.gad-campaigns>article:nth-child(4n+3) .gad-campaign-body summary,
+.gad-campaigns>article:nth-child(4n+2) .gad-text-ad strong,.gad-campaigns>article:nth-child(4n+3) .gad-text-ad strong{color:#fff}
+.gad-campaigns>article:nth-child(4n+2) .gad-text-ad small,.gad-campaigns>article:nth-child(4n+3) .gad-text-ad small,
+.gad-campaigns>article:nth-child(4n+2) .gad-campaign-body>small,.gad-campaigns>article:nth-child(4n+3) .gad-campaign-body>small{color:#e1efff}
+.gad-campaigns>article:nth-child(4n+2) .period-info>button,.gad-campaigns>article:nth-child(4n+3) .period-info>button{color:#fff}
+@media(max-width:480px){.gad-campaigns>article{grid-template-columns:70px minmax(0,1fr)}.gad-campaigns .gad-campaign-body{padding:10px}.gad-campaigns .gad-campaign-body h3{font-size:14px}}
+
+.gad-rankings{grid-template-columns:repeat(2,minmax(0,1fr))}@media(max-width:850px){.gad-rankings{grid-template-columns:minmax(0,1fr)}}
+.gad-chart-heading{display:flex;align-items:center;gap:9px}
+.gad-ranking{overflow:visible}
+.gad-page .gad-ranking-context{margin:20px 0 0;padding-top:16px;border-top:1px solid #aacbe7;line-height:1.65;color:#24445e;font-size:13px}
+.gad-ranking-context>strong{display:block;margin-bottom:5px;color:#064e87}
+.gad-summary>.gad-metric:last-child .period-info>button{color:#fff}

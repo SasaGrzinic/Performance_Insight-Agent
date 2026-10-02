@@ -887,3 +887,33 @@ def analytics_monthly_sources(month=Depends(month_param), refresh: bool = False,
     if month > today.strftime('%Y-%m'):
         raise HTTPException(422, 'Bitte einen aktuellen oder vergangenen Monat wählen.')
     return ga4_cached(db, 'ga4:monthly-sources:v3:'+month, lambda: fetch(s, month, today), refresh=refresh)
+
+
+@app.get('/api/google-ads/campaigns')
+def google_ads_campaigns(month: str, refresh: bool = False, user=Depends(current_user), db=Depends(get_db)):
+    import re
+
+    from .analytics import month_bounds
+    from .google_ads_campaigns import fetch
+    if not re.fullmatch(r'20\d{2}-(0[1-9]|1[0-2])', month):
+        raise HTTPException(422, 'Ungültiger Monat')
+    s = get_settings()
+    start, end = month_bounds(month)
+    today = datetime.now(ZoneInfo(s.report_timezone)).date()
+    if start > today:
+        raise HTTPException(422, 'Zeitraum liegt in der Zukunft')
+    return ga4_cached(db, 'google-ads:campaigns:v1:' + month, lambda: fetch(s, start, min(end, today)), refresh=refresh)
+
+
+@app.get('/api/search-insights')
+def search_insights(month=Depends(month_param), source: str = 'organic', refresh: bool = False, user=Depends(current_user), db=Depends(get_db)):
+    from .analytics import month_bounds
+    from .search_insights import fetch
+    if source not in ('organic', 'paid', 'keywords'):
+        raise HTTPException(422, 'Unbekannte Quelle')
+    settings = get_settings()
+    start, end = month_bounds(month)
+    today = datetime.now(ZoneInfo(settings.report_timezone)).date()
+    if start > today:
+        raise HTTPException(422, 'Zeitraum liegt in der Zukunft')
+    return ga4_cached(db, 'search-insights:v1:' + source + ':' + month, lambda: fetch(settings, start, min(end, today), source), refresh=refresh)

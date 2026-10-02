@@ -1,6 +1,7 @@
 import {RecommendationTeaser} from "./RecommendationTeaser";
 import { useQuery } from "@tanstack/react-query";
-import { MarketingQuote } from "./MarketingOverview";
+import { EditorialQuote } from "./EditorialQuote";
+import { asset } from "../staticDemo";
 import { completeSum } from "../linkedinMetrics";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { ChannelIcon } from "./ui";
@@ -48,5 +49,5 @@ export function ChannelDirectory({data, onSelect}: {data: Dashboard; onSelect:(c
         <button className="directory-open" onClick={()=>onSelect(c)} aria-label={`${c.name}: Details öffnen`}/>
       </article>;
     })}</div>
-  </section><RecommendationTeaser/><MarketingQuote/></>;
+  </section><RecommendationTeaser/><EditorialQuote portrait={asset("brand/portraits/denzel-washington-v2.png")} text="Never be discouraged. Never hold back. Give everything you’ve got." author="Denzel Washington" role="Schauspieler und Regisseur" source="https://almanac.upenn.edu/archive/volumes/v57/n34/comm-washington.html"/></>;
 }
