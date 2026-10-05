@@ -31,6 +31,7 @@ def main():
         APP_ORIGIN="http://127.0.0.1:5173",
         COOKIE_SECURE="false",
         DEMO_ENABLED="true",
+        LOCAL_GOOGLE_RECONNECT="true",
         ADMIN_USERNAME="admin",
         ADMIN_EMAIL="admin@localhost.invalid",
         ADMIN_PASSWORD=secrets.token_urlsafe(24),

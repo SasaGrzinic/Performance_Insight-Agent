@@ -2,6 +2,34 @@ import assert from "node:assert/strict";
 import { afterEach, mock, test } from "node:test";
 
 let moduleId = 0;
+test("manual refresh bypasses each detail cache once, including later navigation", async () => {
+  const { api, refreshChannelDetails } = await setup();
+  const urls = [];
+  mock.method(globalThis, "fetch", async url => { urls.push(url); return Response.json({}); });
+  await api("/youtube/videos?month=2026-09");
+  refreshChannelDetails();
+  await api("/youtube/videos?month=2026-09");
+  await api("/youtube/videos?month=2026-09");
+  await api("/analytics/areas?area=blog&period=all");
+  await api("/auth/me");
+  assert.deepEqual(urls, [
+    "/api/youtube/videos?month=2026-09",
+    "/api/youtube/videos?month=2026-09&refresh=true",
+    "/api/youtube/videos?month=2026-09",
+    "/api/analytics/areas?area=blog&period=all&refresh=true",
+    "/api/auth/me",
+  ]);
+});
+
+test("failed detail refresh does not mark stale fallback as refreshed", async () => {
+  const { api, refreshChannelDetails } = await setup();
+  const urls = [];
+  mock.method(globalThis, "fetch", async url => { urls.push(url); return Response.json({warning:"Offline"}); });
+  refreshChannelDetails();
+  await api("/youtube/promoted");
+  await api("/youtube/promoted");
+  assert.deepEqual(urls, ["/api/youtube/promoted?refresh=true", "/api/youtube/promoted?refresh=true"]);
+});
 async function setup() {
   const redirects = [];
   globalThis.window = {

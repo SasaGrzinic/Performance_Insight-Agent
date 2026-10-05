@@ -1,8 +1,10 @@
 import re
 from datetime import date
 from functools import lru_cache
+from pathlib import Path
 from zoneinfo import ZoneInfo
 
+from dotenv import dotenv_values
 from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -34,6 +36,7 @@ class Settings(BaseSettings):
     google_client_id: str = ""
     google_client_secret: str = ""
     google_refresh_token: str = ""
+    local_google_reconnect: bool = False
     gsc_refresh_token: str = ""
     ga4_property_id: str = ""
     ga4_refresh_token: str = ""
@@ -90,3 +93,15 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings():
     return Settings()
+
+
+def reload_local_google_credentials():
+    """Local preview only: helpers rotate credentials without restarting workers."""
+    settings = get_settings()
+    if settings.environment != "development" or not settings.local_google_reconnect:
+        return
+    path = Path(__file__).resolve().parents[2] / ".env"
+    values = dotenv_values(path)
+    for key in ("GA4_REFRESH_TOKEN", "GOOGLE_REFRESH_TOKEN", "YOUTUBE_CHANNEL_ID", "GA4_PROPERTY_ID"):
+        if values.get(key):
+            setattr(settings, key.lower(), values[key])

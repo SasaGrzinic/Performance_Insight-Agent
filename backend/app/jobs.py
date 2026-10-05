@@ -14,7 +14,7 @@ from sqlalchemy.exc import IntegrityError
 from .ai import analyze
 from .analytics import build_dashboard, month_bounds, previous_month
 from .catalog import CHANNELS
-from .config import get_settings
+from .config import get_settings, reload_local_google_credentials
 from .connectors import NotConfigured, ProviderError, fetch_channel
 from .db import SessionLocal
 from .models import ChannelState, Job, Metric, Preference, Report, now
@@ -153,6 +153,7 @@ def sync_channel(db, channel, start, end):
 
 
 def synchronize(db, month, channel=None):
+    reload_local_google_credentials()
     s = get_settings()
     today = datetime.now(ZoneInfo(s.report_timezone)).date()
     start = month_bounds(previous_month(month))[0]
@@ -288,6 +289,21 @@ def refresh_analysis(db, month, force=False):
 def run_job(db, job):
     if job.kind == "sync":
         results = synchronize(db, job.payload["month"], job.payload.get("channel"))
+        if job.payload.get("reconnected") and results.get("youtube"):
+            from datetime import date
+
+            from .youtube_videos import fetch as fetch_videos
+
+            settings = get_settings()
+            today = datetime.now(ZoneInfo(settings.report_timezone)).date()
+            video_data = fetch_videos(settings, date(today.year, 1, 1), today)
+            key = "youtube:published:" + job.payload["month"] + ":year"
+            cached = db.get(Preference, key)
+            if cached:
+                cached.value = video_data
+            else:
+                db.add(Preference(key=key, value=video_data))
+            db.commit()
         refresh_analysis(db, job.payload["month"])
         refresh_analysis(db, previous_month(job.payload["month"]))
         failures = db.scalars(

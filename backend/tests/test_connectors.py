@@ -22,6 +22,16 @@ START = date(2026, 8, 1)
 END = date(2026, 8, 31)
 
 
+def test_expired_google_grant_has_safe_actionable_error():
+    from app.connectors import request
+
+    result = httpx.Response(400, json={"error": "invalid_grant", "error_description": "secret-echo"})
+    with patch("httpx.Client.request", return_value=result):
+        with pytest.raises(ProviderError, match="erneut mit Google verbinden") as exc:
+            request("POST", "https://oauth2.googleapis.com/token")
+    assert "secret-echo" not in str(exc.value)
+
+
 def response(data):
     return SimpleNamespace(json=lambda: data)
 

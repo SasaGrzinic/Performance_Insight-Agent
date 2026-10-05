@@ -38,3 +38,30 @@ Ein fehlgeschlagener Versand ist im Reportstatus sichtbar; die Auftragswiederhol
 - Für Produktion HTTPS und sichere Cookies erzwingen, Demo abschalten, `.env` nur für Betriebspersonal lesbar halten.
 - Zugangsrücksetzung und Verantwortlichkeiten für Token-Erneuerung festlegen. Kein öffentlicher Registrierungsweg, kein Self-Service-Passwortreset.
 - Provider-API-Versionen regelmässig prüfen. Paket-Locks halten Builds nachvollziehbar; Updates zuerst in CI testen.
+# Google-Verbindungen im lokalen Testbetrieb (05.10.2026)
+
+`scripts/dev.py --scheduler` aktiviert die lokale Wiederverbindung für Analytics
+und YouTube (`LOCAL_GOOGLE_RECONNECT=true`). Im Dashboard erscheinen bei
+Importfehlern der letzte erfolgreiche Abruf und «Google erneut verbinden»; unter
+«Datenquellen» sind beide Verbindungen dauerhaft erreichbar. Nur der Master-Admin
+kann den Assistenten starten. Die öffentliche Demo enthält diesen Ablauf nicht.
+
+Nach «Google-Anmeldung öffnen» im berechtigten Sonio-Konto die bisherigen
+Leserechte bestätigen. Die bestehenden OAuth-Helfer prüfen die Sonio-Property bzw.
+den Kanal, verwenden State/PKCE und einen Cookie, speichern nur lokal in `.env`
+(0600) und schliessen nach Erfolg. Ein zufälliges Startticket beschränkt den
+Loopback-Einstieg; parallele Anmeldungen sind gesperrt. Abbruch/Timeout starten
+keinen Import. Bei Problemen kann die Anmeldung im Dashboard abgebrochen und
+neu gestartet werden. API-Neustarts beenden einen noch offenen Assistenten.
+
+Nach erfolgreicher Freigabe wird automatisch ein dauerhafter Sync-Auftrag für
+den betroffenen Kanal angelegt (aktueller Monat und Vorperiode; YouTube zusätzlich
+Videodetails des laufenden Jahres). API und Worker übernehmen die rotierten
+GA4-/YouTube-Zugangsdaten lokal ohne weiteren Neustart; Ads und Search Console
+werden nicht überschrieben. Der Worker muss laufen. Die Oberfläche überwacht den
+Auftrag und lädt danach ihre Abfragen neu. Abruffehler erhalten vorhandene Daten.
+
+Der Google-Testmodus bleibt unverändert. Dessen siebentägige Tokenbegrenzung wird
+nicht umgangen; Widerruf/MFA erfordern weiterhin eine persönliche Google-Freigabe.
+Diese Funktion stellt kein Produktionshosting oder externen Benachrichtigungsdienst
+bereit. In einer produktiven Installation ist der lokale Helfer deaktiviert.

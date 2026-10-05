@@ -57,6 +57,9 @@ def main():
                 return self.reply(410, 'Autorisierung beendet. Assistent neu starten.')
             url = urlsplit(self.path)
             if url.path == '/start':
+                start_key = os.environ.get('SONIO_OAUTH_START_KEY', '')
+                if start_key and not hmac.compare_digest(parse_qs(url.query).get('ticket', [''])[0], start_key):
+                    return self.reply(403, 'Bitte die Verbindung im Dashboard starten.')
                 started = True
                 location = 'https://accounts.google.com/o/oauth2/v2/auth?' + urlencode({
                     'client_id': env['GOOGLE_CLIENT_ID'], 'redirect_uri': REDIRECT,
@@ -113,6 +116,8 @@ def main():
                 set_key(ROOT / '.env', 'YOUTUBE_CHANNEL_ID', channel_id)
                 os.chmod(ROOT / '.env', 0o600)
                 completed = True
+                if os.environ.get("SONIO_OAUTH_START_KEY"):
+                    print("SONIO_OAUTH_COMPLETE", flush=True)
                 print('Sonio-Kanal verifiziert. Refresh-Token lokal gespeichert.', flush=True)
                 return self.reply(200, '<h1>Sonio YouTube verbunden</h1><p>Der Kanal wurde verifiziert. Sie können dieses Fenster schliessen.</p>',
                                   Set_Cookie='sonio_oauth=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0')

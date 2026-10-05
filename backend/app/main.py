@@ -24,10 +24,13 @@ from sqlalchemy.exc import IntegrityError
 
 from .analytics import build_dashboard, month_bounds
 from .catalog import BY_ID
-from .config import get_settings
+from .config import get_settings, reload_local_google_credentials
 from .connectors import parse_docx
 from .db import SessionLocal, get_db
 from .demo import demo_analysis, demo_dashboard
+from .events import router as events_router
+from .google_reconnect import router as google_reconnect_router
+from .google_reconnect import stop_helper
 from .jobs import enqueue
 from .models import (
     ChannelState,
@@ -73,7 +76,10 @@ async def lifespan(app):
                 )
             )
             db.commit()
-    yield
+    try:
+        yield
+    finally:
+        stop_helper()
 
 
 app = FastAPI(
@@ -84,9 +90,13 @@ app = FastAPI(
     openapi_url="/api/openapi.json" if s.environment != "production" else None,
 )
 
+app.include_router(google_reconnect_router)
+app.include_router(events_router)
+
 
 @app.middleware("http")
 async def security_headers(request, call_next):
+    reload_local_google_credentials()
     if request.method not in {"GET", "HEAD", "OPTIONS"}:
         origin = request.headers.get("origin")
         if origin and origin.rstrip("/") != s.app_origin.rstrip("/"):

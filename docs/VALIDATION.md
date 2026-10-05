@@ -596,3 +596,30 @@ Alle Analytics-Bereiche verwenden ein gemeinsames zweispaltiges Inhaltsraster; u
 - Frontend: 26 Tests bestanden; TypeScript und Vite-Produktionsbuild bestanden (bestehende Chunk-Grössenwarnung).
 - Ruff: bestanden. 52 geänderte/neue Dateien vor Commit auf Übereinstimmungen mit lokalen Geheimnissen und private Schlüssel geprüft, keine Treffer. .env und .local bleiben ausgeschlossen.
 - Sicherung auf design/sonio-dashboard-login; kein Pages-Deployment beauftragt.
+# Aktualisierungsdiagnose – 05.10.2026
+
+## Wiederverbindung abgeschlossen (später am 05.10.)
+- Neuer admin-/CSRF-geschützter lokaler Wiederverbindungsablauf im Dashboard.
+- Live über die Oberfläche geprüft: GA4-Sonio-Property und YouTube-Sonio-Kanal erneut bestätigt. Beide automatisch angelegten Sync-Aufträge `completed`; GA4 105 und YouTube 93 Messwerte geladen, YouTube-Jahresvideothek ebenfalls geladen. Kein manueller Neustart nach Tokenrotation.
+- 112 Backend- und 28 Frontend-Tests erfolgreich; TypeScript, Ruff und Vite-Build erfolgreich. Bestehende Bundle-Grössenwarnung bleibt.
+- Desktop: Fehlermeldung, letzter Datenstand, Startlink und erfolgreicher automatischer Zahlenwechsel im Browser geprüft. Testmodus unverändert; Freigaben können erneut ablaufen.
+- Vorherige Diagnose und damalige offene Freigabe unten dokumentieren den Verlauf; sie sind durch diesen bestätigten Erfolg ersetzt.
+
+- Google-Token-Endpunkt meldet für GA4 und YouTube `invalid_grant` (abgelaufen oder widerrufen); keine Geheimnisse protokolliert. Erneute Autorisierung ist noch erforderlich. Testmodus ist der zuletzt dokumentierte Zustand, nicht erneut in der Cloud-Konsole bestätigt.
+- Lokale Importzustände: Mailchimp, Google Ads, LinkedIn Ads und Organic-Basiswerte am 05.10. erfolgreich; LinkedIn-Postdetails zuletzt durch HTTP 429 begrenzt.
+- Zentraler Aktualisierungsabschluss invalidiert jetzt auch YouTube-, Video-, Analytics-Detail-, Google-Ads- und Suchabfragen. Cachefähige Detailendpoints umgehen nach manueller Aktualisierung ihren Servercache einmal pro URL; Warnungs-Fallbacks gelten nicht als frischer Abruf.
+- Google-Tokenfehler erhält eine konkrete, geheimnisfreie Wiederverbindungsanweisung. Backend-Änderung benötigt Neustart der laufenden Prozesse.
+- Geprüft: 18 Connector-Tests, 8 Frontend-API-Tests, TypeScript und Ruff erfolgreich. Kein erneuter erfolgreicher GA4-/YouTube-Liveabruf behauptet; Produktions-OAuth/Hosting noch nicht eingerichtet.
+
+### 2026-10-05 — Events und Zoom-Archiv
+- Acht Forms-Formulare mit 432 Antworten, 118 Sonio und 43 Partnern aggregiert; 271 unzugeordnet. Keine personenbezogenen Antwortdaten gespeichert.
+- Sieben erhaltene Zoom-Aufzeichnungen seit 2024 integriert. Keine vollständige historische Abdeckung oder automatische Synchronisierung behauptet.
+- Sechs gezielte Backendtests, Ruff, TypeScript und Vite-Build erfolgreich (bestehende Chunk-Warnung).
+- Browser: Quellen-/Jahresfilter, Forms-Bilder und Gruppensummen geprüft. Mobile 390 px ohne horizontalen Überlauf; Viewport zurückgesetzt.
+- Nach Nutzerfeedback Eventbilder randlos im Format 16:9 mit zentriertem Ausschnitt; Desktop-Darstellung visuell bestätigt.
+
+### 2026-10-05 — Freigabe zur GitHub-Veröffentlichung
+- 118 Backendtests und 28 Frontendtests bestanden; Ruff und TypeScript erfolgreich.
+- Statischer Pages-Build mit VITE_STATIC_DEMO=true und Repository-Basispfad erfolgreich; bestehende Bundle-Grössenwarnung.
+- 23 geänderte/neue Dateien gegen lokale Geheimniswerte geprüft, keine Treffer. .env und .local bleiben ausgeschlossen.
+- Events in der öffentlichen Demo ohne echte Anmeldezahlen; Google-Wiederverbindung ausschliesslich im geschützten Workspace.

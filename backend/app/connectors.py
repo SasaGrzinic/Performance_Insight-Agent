@@ -49,6 +49,15 @@ def request(method, url, **kwargs):
             f"Anbieter vorübergehend nicht verfügbar (HTTP {response.status_code})."
         )
     if response.status_code >= 400:
+        if url == "https://oauth2.googleapis.com/token":
+            try:
+                expired = response.json().get("error") == "invalid_grant"
+            except (ValueError, AttributeError):
+                expired = False
+            if expired:
+                raise ProviderError(
+                    "Google-Anmeldung abgelaufen oder widerrufen. Bitte diesen Kanal erneut mit Google verbinden. Zuletzt geladene Daten bleiben erhalten."
+                )
         # Never persist a provider response that may echo credentials or contact data.
         raise ProviderError(
             f"Anbieter antwortet mit HTTP {response.status_code}; Zugang und Kontoberechtigungen prüfen."

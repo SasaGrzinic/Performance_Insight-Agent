@@ -1,4 +1,6 @@
+import { Events } from "./components/Events";
 import {SearchInsights,SearchHero} from "./components/SearchInsights";
+import { GoogleReconnect } from "./components/GoogleReconnect";
 import {GoogleAds,GoogleAdsHero} from "./components/GoogleAds";
 import {RecommendationContext, RecommendationTeaser} from "./components/RecommendationTeaser";
 import {AnalyticsHero} from './components/AnalyticsHero';
@@ -69,7 +71,7 @@ import {
   Copy,
 } from "lucide-react";
 import * as Tabs from "@radix-ui/react-tabs";
-import { api, number, monthName } from "./api";
+import { api, number, monthName, refreshChannelDetails } from "./api";
 import type {
   Dashboard,
   Analysis,
@@ -271,6 +273,10 @@ function App() {
           : progress.data.error || "Auftrag fehlgeschlagen.",
       );
       setJob(null);
+      refreshChannelDetails();
+      for (const key of ["youtube-published-videos", "youtube-promoted", "youtube-lifetime-traffic", "video-library", "analytics-cohorts-v5", "analytics-lifetime-traffic", "google-ads-campaigns", "search-insights"]) {
+        client.invalidateQueries({ queryKey: [key] });
+      }
       client.invalidateQueries({ queryKey: ["dashboard"] });
       client.invalidateQueries({ queryKey: ["analysis"] });
       client.invalidateQueries({ queryKey: ["reports"] });
@@ -539,7 +545,7 @@ function App() {
               </section>
               <p className="marketing-pitch">Der Marketing Performance &amp; Insight Agent bündelt die Kanalzahlen, macht Entwicklungen verständlich und unterstützt bei der Priorisierung der nächsten Schritte – für weniger Reporting-Aufwand und fundierte Marketingentscheidungen.</p>
             </>
-          ) : view === "search" ? <SearchHero/> : view === "channel-directory" ? <><div className="marketing-mast"><h1>Marketingkanäle.</h1></div><section className="marketing-hero"><img src={asset("brand/sonio-blog-header.jpg")} alt="Berglandschaft mit Fahrer und Zielflagge"/><div><h2>Alle Kanäle. Klar im Blick.</h2><p>Entwicklungen erkennen. Gezielt tiefer einsteigen.</p></div></section><p className="directory-intro">Die Marketingkanäle auf einen Blick: Die wichtigsten Monatszahlen und ihre Entwicklung zeigen, wo sich ein genauerer Blick lohnt. Im jeweiligen Kanal stehen weitere Kennzahlen, Inhalte und vertiefte Auswertungen bereit.</p></> : view === "channels" && channel === "google_ads" ? <GoogleAdsHero /> : view === "channels" && channel === "mailchimp" ? <MailchimpHero /> : view === "channels" && channel === "analytics" ? <AnalyticsHero /> : view === "videos" ? <VideoInsightsHero /> : view === "channels" && channel === "linkedin_organic" ? <LinkedInHero /> : view === "channels" && channel === "linkedin" ? <LinkedInAdsHero /> : view === "channels" && channel === "youtube" ? <YouTubeHero /> : (
+          ) : view === "search" ? <SearchHero/> : view === "channel-directory" ? <><div className="marketing-mast"><h1>Marketingkanäle.</h1></div><section className="marketing-hero"><img src={asset("brand/sonio-blog-header.jpg")} alt="Berglandschaft mit Fahrer und Zielflagge"/><div><h2>Alle Kanäle. Klar im Blick.</h2><p>Entwicklungen erkennen. Gezielt tiefer einsteigen.</p></div></section><p className="directory-intro">Die Marketingkanäle auf einen Blick: Die wichtigsten Monatszahlen und ihre Entwicklung zeigen, wo sich ein genauerer Blick lohnt. Im jeweiligen Kanal stehen weitere Kennzahlen, Inhalte und vertiefte Auswertungen bereit.</p></> : view === "channels" && channel === "events" ? <><div className="marketing-mast"><h1>Events.</h1></div><section className="marketing-hero"><img src={asset("brand/sonio-blog-header.jpg")} alt="Sonio-Berglandschaft mit Zielflagge"/><div><h2>Begegnungen, die verbinden.</h2><p>Events und Webinare. Resonanz und Publikum im Blick.</p></div></section></> : view === "channels" && channel === "google_ads" ? <GoogleAdsHero /> : view === "channels" && channel === "mailchimp" ? <MailchimpHero /> : view === "channels" && channel === "analytics" ? <AnalyticsHero /> : view === "videos" ? <VideoInsightsHero /> : view === "channels" && channel === "linkedin_organic" ? <LinkedInHero /> : view === "channels" && channel === "linkedin" ? <LinkedInAdsHero /> : view === "channels" && channel === "youtube" ? <YouTubeHero /> : (
             <div className="page-intro photographic-intro">
               {
                 <svg
@@ -633,6 +639,7 @@ function App() {
             </div>
           )}
           {view !== "search" && view !== "overview" && view !== "videos" && !inlineChannelActions && dashboardActions}
+          {!demo && me.data && <GoogleReconnect isAdmin={isAdmin} showAll={view === "sources"} />}
           {demo && (
             <div className="demo-banner">
               <Info size={16} />
@@ -783,6 +790,7 @@ function App() {
                         actions={dashboardActions}
                       />
                     )}
+                    {channel === "events" && <Events demo={demo} />}
                     {channel === "youtube" && (
                       <YouTubeVideos demo={demo} actions={dashboardActions} />
                     )}
@@ -792,7 +800,7 @@ function App() {
                       channel !== "linkedin_organic" &&
                       !isAds &&
                       channel !== "mailchimp" &&
-                      channel !== "youtube" && channel !== "google_ads" && (
+                      channel !== "youtube" && channel !== "google_ads" && channel !== "events" && (
                         <>
                           <div className="section-heading">
                             <div className="channel-title">

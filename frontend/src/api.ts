@@ -11,6 +11,12 @@ export class ApiError extends Error {
 
 let authenticated = false;
 let returningToLogin = false;
+let refreshGeneration = 0;
+const refreshedDetails = new Map<string, number>();
+export function refreshChannelDetails() {
+  refreshGeneration += 1;
+}
+const cachedDetails = /^\/(analytics\/(areas|area-traffic|monthly-sources|campaigns|content)|youtube\/(videos|promoted)|google-ads\/campaigns|search-insights|mailchimp\/campaigns\/[^/]+\/insights)(\?|$)/;
 
 function handleUnauthorized(path: string) {
   const pathname = path.split("?")[0];
@@ -40,7 +46,16 @@ export async function api<T>(
     return staticDemoResponse(path) as T;
   }
   const isForm = options.body instanceof FormData;
-  const response = await fetch("/api" + path, {
+  const generation = refreshGeneration;
+  const forceRefresh = generation > 0 && (!options.method || options.method === "GET") && cachedDetails.test(path) && refreshedDetails.get(path) !== generation;
+  let requestPath = path;
+  if (forceRefresh) {
+    const [pathname, search] = path.split("?");
+    const params = new URLSearchParams(search);
+    params.set("refresh", "true");
+    requestPath = pathname + "?" + params.toString();
+  }
+  const response = await fetch("/api" + requestPath, {
     ...options,
     credentials: "same-origin",
     headers: {
@@ -67,7 +82,9 @@ export async function api<T>(
   }
   if (path === "/auth/me" || path === "/auth/login") authenticated = true;
   if (path === "/auth/logout") authenticated = false;
-  return response.json();
+  const result = await response.json();
+  if (forceRefresh && !result?.warning) refreshedDetails.set(path, generation);
+  return result;
 }
 export const number = (value: number | null | undefined, unit = "count") =>
   value == null
