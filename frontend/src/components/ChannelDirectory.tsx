@@ -1,3 +1,4 @@
+import {comparisonText} from "./ComparisonInfo";
 import {RecommendationTeaser} from "./RecommendationTeaser";
 import { useQuery } from "@tanstack/react-query";
 import { EditorialQuote } from "./EditorialQuote";
@@ -17,7 +18,7 @@ const metrics: Record<string,string[]> = {
   mailchimp: ["emails_sent", "unique_clicks"], youtube: ["views", "watch_minutes"],
   events: ["registrations"], qr: ["scans"],
 };
-const labels: Record<string,string> = {impressions:"Impressionen",clicks:"Klicks",conversions:"Zielaktionen",sessions:"Website-Besuche",engaged_sessions:"Engagierte Besuche",emails_sent:"Versendete E-Mails",unique_clicks:"Klickende je Mailing",views:"Videoaufrufe",watch_minutes:"Wiedergabezeit · Min.",registrations:"Anmeldungen",scans:"QR-Scans"};
+const labels: Record<string,string> = {impressions:"Impressionen",clicks:"Klicks",conversions:"Zielaktionen",sessions:"Website-Besuche",engaged_sessions:"Engagierte Besuche",emails_sent:"Versendete E-Mails",unique_clicks:"Klickende je Mailing",views:"Videoaufrufe",watch_minutes:"Wiedergabezeit · Min.",registrations:"Bestätigte Anmeldungen",responses:"Formularantworten",attendees:"Zoom-Teilnahme-Einträge",recording_views:"Aufzeichnungsaufrufe",scans:"QR-Scans"};
 const descriptions: Record<string,string> = {
   linkedin_organic:"Unbezahlte Beiträge machen Sonio sichtbar und stärken den Austausch mit der Community.", linkedin:"Bezahlte Anzeigen erreichen gezielt berufliche Zielgruppen und lenken Interesse auf Angebote.",
   google_ads:"Anzeigen in der Google-Suche und im Werbenetzwerk sprechen Menschen mit passenden Interessen an.",analytics:"Zeigt, wie Besucher die Website nutzen, woher sie kommen und welche Inhalte sie interessieren.",
@@ -28,7 +29,7 @@ export function ChannelDirectory({data, onSelect}: {data: Dashboard; onSelect:(c
   const ads = useQuery({queryKey:["linkedin-ads-campaigns",data.demo], queryFn:()=>api<{start:string;end:string;campaigns:{example?:boolean;values:Record<string,number>}[]}>("/linkedin/ads/campaigns"),enabled:!data.demo});
   return <><section className="channel-directory" aria-label="Marketingkanäle">
     <div className="section-heading"><div><h2>Kanäle im Überblick.</h2></div>
-      <span className="directory-month">{monthName(data.month)}<PeriodInfo>{data.demo ? "Beispieldaten. " : ""}Monatswerte vom {data.period_start} bis {data.period_end}. Vergleich: {data.comparison_month}-01 bis {data.comparison_end}. Laufende Monate sind unvollständig. Kampagnendetails können einen anderen Zeitraum zeigen.</PeriodInfo></span>
+      <span className="directory-month">{monthName(data.month)}<PeriodInfo label="Monatsauswahl und Vormonatsvergleich erklärt">{data.demo ? "Beispieldaten. " : ""}Die Veränderung zum Vormonat basiert auf gleich langen, verfügbaren Zeiträumen – beispielsweise 1.–3. Oktober gegenüber 1.–3. September. Der Datenstand kann je Kanal abweichen. Die angezeigte Gesamtzahl kann bereits neuere Daten enthalten. Die konkreten Vergleichswerte und Zeiträume stehen bei den Kennzahlen in der Kanalansicht. Bei Datenlücken wird die Tendenz ausgesetzt. Kampagnenansichten behalten ihren separat angegebenen Zeitraum.</PeriodInfo></span>
     </div>
     <div className="directory-list">{data.channels.map(c => {
       const connected = c.status === "connected" || c.status === "imported";
@@ -40,10 +41,10 @@ export function ChannelDirectory({data, onSelect}: {data: Dashboard; onSelect:(c
       return <article className="directory-row" key={c.id}>
         <div className="directory-identity"><span className="directory-logo"><ChannelIcon id={c.id} size={48}/></span><div><h3>{c.name}</h3><p>{descriptions[c.id]}</p><small>{data.demo ? "Beispieldaten" : connected ? "Verbunden" : c.status === "error" ? "Aktualisierung prüfen" : "Noch nicht verbunden"}</small></div></div>
         {adsPeriod && <span className="directory-card-period">Letzte 365 Tage · {new Date(adsPeriod.start+"T12:00:00").toLocaleDateString("de-CH")} – {new Date(adsPeriod.end+"T12:00:00").toLocaleDateString("de-CH")}</span>}
-        <div className="directory-kpis">{hasData || connected || blockedAds ? (metrics[c.id] || [c.primary]).slice(0,2).map(key => {
-          const v=values[key], t=metricTrend(v,adsPeriod ? undefined : c.previous[key]);
+        <div className="directory-kpis">{hasData || connected || blockedAds ? (c.event_summary ? [c.primary] : metrics[c.id] || [c.primary]).slice(0,2).map(key => {
+          const v=values[key], t=metricTrend(c.comparison_values ? c.comparison_values[key] : v,adsPeriod ? undefined : c.previous[key]);
           const Icon=t.direction === "up" ? TrendingUp : t.direction === "down" ? TrendingDown : Minus;
-          return <div className="directory-kpi" key={key}><span>{labels[key] || c.fields[key]}</span><strong>{number(v)}</strong><small><Icon size={13} aria-hidden="true"/>{adsPeriod ? "Kampagnen im Zeitraum" : blockedAds ? "Zugriff gesperrt" : t.value === undefined ? "Kein Vergleich" : `${t.value > 0 ? "+" : ""}${number(t.value)} % zum Vormonat`}</small></div>;
+          return <div className="directory-kpi" key={key}><span>{labels[key] || c.fields[key]}</span><strong>{number(v)}</strong><small data-trend={adsPeriod||blockedAds?"neutral":t.direction} title={comparisonText(c.comparisons?.[key])}><Icon size={13} aria-hidden="true"/>{c.event_summary ? `Event-Gesamtstand · ${c.event_summary.coverage[key]?.known ?? 0} von ${c.event_summary.event_count} Events` : adsPeriod ? "Kampagnen im Zeitraum" : blockedAds ? "Zugriff gesperrt" : t.value === undefined ? "Kein Vergleich" : `${t.value > 0 ? "+" : ""}${number(t.value)} % zum Vormonat`}</small></div>;
         }) : <p className="directory-empty">Kennzahlen erscheinen nach der Anbindung.</p>}</div>
         {blockedAds && <small className="directory-access-note">Google Ads verweigert den API-Zugriff (403). Kennzahlen sind noch nicht verfügbar.</small>}
         <button className="directory-open" onClick={()=>onSelect(c)} aria-label={`${c.name}: Details öffnen`}/>

@@ -1,3 +1,4 @@
+import {MetricHelp} from './MetricHelp';
 import { RecommendationTeaser } from './RecommendationTeaser';
 import { EditorialQuote } from './EditorialQuote';
 import { asset } from '../staticDemo';
@@ -150,7 +151,7 @@ export function MailchimpCampaigns({ demo, actions }: { demo: boolean; actions?:
           Suchbegriff.
         </p>
       )}
-      <div className="mailing-groups">
+      <MetricHelp label="Mailingkennzahlen erklärt" entries={Object.entries({...fields,...detailFields}).map(([key,label])=>({key,label,text:explanations[key]}))}/><div className="mailing-groups">
         {displayedGroups.map((group) => (
           <details className="mailing-group" key={group.name} open>
             <summary>
@@ -195,14 +196,14 @@ const explanations: Record<string,string> = {
  unsubscribed: 'Abmeldungen, die Mailchimp diesem Mailing zurechnet.',
  open_rate: 'Erfasste Öffnungen im Verhältnis zur Zustellung. Durch Apple Mail Privacy Protection und Bots beeinflussbar.',
 };
-function MailingMetrics({values,detail=false}:{values:Mailing['values'];detail?:boolean}){
- return <dl className="mc-metrics">{Object.entries(detail?detailFields:fields).map(([key,label])=><div key={key}><dt>{label} <PeriodInfo label={`${label} erklärt`}>{explanations[key]}</PeriodInfo></dt><dd>{displayMetric(values,key)}</dd></div>)}</dl>
+function MailingMetrics({values,detail=false,showHelp=false}:{values:Mailing['values'];detail?:boolean;showHelp?:boolean}){
+ return <dl className="mc-metrics">{Object.entries(detail?detailFields:fields).map(([key,label])=><div key={key}><dt>{label} {showHelp&&<PeriodInfo label={`${label} erklärt`}>{explanations[key]}</PeriodInfo>}</dt><dd>{displayMetric(values,key)}</dd></div>)}</dl>
 }
 function MailingTotals({mailings}:{mailings:Mailing[]}){
  const sum=(key:string)=>mailings.length && mailings.every(m=>m.values[key]!=null)?mailings.reduce((n,m)=>n+m.values[key]!,0):null;
  const delivered=sum('delivered'), clicks=sum('unique_clicks'), unsubscribed=sum('unsubscribed');
  const values={delivered,unique_clicks:clicks,click_rate:delivered&&clicks!=null?clicks/delivered*100:null,unsubscribe_rate:delivered&&unsubscribed!=null?unsubscribed/delivered*100:null};
- return <section className="mc-totals" aria-label="Kennzahlen der ausgewählten Mailings"><MailingMetrics values={values}/><p><PeriodInfo label="Gesamtübersicht der Mailings erklärt">Empfänger werden je Mailing gezählt. Dieselbe Person kann deshalb in mehreren Mailings mehrfach vorkommen. Klick- und Abmeldequote werden aus den aufsummierten Werten und Zustellungen berechnet, nicht als einfacher Durchschnitt der Mailingquoten. Die Zahlen zeigen den Gesamtstand seit Versand; zugehörige Sendungen anderer Monate können enthalten sein.</PeriodInfo> {mailings.length} Mailings in der Auswahl · Gesamtstand seit Versand. Klickende je Mailing gezählt; Quoten nach Zustellungen gewichtet. Zugehörige Sendungen aus anderen Monaten sind enthalten.</p></section>
+ return <section className="mc-totals" aria-label="Kennzahlen der ausgewählten Mailings"><MailingMetrics values={values} showHelp/><p><PeriodInfo label="Gesamtübersicht der Mailings erklärt">Empfänger werden je Mailing gezählt. Dieselbe Person kann deshalb in mehreren Mailings mehrfach vorkommen. Klick- und Abmeldequote werden aus den aufsummierten Werten und Zustellungen berechnet, nicht als einfacher Durchschnitt der Mailingquoten. Die Zahlen zeigen den Gesamtstand seit Versand; zugehörige Sendungen anderer Monate können enthalten sein.</PeriodInfo> {mailings.length} Mailings in der Auswahl · Gesamtstand seit Versand. Klickende je Mailing gezählt; Quoten nach Zustellungen gewichtet. Zugehörige Sendungen aus anderen Monaten sind enthalten.</p></section>
 }
 function MailingCard({mailing:m}:{mailing:Mailing}){
  const [open,setOpen]=useState(false);

@@ -1,3 +1,4 @@
+import {ComparisonInfo} from "./ComparisonInfo";
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../api';
 import { asset } from '../staticDemo';
@@ -18,7 +19,8 @@ export function channelMetricLabel(c: Channel, key: string) {
         : "Anzeigeneinblendungen",
     unique_clicks: "Personen klickten je Newsletter",
     views: "Videoaufrufe",
-    registrations: "Anmeldungen",
+    registrations: "Bestätigte Anmeldungen",
+    responses: "Formularantworten", attendees: "Zoom-Teilnahme-Einträge", recording_views: "Aufzeichnungsaufrufe",
     scans: "QR-Code-Scans",
     conversions: "Erfasste Zielaktionen",
   };
@@ -42,6 +44,7 @@ export function overviewMetricHelp(c: Channel, key: string) {
     scans: 'Erfasste QR-Code-Aufrufe. Wiederholte Scans können mehrfach zählen.',
     followers_gained: 'Hinzugewonnene Follower im Zeitraum. Abgänge werden hier nicht abgezogen; keine Nettoveränderung.',
   };
+  if(c.event_summary) return c.event_summary.notice + ` Abdeckung: ${c.event_summary.coverage[key]?.known ?? 0} von ${c.event_summary.event_count} Events. Datenstand: ${c.event_summary.oldest_observed_at ? new Date(c.event_summary.oldest_observed_at).toLocaleString('de-CH') : 'nicht vorhanden'}.`;
   return (help[key] || `${c.fields[key] || key}: gemeldeter Messwert des Kanals.`) + ' Fehlende Werte bleiben als Strich sichtbar.';
 }
 export function overviewSecondaryMetric(c: Channel) {
@@ -50,8 +53,8 @@ export function overviewSecondaryMetric(c: Channel) {
 }
 export function OverviewHighlights({ dashboard: d, periodControl }: { dashboard: Dashboard; periodControl?: ReactNode }) {
   const selected = d.channels.filter(c => c.status === "connected" || Object.values(c.values).some(v => Number.isFinite(v))).map(c => {
-    const k=c.primary, v=c.values[k], p=c.previous[k];
-    return {c,k,v,p,change:p>0&&Number.isFinite(v)?(v-p)/p*100:null,positive:v>p};
+    const k=c.primary, v=c.values[k], p=c.previous[k], compared=c.comparison_values ? c.comparison_values[k] : v;
+    return {c,k,v,p,change:p>0&&Number.isFinite(compared)?(compared-p)/p*100:null,positive:compared>p};
   });
   return (
     <section className="marketing-developments">
@@ -65,9 +68,9 @@ export function OverviewHighlights({ dashboard: d, periodControl }: { dashboard:
       </div>
       <p className="comparison-context">
         {d.partial
-          ? `Laufender Monat: ${d.period_start} bis ${d.period_end}; Vergleich bis ${d.comparison_end}.`
+          ? `Laufender Monat: ${d.period_start} bis ${d.period_end}.`
           : "Vergleich der Monatswerte."}{" "}
-        Mehr Volumen allein belegt keine höhere Qualität.
+        Die Tendenz verwendet je Kennzahl nur vergleichbare Tageswerte; der angezeigte Gesamtwert kann bereits neuere Tage enthalten. Mehr Volumen allein belegt keine höhere Qualität.
       </p>
       {selected.length ? (
         <div className="marketing-highlights">
@@ -84,9 +87,10 @@ export function OverviewHighlights({ dashboard: d, periodControl }: { dashboard:
                 {number(t.v)}
               </strong>
               <span>{channelMetricLabel(t.c, t.k)} <PeriodInfo label={`${channelMetricLabel(t.c,t.k)} erklärt`}>{overviewMetricHelp(t.c,t.k)}</PeriodInfo></span>
-              <small>
-                {t.change == null ? "Kein Vorperiodenvergleich" : `${number(Math.abs(t.change))} % ${t.positive ? "mehr" : "weniger"} als in der Vorperiode`}
+              <small data-trend={t.change==null||t.change===0?"neutral":t.change>0?"up":"down"}>
+                {t.c.event_summary ? `Event-Gesamtstand · ${t.c.event_summary.coverage[t.k]?.known ?? 0} von ${t.c.event_summary.event_count} Events` : t.change == null ? "Kein Vorperiodenvergleich" : t.change === 0 ? "Unverändert zum Vormonat" : `${number(Math.abs(t.change))} % ${t.positive ? "mehr" : "weniger"} als in der Vorperiode`}
               </small>
+              {!t.c.event_summary&&<ComparisonInfo comparison={t.c.comparisons?.[t.k]}/>}
             </article>
           ))}
         </div>

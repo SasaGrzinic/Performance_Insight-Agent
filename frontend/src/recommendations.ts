@@ -1,7 +1,8 @@
 import type {Dashboard,Recommendation} from './types';
 export function metricRecommendations(d:Dashboard):Recommendation[]{
  return d.channels.flatMap(c=>{
- const key=c.primary,value=c.values[key],previous=c.previous[key];
+ const key=c.primary,value=c.comparison_values ? c.comparison_values[key] : c.values[key],previous=c.previous[key];
+ if(c.comparisons && c.comparisons[key]?.status !== "comparable")return [];
  if(value==null||!Number.isFinite(value))return [];
  const decline=previous>0&&Number.isFinite(previous)&&value<previous;
  const actions:Record<string,string>={

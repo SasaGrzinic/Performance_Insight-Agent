@@ -822,6 +822,31 @@ def ga4_cached(db, key, loader, seconds=3600, refresh=False):
     return result
 
 
+@app.get("/api/sales-report/linkedin")
+def sales_report_linkedin(month=Depends(month_param), user=Depends(current_user), db=Depends(get_db)):
+    from .linkedin_ads import campaign_summary
+
+    start, end = month_bounds(month)
+    today = datetime.now(ZoneInfo(s.report_timezone)).date()
+    return campaign_summary(db, s, min(end, today), start=start)
+
+
+@app.get("/api/sales-report/pages")
+def sales_report_pages(month=Depends(month_param), user=Depends(current_user), db=Depends(get_db)):
+    from .ga4_content import fetch
+
+    today = datetime.now(ZoneInfo(s.report_timezone)).date()
+    result = ga4_cached(db, "ga4:sales-pages:v1:" + month,
+                        lambda: fetch(s, month, today, include_all=True))
+    metadata = {}
+    for cached in db.scalars(select(Preference).where(Preference.key.startswith("ga4:catalog:v4:"))):
+        for page in cached.value.get("pages", []):
+            metadata[page["path"].rstrip("/") or "/"] = page
+    return {**result, "pages": [{**page,
+            "image": metadata.get(page["path"].rstrip("/") or "/", {}).get("image"),
+            } for page in result["pages"]]}
+
+
 @app.get("/api/analytics/areas")
 def analytics_areas(
     area: str, period: str, refresh: bool = False, user=Depends(current_user), db=Depends(get_db)

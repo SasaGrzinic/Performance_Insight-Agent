@@ -41,3 +41,19 @@
 #root main .ads-primary-kpis :is(dt,dd){color:#173d62}
 #root main .li-kpis>.li-tile strong{color:#0063b8}
 #root .li-help>button{width:28px;height:28px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;padding:0}
+
+.comparison-data-info { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; font-size: 12px; line-height: 1.5; margin-top: 5px; }
+@media (max-width: 700px) {
+  #root .comparison-data-info .period-info-tooltip { position: fixed; left: 16px; right: 16px; top: auto; bottom: 16px; width: auto; max-height: 60vh; overflow-y: auto; }
+}
+
+/* Direction, not business judgement: shared readable change colours on every surface. */
+:root{--trend-up-text:#176143;--trend-down-text:#a52d35;--trend-flat-text:#40576b}
+#root :is([data-trend="up"],.change.positive,.trend-up){color:var(--trend-up-text);background:transparent}
+#root :is([data-trend="down"],.change.negative,.trend-down){color:var(--trend-down-text);background:transparent}
+#root :is([data-trend="neutral"],[data-trend="flat"],.change.neutral){color:var(--trend-flat-text);background:transparent}
+#root :is([data-trend="up"],[data-trend="down"],.change,.trend-up,.trend-down){border-radius:0;padding:0;width:fit-content;max-width:100%;font-weight:600}
+#root :is([data-trend="neutral"],[data-trend="flat"]){border-radius:0;padding:0;width:fit-content;max-width:100%}
+#root .highlight-channel .positive{background:var(--trend-up-text)}
+#root .highlight-channel .negative{background:var(--trend-down-text)}
+#root .highlight-channel .neutral{background:var(--trend-flat-text)}

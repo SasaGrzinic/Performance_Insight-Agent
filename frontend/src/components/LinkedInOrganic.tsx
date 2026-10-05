@@ -1,3 +1,6 @@
+import {BenchmarkNote} from './BenchmarkNote';
+import {organicBenchmark, ownPostMedian} from '../benchmarks';
+import {comparisonText} from "./ComparisonInfo";
 import {RecommendationTeaser} from "./RecommendationTeaser";
 import { EditorialQuote } from './EditorialQuote';
 import { asset } from '../staticDemo';
@@ -47,11 +50,13 @@ function Tile({
   value,
   help,
   tendency,
+  benchmark,
 }: {
   label: string;
   value: string;
   help: string;
   tendency?: ReactNode;
+  benchmark?: ReactNode;
 }) {
   return (
     <div className="li-tile">
@@ -61,13 +66,14 @@ function Tile({
       </div>
       <strong>{value}</strong>
       {tendency}
+      {benchmark}
     </div>
   );
 }
 function Tendency({current, previous, points = false, label, context}: {current: unknown; previous: unknown; points?: boolean; label?: string; context: string}) {
   const change = metricTrend(current, previous, points);
   const Icon = change.direction === "up" ? TrendingUp : change.direction === "down" ? TrendingDown : Minus;
-  return <span className="li-tendency"><Icon size={12} aria-hidden="true" /><span>{label && `${label}: `}{change.value === undefined ? change.label : `${change.value > 0 ? "+" : ""}${number(change.value)} ${points ? "PP" : "%"}`}<span className="li-tendency-period"> zum Vormonat</span></span><Help>{context} {change.label}</Help></span>;
+  return <span className="li-tendency" data-trend={change.direction}><Icon size={12} aria-hidden="true" /><span>{label && `${label}: `}{change.value === undefined ? change.label : `${change.value > 0 ? "+" : ""}${number(change.value)} ${points ? "PP" : "%"}`}<span className="li-tendency-period"> zum Vormonat</span></span><Help>{context} {change.label}</Help></span>;
 }
 const fmt = (v: unknown) => (finite(v) ? number(v) : "—");
 export function LinkedInHero() {
@@ -175,13 +181,17 @@ export function LinkedInOrganic({
       ? watch / views / 1000
       : undefined;
   const comparisonContext = `Vergleich ${data.period_start} bis ${data.period_end} mit ${data.comparison_month}-01 bis ${data.comparison_end}. ${data.partial ? "Laufender Monat: Vormonat auf denselben Kalendertag begrenzt." : "Abgeschlossene Monatszeiträume."}`;
+  const compared = channel.comparison_values ?? values;
+  const comparisonHelp = (key: string) => channel.comparisons ? comparisonText(channel.comparisons[key]) : comparisonContext;
+  const rateKeys = ["impressions", "clicks", "likes", "comments", "shares"];
+  const sameWindow = !channel.comparisons || (rateKeys.every(k => channel.comparisons?.[k]?.status === "comparable") && new Set(rateKeys.map(k => channel.comparisons?.[k]?.current_end)).size === 1);
   const tendencies = year ? [] : [
-    <Tendency current={values.impressions} previous={channel.previous.impressions} context={comparisonContext} />,
-    <Tendency current={engagement(values)} previous={engagement(channel.previous)} points context={comparisonContext} />,
-    <span className="li-tendency-pair"><Tendency label="Kommentare" current={values.comments} previous={channel.previous.comments} context={comparisonContext} /><Tendency label="Reposts" current={values.shares} previous={channel.previous.shares} context={comparisonContext} /></span>,
-    <Tendency current={values.followers_organic} previous={channel.previous.followers_organic} context={comparisonContext} />,
-    <Tendency current={values.clicks} previous={channel.previous.clicks} context={comparisonContext} />,
-    <Tendency current={values.likes} previous={channel.previous.likes} context={comparisonContext} />,
+    <Tendency current={compared.impressions} previous={channel.previous.impressions} context={comparisonHelp("impressions")} />,
+    <Tendency current={sameWindow ? engagement(compared) : undefined} previous={engagement(channel.previous)} points context={sameWindow ? comparisonHelp("impressions") : "Engagement-Bestandteile haben unterschiedliche Datenabdeckung; Vergleich ausgesetzt."} />,
+    <span className="li-tendency-pair"><Tendency label="Kommentare" current={compared.comments} previous={channel.previous.comments} context={comparisonHelp("comments")} /><Tendency label="Reposts" current={compared.shares} previous={channel.previous.shares} context={comparisonHelp("shares")} /></span>,
+    <Tendency current={compared.followers_organic} previous={channel.previous.followers_organic} context={comparisonHelp("followers_organic")} />,
+    <Tendency current={compared.clicks} previous={channel.previous.clicks} context={comparisonHelp("clicks")} />,
+    <Tendency current={compared.likes} previous={channel.previous.likes} context={comparisonHelp("likes")} />,
   ];
   const postsAvailable = !demo && !loading && !failed && postQueries.every(q => q.data?.last_success);
   const cards = [
@@ -291,7 +301,7 @@ export function LinkedInOrganic({
                     <div><span>Neue Follower <Help>{help} Zeitraum: {period}.</Help></span><strong>{value}</strong><small>Organisch · {period}</small>{tendencies[i]}</div>
                   </div>
                   {audience.isError && <small role="alert">Gesamtbestand konnte nicht aktualisiert werden. <button type="button" onClick={() => audience.refetch()}>Erneut laden</button></small>}
-                </div> : <Tile key={label} label={label} value={value} help={help} tendency={tendencies[i]} />
+                </div> : <Tile key={label} label={label} value={value} help={help} tendency={tendencies[i]} benchmark={i === 1 && finite(engagement(values)) ? <BenchmarkNote benchmark={organicBenchmark}/> : undefined} />
               ),
           )}
         </div>
@@ -398,10 +408,10 @@ export function LinkedInOrganic({
         )}
         <div className="li-table-panel" role="region" aria-label="Beitragskennzahlen" tabIndex={0}>
           <table id="li-post-list" className="li-table"><thead><tr><th>Beitrag / Thema</th><th>Impressionen</th><th>Klicks</th><th>Engagement <Help>Interaktionen geteilt durch Impressionen. Gesamtwerte seit Veröffentlichung, keine Monatsrate.</Help></th><th>Kommentare / Reposts</th></tr></thead>
-          <tbody>{displayedPosts.map((p) => <tr key={p.id}>
+          <tbody>{displayedPosts.map((p) => {const median = !loading && !failed ? ownPostMedian(posts, p.kind) : undefined; return <tr key={p.id}>
             <td><div className="li-post-cell"><PostImage post={p} /><div><a href={p.url} target="_blank" rel="noreferrer">{readablePostTitle(p.title)} <ExternalLink size={12}/></a><small>{new Date(p.published_at).toLocaleDateString("de-CH", {timeZone:"Europe/Zurich"})} · Stand {new Date(p.updated_at).toLocaleDateString("de-CH")}</small></div></div></td>
-            <td>{fmt(p.metrics.impressions)}</td><td>{fmt(p.metrics.clicks)}</td><td>{finite(engagement(p.metrics)) ? `${number(engagement(p.metrics))} %` : "—"}</td><td>{fmt(p.metrics.comments)} / {fmt(p.metrics.shares)}</td>
-          </tr>)}</tbody></table>
+            <td>{fmt(p.metrics.impressions)}</td><td>{fmt(p.metrics.clicks)}</td><td>{finite(engagement(p.metrics)) ? `${number(engagement(p.metrics))} %` : "—"}{median && finite(engagement(p.metrics)) && <BenchmarkNote benchmark={{value:`${number(median.value)} %`,context:`Sonio-Median · ${median.count} Posts`,explanation:`Geladene Beiträge desselben Formats (${p.kind}) aus der gewählten Veröffentlichungsauswahl. Mittlerer Wert der einzelnen Engagement-Raten inklusive Klicks. Gesamtstand seit Veröffentlichung; unterschiedliches Beitragsalter ist nicht bereinigt. Kein externer Branchenbenchmark.`}}/>}</td><td>{fmt(p.metrics.comments)} / {fmt(p.metrics.shares)}</td>
+          </tr>})}</tbody></table>
           <p className="li-note">Beitragsalter und Format beim Vergleich berücksichtigen. Gesamtwerte nicht zu Monatswerten addieren.</p>
         </div>
         {filteredPosts.length > 5 && <button type="button" className="button" aria-expanded={showAllPosts} aria-controls="li-post-list" onClick={() => setExpandedPostsFor(showAllPosts ? null : postSelection)}>

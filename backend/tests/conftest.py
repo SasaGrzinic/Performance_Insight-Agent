@@ -6,6 +6,9 @@ from pathlib import Path
 import pytest
 
 os.environ["ENVIRONMENT"] = "test"
+os.environ["ZOOM_ACCOUNT_ID"] = ""
+os.environ["ZOOM_CLIENT_ID"] = ""
+os.environ["ZOOM_CLIENT_SECRET"] = ""
 os.environ["COOKIE_SECURE"] = "false"
 os.environ["DEMO_ENABLED"] = "true"
 os.environ["APP_ORIGIN"] = "http://testserver"

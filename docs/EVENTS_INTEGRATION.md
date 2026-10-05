@@ -61,10 +61,21 @@ Zoom-Daten vor 01.01.2024 werden vom Importschema abgelehnt.
 
 ## Betrieb und Grenzen
 
-Noch kein automatischer Forms-/Zoom-Sync. Aktualisieren lädt den gespeicherten
-Snapshot und weist dies aus. Browser-Anmeldung ist keine API-Verbindung.
-Für den Dauerbetrieb Aggregation in Microsoft 365/Power Automate beziehungsweise
-freigegebener Zoom-Zugang; ausschliesslich Summen an das Backend übertragen.
+Zoom Server-to-Server OAuth wurde am 05.10.2026 aktiviert und live geprüft.
+Scopes: `report:read:list_history_meetings:admin`, `report:read:webinar:admin`.
+Keine Registranten-/Teilnehmerlisten-Endpunkte. Credentials ausschliesslich lokal.
+`zoom_events.py` liest paginierte Webinarhistorie und aggregierte Detailberichte.
+Explizite Filter: meeting_type=webinar, date_type=start_time, report_type=all.
+Die API verweigerte Oktober 2025 mit Code 300 (nur letzte sechs Monate).
+Abruf 01.05.–05.10.2026 erfolgreich, jedoch null Webinare geliefert. Sieben
+ältere Archiveinträge bleiben erhalten und werden nicht als live aktualisiert markiert.
+Anmeldungen und Firmenaufteilung sind über diese Berichtsscopes nicht verfügbar.
+
+Admin-POST `/api/events/zoom/refresh` mit CSRF; manuell über Daten aktualisieren.
+Automatischer Abruf im vorhandenen Scheduler bei laufender lokaler Anwendung.
+Fehler erhalten den letzten Snapshot. Import ist anhand Webinarinstanz idempotent;
+pro Event separater Abrufstand, keine Erneuerung des Forms-Datenstands.
+Forms bleibt manuell. Öffentliche Demo enthält keine echten Eventdetails.
 
 ## Prüfung
 
@@ -72,3 +83,39 @@ Sechs gezielte Backendtests, Ruff und TypeScript erfolgreich. Browser: Quellen-
 und Jahresfilter, zwei Zoom-Einträge 2024, Forms-Gruppensummen 2025 und geladene
 Originalbilder geprüft. Desktop zwei Karten nebeneinander; Mobile 390 px ohne
 horizontalen Seitenüberlauf. Temporären Viewport anschliessend zurückgesetzt.
+
+## Review F02 – gemeinsame Event-Zählbasis (05.10.2026)
+
+- `event_summary.py` stellt Snapshot-Summen für Eventfilter und Dashboard bereit.
+  Eventdatum bestimmt den Monat, inklusive bevorstehender Events im Monat; Werte
+  sind letzte Event-Gesamtstände, keine im Monat neu eingegangenen Anmeldungen.
+- Antworten, bestätigte Anmeldungen, Zoom-Teilnahme-Einträge und Aufzeichnungsaufrufe
+  bleiben getrennt. Sonio/Partner/Kunden werden nur aus vorhandenen Gruppenzahlen
+  summiert. Unbekannte Firmen sind nicht automatisch Kunden. Teilstände nennen
+  bekannte/gesamte Events. Ein Strich bedeutet unbekannt, 0 bleibt eine echte Null.
+- Markierte Duplikate und gleiche Datum/Titel-Kandidaten werden konservativ aus
+  Summen ausgeschlossen, nicht gelöscht. Keine Garantie auf Erkennung aller
+  Mehrfacherfassungen; ohne dauerhafte gemeinsame Event-ID bleibt dies begrenzt.
+- Bei vorhandenem Snapshot werden alte DOCX-Metric-Zeilen nicht zusätzlich gezählt.
+  Unbekannte Eventdaten werden nicht einem Monat zugeschlagen. Keine künstliche
+  Tageskurve oder Vormonatsbewertung aus heutigen Snapshots.
+- Neue Reports und der Agent-Eingang enthalten dieselben Summen, Abdeckung und
+  Datenstände. Bestehende Reports bleiben unverändert. Kein KI-Lauf oder
+  Reportversand durch diese Änderung ausgelöst.
+- Browserabgleich Oktober: 10 Formularantworten, Sonio 6, Partner 1, Kunden offen;
+  3 noch nicht eindeutig zugeordnet. Alle Jahre: 432 Antworten, Sonio 118, Partner
+  43 als Teilstände, Kunden offen. Es wurden keine Personendaten gespeichert.
+
+### Vorrangige Nutzerentscheidung – Kunden als Restgruppe, 05.10.2026
+Fehlende importierte Kundenzahlen werden berechnet: bestätigte Anmeldungen (falls
+vorhanden, sonst Formularantworten) minus Sonio minus Partner/Hersteller. Nur wenn
+alle Eingangswerte bekannt sind und der Rest nicht negativ ist. Importierte
+Kundenzahlen bleiben vorrangig; Rohdaten werden nicht umgeschrieben. Oberfläche,
+CSV und Agentdaten kennzeichnen berechnete Werte. Dies ersetzt die vorherige
+Entscheidung, die Restgruppe grundsätzlich offen zu lassen. AI-Experience: 26,
+Oktober-VCF: 3. Die Zählbasis Formularantworten wird weiterhin klar benannt.
+
+Der Nutzer hat «AI-Experience auf dem Zürichsee (2)», ID ai-experience-2026-copy,
+als Test bestätigt. Nur dieser Eintrag wurde aus dem lokalen Snapshot entfernt;
+Sicherung unter .local/, echter Anlass und Originalformular bei Microsoft
+unverändert. Bei späteren manuellen Importen dieses Testformular ausschliessen.

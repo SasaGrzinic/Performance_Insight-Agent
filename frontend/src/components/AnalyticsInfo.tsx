@@ -35,6 +35,7 @@ const interpretations:Record<string,string>={
  comparison:'Nur gleich lange Zeiträume vergleichen. Bei kleinen Ausgangswerten können wenige zusätzliche Besuche grosse Prozentänderungen auslösen.',
 };
 explanations.comparison='Die Tendenz zeigt die prozentuale Veränderung gegenüber dem angegebenen Vergleichszeitraum: (aktueller Wert − Vorperiode) ÷ Vorperiode × 100. Ohne geeigneten Vorwert ist keine Prozentänderung berechenbar.';
+export function analyticsMetricHelp(metric:string) { return [explanations[metric]||explanations.sessions, interpretations[metric]].filter(Boolean).join(' '); }
 export function AnalyticsInfo({metric,label,monthly=false}:{metric:string;label?:string;monthly?:boolean}){
  const id=useId(),[open,setOpen]=useState(false);
  const text=explanations[metric]||explanations.sessions;

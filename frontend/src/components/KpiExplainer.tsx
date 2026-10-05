@@ -1,6 +1,10 @@
 import { useId, useState } from "react";
 
 const definitions: Record<string, string> = {
+  leads: "Abgesendete LinkedIn Lead-Gen-Formulare laut Ads-Reporting. Keine Website-Conversions und noch keine qualifizierten Verkaufschancen. Ausschliesslich aggregierte Zahlen, keine Kontaktdaten.",
+  lead_form_opens: "Wie oft das LinkedIn Lead-Gen-Formular geöffnet wurde. Keine eindeutigen Personen und noch keine abgeschickten Formulare.",
+  lead_completion_rate: "Abgesendete LinkedIn-Formulare geteilt durch Formularöffnungen × 100. Zeigt den Anteil der Öffnungen mit Abschluss. Ohne Öffnungen oder vollständige Werte nicht berechenbar.",
+  cost_per_lead: "Werbeausgaben geteilt durch abgesendete LinkedIn-Formulare. Bei null oder unbekannten Leads nicht berechenbar. Die Kontaktqualität muss separat beurteilt werden.",
   click_rate: "Mailchimp-Klickrate: Anteil der zugestellten Empfänger mit mindestens einem erfassten Klick. Mehrfachklicks derselben Person erhöhen diese Rate nicht. Bots können Klicks beeinflussen.",
   delivery_rate: "Zustellrate: (Versendet − Hard-Bounces − Soft-Bounces) ÷ Versendet × 100. Eine Zustellung belegt nicht den Eingang im Posteingang statt im Spamordner.",
   delivered: "Versendete E-Mails abzüglich Hard- und Soft-Bounces. Keine Aussage darüber, ob die Nachricht gelesen wurde.",

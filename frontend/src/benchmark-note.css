@@ -1,0 +1,12 @@
+/* One neutral line; explanations never stretch neighbouring KPI cards. */
+button.benchmark-note{display:flex;align-items:flex-start;gap:5px;margin:8px 0 0;padding:0;border:0;background:transparent;color:inherit;max-width:100%;font:inherit;font-size:11px;line-height:1.5;font-weight:400;text-align:left;white-space:normal;cursor:pointer}
+button.benchmark-note>svg{flex:none;margin-top:2px}
+button.benchmark-note b{font-size:inherit;font-weight:700;color:inherit}
+button.benchmark-note:focus-visible{outline:2px solid currentColor;outline-offset:3px}
+.benchmark-overlay{position:fixed;inset:0;background:rgb(20 42 64 / 25%);z-index:300}
+.benchmark-explanation{position:fixed;z-index:301;top:50%;left:50%;transform:translate(-50%,-50%);width:min(400px,calc(100vw - 40px));max-height:calc(100dvh - 64px);overflow:auto;box-sizing:border-box;background:#1c3553;color:#fff;border-radius:12px;padding:24px;font-size:14px;line-height:1.6;box-shadow:0 12px 40px #142a4033}
+.benchmark-explanation h2{font-size:19px;color:#fff;margin:0 26px 8px 0}
+.benchmark-explanation p{font-size:13px;color:#fff;margin:0 0 14px}
+.benchmark-explanation a{color:#fff;text-decoration:underline;font-size:12px}
+.benchmark-close{position:absolute;top:12px;right:12px;display:grid;place-items:center;border:0;background:transparent;color:#fff;padding:6px;cursor:pointer}
+.benchmark-explanation :focus-visible{outline:2px solid #fff;outline-offset:3px}

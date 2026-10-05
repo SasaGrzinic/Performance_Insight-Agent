@@ -1,4 +1,7 @@
+export type EventSummary = { customers_calculated_events?:number; values: Record<string,number>; coverage: Record<string,{known:number;total:number;status:string}>; event_count:number; excluded_duplicates:number; oldest_observed_at:string|null; notice:string; event_month?:string };
+export type Comparison = {status: string; current_start: string; current_end: string | null; previous_start: string; previous_end: string | null; value: number | null; previous: number | null; last_measurement: string | null; last_success: string | null; stale: boolean; message: string};
 export type KPI = {
+  comparison?: Comparison;
   channel: string;
   key: string;
   label: string;
@@ -9,6 +12,9 @@ export type KPI = {
   unit: string;
 };
 export type Channel = {
+  event_summary?: EventSummary;
+  comparisons?: Record<string, Comparison>;
+  comparison_values?: Record<string, number>;
   id: string;
   name: string;
   type: string;

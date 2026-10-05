@@ -623,3 +623,136 @@ Alle Analytics-Bereiche verwenden ein gemeinsames zweispaltiges Inhaltsraster; u
 - Statischer Pages-Build mit VITE_STATIC_DEMO=true und Repository-Basispfad erfolgreich; bestehende Bundle-Grössenwarnung.
 - 23 geänderte/neue Dateien gegen lokale Geheimniswerte geprüft, keine Treffer. .env und .local bleiben ausgeschlossen.
 - Events in der öffentlichen Demo ohne echte Anmeldezahlen; Google-Wiederverbindung ausschliesslich im geschützten Workspace.
+
+## 05.10.2026 – Zoom-Berichtsverbindung
+- Server-to-Server OAuth aktiviert; Tokenaustausch und sechs Monatsabfragen live erfolgreich.
+- Expliziter Webinarfilter: 01.05.–05.10.2026 liefert null Webinare. Ältere API-Abfrage mit Code 300/sechsmonatigem Fenster abgelehnt; sieben Archivwebinare unverändert erhalten.
+- Backend-Gesamtsuite: 121 Tests erfolgreich; danach zwei zusätzliche Regressionstests für Fehlererhalt und Admin/CSRF ergänzt, alle fünf Zoom-Tests erfolgreich. Zwei bestehende Starlette-Deprecation-Warnungen.
+- Ruff, TypeScript und Produktionsbuild erfolgreich; bestehende Chunkgrössen-Warnung.
+- Geschütztes Dashboard zeigt Zoom-Abrufstand und getrennten manuellen Forms-Stand. Keine Teilnehmerlisten, keine Geheimnisse in Artefakten.
+
+## 05.10.2026 – Vergleichbare Monatsstände (Review F01, erster Schritt)
+- Monatssummen bleiben erhalten; separate Vergleichswerte und Zeiträume je Kennzahl verhindern den Vergleich einer Teilperiode gegen einen längeren Vormonat.
+- Sieben neue Regressionstests: 3 gegen 5 Tage, innere Datenlücken, echte Nullen, fehlende Vorperiodentage, leere/verkürzte Importe, Nullkorrektur, Monatslängen/Jahreswechsel. Alle bestanden.
+- Gesamtsuite vor finaler AI-Validierungskorrektur: 128 bestanden, ein Bestandsfall fehlgeschlagen; nach Rücknahme der zu strikten Referenzsperre gezielt erfolgreich. Bestehende zwei Starlette-Warnungen. Frontend: 28 Tests, TypeScript und Build bestanden (bekannte Chunkgrössen-Warnung).
+- Browser: geschützte Übersicht zeigt YouTube 1.–2. Oktober gegen 1.–2. September samt Abrufdatum; Desktop-Info geprüft. Mobile 390px ohne Seitenüberlauf, Tooltip-Verankerung korrigiert.
+- Datenreife bleibt eine explizite Grenze: explizite Tageszeilen + Ausschluss heute, bei GA4 drei Kalendertage Puffer sind eine konservative Regel, kein Beweis endgültiger Anbieterzahlen. Fehlende Nullzeilen werden nicht ergänzt.
+- Abschlussprüfung nach Korrektur: gesamte Backend-Suite 130 bestanden, Ruff bestanden. Mobile Info-Box vollständig innerhalb des Bildschirms bestätigt; Viewport zurückgesetzt. Lokale API, Worker und Scheduler mit aktuellem Code neu gestartet.
+
+### 05.10.2026 – Google Ads: Vormonatsvergleich der Hauptkennzahlen
+- Zwei Backend-Tests und zwei neue Frontend-Vergleichstests bestanden; Ruff, TypeScript und Vite-Build erfolgreich. Bestehende Deprecation-/Chunkgrössenwarnungen bleiben.
+- Geschützte lokale Ansicht mit Live-Abruf geprüft: 01.–04.10. gegen 01.–04.09., Klicks 255 gegen 294 (−13.27 %), Ausgaben CHF 145.39 gegen CHF 109.22 (+33.12 %). Momentaufnahme, keine festen Erwartungen.
+- Filter «Suche» setzt bei unklarer Tagesabdeckung den Vergleich aus. Desktop-Infobox und Mobile-Ansicht ohne horizontalen Überlauf geprüft; vier Hauptwerte erhalten.
+- Kein Push und keine öffentliche Veröffentlichung.
+
+### 05.10.2026 – Einheitliche Farben für Veränderungswerte
+- Nutzerentscheidung: numerische Zunahmen grün, Abnahmen rot, Null/fehlend neutral. Dies beschreibt die Richtung, keine pauschale Qualitätsbewertung (insbesondere Kosten).
+- Zentrale Farbtokens mit hellen Hintergrundflächen für helle und dunkle Kacheln. Übersicht, Kanalverzeichnis, Google Ads, LinkedIn Organic, allgemeine KPI-Komponente und Analytics-Seitenvergleiche vereinheitlicht.
+- Google Ads und LinkedIn live im Browser auf berechnete Farben geprüft, Mobile 390px ohne horizontalen Überlauf. TypeScript und Vite-Build erfolgreich; bestehende Chunkgrössenwarnung bleibt.
+- Keine Datenberechnung oder Veröffentlichung geändert.
+
+### 05.10.2026 – Analytics: leere Bereichsauswahl erklärt und vereinfacht
+- Ursache im geschützten Browser verifiziert: Blogartikel starteten im Veröffentlichungsmonat Oktober 2026 mit 0 Seiten; 56 Katalogseiten besitzen kein bestätigtes Veröffentlichungsdatum. Auswahl «Alle» liefert 150 Seiten (Sprachvarianten enthalten) mit Kennzahlen. Keine verlorenen Messwerte in diesem geprüften Fall.
+- Alle Bereiche starten nun mit sämtlichen Veröffentlichungszeiträumen; Monat/Jahr bleiben explizit wählbar. Seitenselektor entfernt, Sprache und Service-Themen bleiben. Zehn Karten plus «Weitere Seiten» erhalten.
+- Status zeigt Anzahl Seiten, sichtbare Karten, Seiten mit Kennzahlen und Abrufstand. Leere Ergebnisse unterscheiden Zeitraum von Sprache/Service-Filtern, mit direktem Zurücksetzen. Katalog- und Kennzahlenwarnungen bleiben getrennt sichtbar.
+- Oktober-Leerzustand und Rückkehr zu «Alle» im Browser geprüft. Kein Seitenselektor mehr vorhanden; Mobile 390px ohne horizontalen Überlauf. TypeScript und Build bestanden; bestehende Chunkgrössenwarnung. Keine Veröffentlichung.
+
+### 05.10.2026 – Review F02 Event-Summen
+- Backend: 134 Tests bestanden, inklusive Eventdatum, bevorstehende Events,
+  unbekannte Werte/echte Null, Teilabdeckung, Duplikate, Legacy-Doppelzählung und
+  Gleichheit zwischen gefiltertem Eventendpoint und Dashboard.
+- TypeScript und Vite-Build bestanden; bestehende Chunkgrössenwarnung bleibt.
+- Browser: Übersicht Oktober und Eventfilter Oktober zeigen übereinstimmend
+  10 Formularantworten; Eventgruppen 6 Sonio/1 Partner, Kunden unbekannt.
+- Keine Veröffentlichung, kein Reportversand und kein echter KI-Aufruf.
+
+### 05.10.2026 – Kunden-Restgruppe und Testformular
+- 16 Event-/Zoom-/Aggregations-Tests bestanden; neue Regel inkl. Vorrang
+  importierter Werte, fehlender Eingänge, echter Null, negativem Rest und
+  Übereinstimmung zwischen Endpoint und Dashboard geprüft. TypeScript bestanden.
+- Nutzerbestätigtes Testformular lokal mit vorheriger Sicherung entfernt.
+
+### 2026-10-05 — F03, erster Benchmark-Schritt (GA4)
+- Sonio-Property 358384645 im angemeldeten GA4 geprüft: Benchmarking aktiviert,
+  ausgewählte Vergleichsgruppe «Unternehmenstechnologie». Keine Einstellungen geändert.
+- Geschützte Analytics-Ansicht: schmale Benchmark-Zeile unter Haupt-KPIs,
+  eine gemeinsame Infobox und externer GA4-Link. Keine zusätzlichen KPI-Kacheln,
+  keine numerischen Branchenwerte und keine automatische Erfolgsbewertung.
+  In Demo ausgeblendet. GA4-Zeitraum muss separat ausgewählt werden.
+- Offizielle Benchmark-Dokumentation: https://support.google.com/analytics/answer/16388466?hl=de
+  Median und 25.–75. Perzentil dienen als Orientierung, nicht als Ziel.
+- Data API Schema geprüft: https://developers.google.com/analytics/devguides/reporting/data/v1/api-schema
+  Kein dokumentiertes Benchmark-Feld gefunden. Automatischer Branchenimport ist
+  NICHT umgesetzt; der Link ist Zugang zur GA4-Auswertung, kein Datenimport.
+- TypeScript und Vite-Build erfolgreich; bestehende Warnung zu Bundle >500 kB.
+  Browserprüfung Desktop und 390 px: Infobox sichtbar, mobile Tooltip-Grenzen
+  innerhalb Viewport, kein horizontaler Seitenüberlauf. Escape schliesst Tooltip.
+- Mailchimp-Benchmarks auf Nutzerwunsch zurückgestellt (Kontaktqualität unklar).
+  Weitere Kanäle werden schrittweise geprüft, keine pauschalen Branchenziele gesetzt.
+
+### 2026-10-05 — Numerische Referenzen Organic/Ads (ersetzt GA4-Schritt)
+- Nutzer verwirft GA4-Zugang ohne Zahl. Entfernt. Numerische Referenzen und Grenzen
+  in BENCHMARKS.md dokumentiert; keine Zielwerte oder neue automatisierte Bewertung.
+- TypeScript und Vite-Build bestanden (bestehende >500 kB Bundle-Warnung).
+- Zwei Regressionstests bestanden: Ziel/Typ/Währung/Klickdefinitionen korrekt
+  getrennt; interner Median schliesst unbekannte Werte aus, behält echte Nullen.
+- Live-Browser: Organic 5.20 % Referenz unter Engagement-Rate; LinkedIn-Awareness
+  CPM-Referenz CHF 10.12 unter tatsächlichem CPM, keine Traffic-CTR an dieser Kampagne.
+  Google Ads Referenz 6.10 % bei zwei SEARCH-Kampagnen, keine bei PMax.
+- Gemeinsamer Referenzdialog Desktop visuell geprüft; bei 390 px links20/rechts370,
+  schliessbar, keine Vergrösserung benachbarter Kacheln. Organic Mobil kein horizontaler
+  Seitenüberlauf. Keine Veröffentlichung/kein Push in diesem Schritt.
+
+### 2026-10-05 — LinkedIn Lead-Kampagnen vorbereiten
+- Live-Finder Konto 514253005: fünf bestehende Kampagnen, keine neue Lead-Kampagne
+  geliefert. Keine Kampagne angelegt oder aktiviert; nichts als Ersatz erfunden.
+- Regulärer 365-Tage-Import mit oneClickLeads/oneClickLeadFormOpens erfolgreich:
+  Status connected, fünf Kampagnen, 20 Lead-/Öffnungs-Tagesmesswerte gespeichert.
+  Das ist eine Feldverfügbarkeitsprüfung, kein Nachweis einer neuen Lead-Kampagne.
+- 13 LinkedIn-Ads-Tests bestanden, darunter explizite 0 vs. fehlend, Trennung von
+  Website-Conversions und zukünftiger LEAD_GENERATION-Entwurf ohne Messwerte.
+  Ruff, TypeScript und Vite-Build bestanden; bestehende Bundle-Warnung >500 kB.
+- Lokale API/Worker/Scheduler kontrolliert neu gestartet. Browser zeigt fünf reale
+  Kampagnen und neue Lead-Kennzahlen in gemeinsamer Erklärung. Bestehendes fiktives
+  Beispiel unverändert erhalten. Lead-Karten live erst nach API-Lieferung prüfbar.
+
+## 2026-10-05 – Reports als Inhaltsvorschau
+
+- TypeScript-Projektprüfung und Vite-Produktionsbuild erfolgreich; bestehender Hinweis auf grosse Bundles bleibt.
+- Lokaler geschützter Browser: GL-, Sales- und Marketing-Auswahl geprüft. Marketing zeigt vier ausdrücklich illustrative Empfehlungen direkt nach dem Monatsrückblick. Bestehendes Archiv mit August/September sichtbar. Keine Speicherung oder Zustellung ausgelöst.
+- Mobile 390px: Sales und Marketing ohne horizontalen Überlauf (clientWidth = scrollWidth = 383); Desktop-Header und Auswahl visuell geprüft. Viewport danach zurückgesetzt.
+- Originalbild und bestehendes Zitat erhalten. Drei neue Perspektiven sind noch keine automatisch erzeugten oder exportierten Zielgruppenreports.
+
+### Reports – befüllte Kapitel und gestalterische Verfeinerung
+- Zwei Regressionstests für fehlend/null, bestätigte Null, veraltete Vergleiche, Null im Nenner und Eventbestände bestanden; TypeScript und Vite-Build erfolgreich.
+- Geschützte Reports-Ansicht: aufklappbare Kapitel, reale Kennzahlen und Lesehilfen sichtbar. Desktop und Mobile 390 geprüft, kein horizontaler Überlauf. Bestehende Bildwelt, Schrift und Archiv erhalten.
+
+### 2026-10-05 – Visueller Sales-Report und Vorstellungsfilme
+- 17 Tests in test_ga4_content/test_linkedin_ads bestanden, inklusive Service-/Profilseiten und strikter Monatsbegrenzung von LinkedIn-Klicks. Ruff, TypeScript und Vite-Build erfolgreich (bekannter Bundlegrössenhinweis).
+- Live im geschützten Browser: Oktober-Website-Ranking geladen, Google Ads mit Kampagnenbildern und Klicks (Datamanagement 58). Fitim 3, Kutay 4, Harald 1 Monats-Seitenaufrufe; keine Ersatzwerte für fehlende Seitenmessungen.
+- Desktop und 390px geprüft, kein horizontaler Überlauf. Fünf Videoplayer mit Originalpostern vorhanden. Lokale API/Worker/Scheduler kontrolliert neu gestartet. Kein Deployment.
+
+### Sales: Organic statt Ads, Vergleich an Vorstellungsvideos
+TypeScript/Vite-Build erfolgreich. Browserprüfung: LinkedIn-Organic-Beitrag mit 14 Klicks, Bild und Original-Link; Providerwarnung HTTP 429 sichtbar, letzter importierter Stand bleibt erhalten. Videokarten Oktober/September jeweils bis 5.: Fitim 3/2, Kutay 4/1. Werte nebeneinander und ohne Verschiebung geprüft.
+
+Sales-Vorstellungsvideos auf Monat/Gesamt umgestellt: TypeScript erfolgreich; Browser zeigt echte Gesamtwerte Fitim 351, Kutay 181, Harald 54, Paddy 48, Roman 14. Vormonatsanzeige entfernt.
+
+### GL-Report visuell – 2026-10-05
+- TypeScript und Vite-Build erfolgreich; bestehender Bundlegrössenhinweis. Zwei Report-Evidence-Regressionstests bestanden.
+- Browser: echte Oktoberwerte sichtbar (314 Sitzungen, 1554 LinkedIn-Impressionen, CHF 174.05 Google-Ads-Ausgaben), Diagrammwechsel Website/LinkedIn geprüft, Bildhighlight Full Service Provider statt Support.
+- Desktop und Mobile 390 geprüft; kein horizontaler Überlauf. Keine neue KI-Analyse oder Reportzustellung erzeugt.
+
+### GL-Hover-Vergleich – 05.10.2026
+TypeScript und Regressionstest für Tagesvergleiche bestanden. Browser zeigt 4. Oktober: 22 Website-Besuche gegenüber 62 am 4. September, −64.52 %. Vorwert null/fehlend, veraltete Werte und laufender Tag werden nicht prozentual bewertet. Positive/negative Veränderungen als grüne/rote Schrift.
+
+GL-Events und kontextbezogene Hinweise: TypeScript bestanden. Geschützter Browser zeigt VMware Cloud Foundation am 29.10.2026 mit Originalbild und 10 Formularantworten / 3 Kunden / 6 Sonio / 1 Partner. Drei Hinweise mit aktuellen Daten und konkreten nächsten Schritten sichtbar geprüft.
+
+### Marketing-Hub – 05.10.2026
+TypeScript, Vite-Build und drei Reporttests bestanden (bekannter Bundlegrössenhinweis). Geschützte Browserprüfung: Monatskennzahlen, Kanalwechsel per Maus/Tastatur, Website-/LinkedIn-/YouTube-Originalbilder und Eventkarte sichtbar. Keine Newsletter-Messwerte für Oktober werden erfunden; LinkedIn HTTP429 bleibt sichtbar. 390px geprüft, scrollWidth=clientWidth=383, kein horizontaler Überlauf. Desktopansicht wiederhergestellt. Keine Veröffentlichung oder neue Agentenanalyse.
+
+Report-Bildprüfung 05.10.2026: 123 vorhandene Sonio-Seitenpfade öffentlich geprüft, 99 Originalmotive gefunden. TypeScript bestanden. Browser: Sales-Startseite, Über Sonio, Karriere, Kontakt, fünf Kampagnenmotive sowie GL-Fachinhalt/Event und Marketing-Website/LinkedIn/YouTube mit erfolgreich geladenen Bildern verifiziert. Newsletter ohne Oktober-Mailing bleibt leer; nicht mit fremdem Motiv befüllt.
+
+Marketing-Überlagerung: TypeScript erfolgreich. Browserauswahl aller drei Kanäle und beider Kennzahlen geprüft; Google/Organic-Linien vorhanden, fehlende LinkedIn-Ads-Messwerte ausdrücklich markiert. Kontrollgrössen nach visueller Prüfung kompakt korrigiert.
+
+### GitHub-Sicherung 05.10.2026
+Vor Commit: vollständige Backend-Suite auf separater temporärer Testdatenbank 139 bestanden; Frontend 35 bestanden; TypeScript, Vite-Build, Ruff und git diff --check erfolgreich. Bekannte Hinweise: Bundlegrösse und zwei Testclient-Deprecations. Geänderte Dateien auf bekannte Secret-Muster geprüft; .env und .local bleiben ignoriert. Sicherung auf bestehendem Design-Branch, kein Pages-Deployment.

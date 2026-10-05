@@ -1,3 +1,6 @@
+import {BenchmarkNote} from './BenchmarkNote';
+import {linkedinAdsBenchmark} from '../benchmarks';
+import {MetricHelp} from './MetricHelp';
 import {RecommendationTeaser} from "./RecommendationTeaser";
 import "../linkedin-ads.css";
 import { PeriodInfo } from "./PeriodInfo";
@@ -53,6 +56,10 @@ const objectives: Record<string, string> = {
   LEAD_GENERATION: "Lead-Generierung",
 };
 const adsHelp: Record<string,string> = {
+ leads: "Abgesendete LinkedIn Lead-Gen-Formulare laut Ads-Reporting. Keine Website-Conversions und noch keine qualifizierten Verkaufschancen. Es werden ausschliesslich aggregierte Zahlen geladen, keine Kontaktdaten.",
+ lead_form_opens: "Wie oft das LinkedIn Lead-Gen-Formular geöffnet wurde. Keine eindeutigen Personen und noch keine Anmeldung.",
+ lead_completion_rate: "Abgesendete LinkedIn Lead-Gen-Formulare geteilt durch Formularöffnungen × 100. Ohne Öffnungen oder vollständige Werte bleibt die Rate unbekannt.",
+ cost_per_lead: "Werbeausgaben geteilt durch abgesendete LinkedIn Lead-Gen-Formulare. Bei null oder unbekannten Leads kein berechenbarer Wert. Keine Aussage über die Qualität der Kontakte.",
  impressions: 'Anzahl der Anzeigeneinblendungen. Mehrere Einblendungen können dieselbe Person betreffen; dies ist keine eindeutige Reichweite.',
  clicks: 'Von LinkedIn gezählte Anzeigenklicks. Je nach Format können auch Interaktionen innerhalb von LinkedIn enthalten sein. Nicht gleich Website-Besuche.',
  ctr: 'LinkedIn-Klicks geteilt durch Impressionen. Die Klickrate beschreibt Resonanz, nicht die Qualität der Website-Besuche. Ziel und Anzeigenformat berücksichtigen.',
@@ -74,6 +81,10 @@ const primaryFields = {
   spend: "Ausgaben",
 };
 const fields = {
+  leads: "Leads (LinkedIn-Formular)",
+  lead_form_opens: "Formularöffnungen",
+  lead_completion_rate: "Formular-Abschlussrate",
+  cost_per_lead: "Kosten / Lead",
   ...primaryFields,
   cpm: "Kosten / 1’000 Einblendungen",
   cost_per_conversion: "Kosten / Zielaktion",
@@ -87,18 +98,23 @@ const fields = {
 const ratio = (a: number | undefined, b: number | undefined, scale = 1) =>
   Number.isFinite(a) && Number.isFinite(b) && b! > 0 ? a! / b! * scale : null;
 const value = (c: Campaign, k: string) => {
+  if (k === "cost_per_lead") return ratio(c.values.spend, c.values.leads);
+  if (k === "lead_completion_rate") return ratio(c.values.leads, c.values.lead_form_opens, 100);
   if (k === "landing_page_ctr") return ratio(c.values.landing_page_clicks, c.values.impressions, 100);
   if (k === "landing_page_cpc") return ratio(c.values.spend, c.values.landing_page_clicks);
   if (k === "cpm") return ratio(c.values.spend, c.values.impressions, 1000);
   if (k === "cost_per_conversion") return ratio(c.values.spend, c.values.conversions);
   return k === "ctr" ? c.ctr : k === "cpc" ? c.cpc : c.values[k];
 };
-const campaignFields = (c: Campaign) => c.objective === "BRAND_AWARENESS" ? {
+const campaignFields = (c: Campaign) => c.objective === "LEAD_GENERATION" ? {
+  impressions: fields.impressions, leads: fields.leads, cost_per_lead: fields.cost_per_lead,
+  lead_form_opens: fields.lead_form_opens, lead_completion_rate: fields.lead_completion_rate, spend: fields.spend,
+} : c.objective === "BRAND_AWARENESS" ? {
   impressions: fields.impressions, clicks: "LinkedIn-Klicks", ctr: fields.ctr,
   landing_page_clicks: fields.landing_page_clicks, cpm: fields.cpm, spend: fields.spend,
 } : primaryFields;
-const moneyKeys = ["spend", "cpc", "landing_page_cpc", "cpm", "cost_per_conversion"];
-const metricValue = (c: Campaign, key: string) => `${number(value(c, key), moneyKeys.includes(key) ? c.currency : "count")}${["ctr", "landing_page_ctr"].includes(key) && value(c,key) != null ? " %" : ""}`;
+const moneyKeys = ["cost_per_lead","spend", "cpc", "landing_page_cpc", "cpm", "cost_per_conversion"];
+const metricValue = (c: Campaign, key: string) => `${number(value(c, key), moneyKeys.includes(key) ? c.currency : "count")}${["ctr", "landing_page_ctr", "lead_completion_rate"].includes(key) && value(c,key) != null ? " %" : ""}`;
 export function LinkedInAdsHero() {
   return <><div className="li-mast"><div><small>Sonio AG</small><h1>LinkedIn Ads Cockpit.</h1></div><span>Marketing · Paid Social</span></div>
     <section className="li-hero"><img src={asset("brand/sonio-blog-header.jpg")} alt="Berglandschaft mit Fahrer und Zielflagge"/><div><h2>Gezielt sichtbar. Wirkung im Blick.</h2><p>Kampagnen verstehen. Marketing gezielt steuern.</p></div></section></>;
@@ -227,7 +243,7 @@ export function AdsCampaigns({ demo, actions }: { demo: boolean; actions?: React
 
       <p className="ads-intro">Sichtbarkeit schaffen, Interesse gewinnen, Ergebnisse einordnen. Jede Kampagne wird anhand ihres Ziels und ihrer eingesetzten Mittel betrachtet.</p>
       {!campaigns.length && <p>Noch keine Kampagnen geladen.</p>}
-      <div className="ads-campaign-list">
+      <MetricHelp label="Kampagnenkennzahlen erklärt" entries={Object.entries(fields).map(([key,label])=>({key,label,text:adsHelp[key]}))}/><div className="ads-campaign-list">
         {displayCampaigns.map((c) => (
           <article
             key={c.id}
@@ -252,7 +268,9 @@ export function AdsCampaigns({ demo, actions }: { demo: boolean; actions?: React
                   </p>
                 </div>
                 <span className="ads-status">
-                  {c.status
+                  {c.status === "ACTIVE" && c.start && c.start > d.end
+                    ? "Geplant"
+                    : c.status
                     ? statuses[c.status] || c.status
                     : "Status unbekannt"}
                 </span>
@@ -264,7 +282,7 @@ export function AdsCampaigns({ demo, actions }: { demo: boolean; actions?: React
               <dl className="ads-primary-kpis">
                 {Object.entries(campaignFields(c)).map(([key, label]) => (
                   <div key={key} className={key === "spend" ? "campaign-cost" : undefined}>
-                    <dt>{label} <PeriodInfo label={`${label} erklärt`}>{adsHelp[key]}</PeriodInfo></dt><dd>{metricValue(c,key)}</dd>
+                    <dt>{label}</dt><dd>{metricValue(c,key)}</dd>{value(c,key) != null && <BenchmarkNote benchmark={linkedinAdsBenchmark(c.objective,key,c.currency)}/>}
                   </div>
                 ))}
               </dl>
@@ -273,14 +291,18 @@ export function AdsCampaigns({ demo, actions }: { demo: boolean; actions?: React
                   ? "Alle Zahlen sind frei erfunden und dienen ausschliesslich der Darstellung."
                   : c.first_activity
                     ? `Gelieferte Aktivität im Zeitraum: ${date(c.first_activity)} bis ${date(c.last_activity)}.`
+                    : c.status === "DRAFT" ? "Entwurf · noch keine Messwerte. Die Kampagne bleibt bereits sichtbar."
+                    : c.start && c.start > d.end ? "Geplanter Start · noch keine Messwerte. Die Kampagne bleibt bereits sichtbar."
                     : "Für die letzten 365 Tage liefert LinkedIn keine Kennzahlen zu dieser Kampagne."}
               </p>
               <details>
                 <summary>Details &amp; Einordnung</summary>
-                <dl className="ads-secondary-kpis">{["clicks", "ctr", "cpc", "landing_page_ctr", "landing_page_cpc", "cpm", "conversions", "cost_per_conversion"].filter(key => !(key in campaignFields(c))).map(key => <div key={key}><dt>{fields[key as keyof typeof fields]} <PeriodInfo label={`${fields[key as keyof typeof fields]} erklärt`}>{adsHelp[key]}</PeriodInfo></dt><dd>{metricValue(c,key)}</dd></div>)}</dl>
+                <dl className="ads-secondary-kpis">{["clicks", "ctr", "cpc", "landing_page_ctr", "landing_page_cpc", "cpm", "conversions", "cost_per_conversion"].filter(key => !(key in campaignFields(c))).map(key => <div key={key}><dt>{fields[key as keyof typeof fields]}</dt><dd>{metricValue(c,key)}</dd>{value(c,key) != null && <BenchmarkNote benchmark={linkedinAdsBenchmark(c.objective,key,c.currency)}/>}</div>)}</dl>
                 <p>Website-Zielaktionen sind die von LinkedIn zugerechneten Website-Conversions. Die konkrete Aktion ist noch nicht verifiziert; deshalb werden sie nicht als Anmeldungen oder Leads bezeichnet. Landingpage-Klicks sind keine nachgewiesenen Website-Sitzungen.</p>
                 <p>
-                  {c.objective === "BRAND_AWARENESS"
+                  {c.objective === "LEAD_GENERATION"
+                    ? "Leads sind abgesendete LinkedIn-Formulare, nicht automatisch qualifizierte Kundenanfragen. Formularöffnungen und Abschlussrate zeigen, wo Interessierte aussteigen; Kosten pro Lead ordnen den Werbeaufwand ein. Website-Zielaktionen bleiben separat."
+                    : c.objective === "BRAND_AWARENESS"
                     ? "Das Ziel ist Markenbekanntheit. Impressionen zeigen die Ausspielung; Klicks und CPC sind ergänzende Signale. Ohne Reichweite und Häufigkeit lässt sich die Bekanntheitswirkung nicht abschliessend beurteilen."
                     : c.objective === "WEBSITE_CONVERSION"
                       ? "Das Ziel sind Website-Conversions. Beurteile die Ergebnisse anhand der definierten Conversion und ihrer Erfassung. Klicks allein zeigen noch keine Zielerreichung."

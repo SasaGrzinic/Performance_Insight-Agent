@@ -62,3 +62,25 @@ def test_pagination_titles_and_missing_values(monkeypatch):
     assert r["pages"][0]["previous"] is None
     assert r["pages"][2]["current"] is None
     assert calls[1]["offset"] == 1
+
+
+def test_sales_includes_profiles_and_services_without_changing_default(monkeypatch):
+    monkeypatch.setattr(g, 'google_token', lambda *args: 'test')
+    def request(*args, **kwargs):
+        body = kwargs['json']
+        rows = []
+        for path in ['/services/managed-services', '/kutay-karaer-verbindet-business-it']:
+            dims = [{'value': path}]
+            vals = [4, 2, 3, 40]
+            if len(body['dimensions']) == 2:
+                dims.append({'value': 'Title'})
+                vals = [4]
+            rows.append({'dimensionValues': dims, 'metricValues': [{'value': str(v)} for v in vals]})
+        return SimpleNamespace(json=lambda: {'rows': rows, 'rowCount': len(rows)})
+    monkeypatch.setattr(g, 'request', request)
+    s = SimpleNamespace(ga4_property_id='123', ga4_refresh_token='test')
+    assert not g.fetch(s, '2026-10', date(2026, 10, 5))['pages']
+    result = g.fetch(s, '2026-10', date(2026, 10, 5), include_all=True)
+    assert len(result['pages']) == 2
+    assert result['start'] == '2026-10-01'
+    assert result['end'] == '2026-10-05'

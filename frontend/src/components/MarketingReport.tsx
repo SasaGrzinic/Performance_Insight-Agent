@@ -1,0 +1,82 @@
+import {MarketingChannelComparison} from './MarketingChannelComparison';
+import {reportPageImage} from '../reportImages';
+import {useContext,useState} from 'react';
+import {useQuery} from '@tanstack/react-query';
+import {LineChart,Line,XAxis,YAxis,Tooltip,ResponsiveContainer,CartesianGrid} from 'recharts';
+import {ArrowUpRight,Image as ImageIcon} from 'lucide-react';
+import {api,number,monthName} from '../api';
+import {reportFact} from '../reportEvidence';
+import {readablePostTitle} from '../comparison';
+import {dailyReportChange} from '../reportDailyComparison';
+import type {Dashboard} from '../types';
+import type {PostsResponse} from './PerformanceExplorer';
+import {ChannelIcon} from './ui';
+import {PeriodInfo} from './PeriodInfo';
+import {overviewMetricHelp} from './MarketingOverview';
+import {ExecutiveEvents} from './ExecutiveEvents';
+import {RecommendationContext} from './RecommendationTeaser';
+import './marketing-report.css';
+
+const signals=[
+ {id:'analytics',key:'engaged_sessions',title:'Website',label:'Engagierte Besuche'},
+ {id:'linkedin_organic',key:'clicks',title:'LinkedIn Organic',label:'LinkedIn-Klicks'},
+ {id:'google_ads',key:'clicks',title:'Google Ads',label:'Anzeigenklicks'},
+ {id:'linkedin',key:'clicks',title:'LinkedIn Ads',label:'Anzeigenklicks'},
+ {id:'youtube',key:'watch_minutes',title:'YouTube',label:'Wiedergabezeit (Min.)'},
+ {id:'mailchimp',key:'unique_clicks',title:'Newsletter',label:'Klickende je Kampagne'},
+];
+type Page={path:string;title:string;url:string;image:string|null;kind?:string;current:Record<string,number|null>|null};
+type Pages={pages:Page[];warning?:string;thresholded?:boolean;updated_at:string};
+type Video={id:string;title:string;image_url:string|null;published_at:string;metrics:Record<string,number|null>|null;lifetime?:Record<string,number>};
+type Videos={videos:Video[];warning?:string;updated_at:string};
+type Mailing={id:string;title:string;subject:string;send_time:string;test:boolean;image_url?:string|null;values:Record<string,number|null>};
+type Mailings={groups:{name:string;mailings:Mailing[]}[];status:string;last_success:string|null};
+const known=(v:unknown):v is number=>typeof v==='number'&&Number.isFinite(v);
+function Picture({src,title}:{src?:string|null;title:string}){
+ const [failed,setFailed]=useState(false);
+ return src&&!failed?<img src={src} alt={title} loading="lazy" onError={()=>setFailed(true)}/>:<div className="mr-picture-empty"><ImageIcon size={30}/><span>Kein Bild verfügbar</span></div>;
+}
+function Highlight({channel,title,src,value,label,period,url,empty,warning}:{channel:string;title?:string;src?:string|null;value?:number|null;label:string;period:string;url?:string;empty:string;warning?:string}){
+ return <article className="mr-highlight"><div className="mr-highlight-image"><Picture key={src} src={src} title={title||channel}/><span>{channel}</span></div><div className="mr-highlight-copy"><small>{period}</small><h4>{title||empty}</h4>{title&&<p className="mr-highlight-value"><strong>{number(value)}</strong> {label}</p>}{warning&&<p className="mr-warning">{warning}</p>}{url&&<a href={url} target="_blank" rel="noreferrer">Original ansehen <ArrowUpRight size={16}/></a>}</div></article>;
+}
+export function MarketingReport({data}:{data:Dashboard}){
+ const [selection,setSelection]=useState(0);
+ const [compareChannels,setCompareChannels]=useState(false);
+ const context=useContext(RecommendationContext);
+ const enabled=!data.demo;
+ const pages=useQuery({queryKey:['sales-pages',data.month],queryFn:()=>api<Pages>(`/sales-report/pages?month=${data.month}`),enabled,staleTime:3600000});
+ const posts=useQuery({queryKey:['sales-organic',data.month],queryFn:()=>api<PostsResponse>(`/linkedin/posts?month=${data.month}`),enabled,staleTime:3600000});
+ const videos=useQuery({queryKey:['youtube-published-videos',data.month,false],queryFn:()=>api<Videos>(`/youtube/videos?month=${data.month}`),enabled,staleTime:3600000});
+ const mail=useQuery({queryKey:['mailchimp-campaigns',false],queryFn:()=>api<Mailings>('/mailchimp/campaigns'),enabled,staleTime:3600000});
+ const previous=useQuery({queryKey:['dashboard',data.demo,data.comparison_month],queryFn:()=>api<Dashboard>(`${data.demo?'/demo':''}/dashboard?month=${data.comparison_month}`)});
+ const page=(pages.data?.pages||[]).map(p=>({...p,image:reportPageImage(p.path,p.image),catalogImage:p.image})).filter(p=>!/^\/(?:fr-ch\/)?services\/support(?:\/|$)/i.test(p.path)&&(p.kind||p.catalogImage)&&known(p.current?.screenPageViews)&&p.current.screenPageViews>0).sort((a,b)=>b.current!.screenPageViews!-a.current!.screenPageViews!)[0];
+ const post=(posts.data?.posts||[]).filter(p=>known(p.metrics.clicks)).sort((a,b)=>b.metrics.clicks-a.metrics.clicks)[0];
+ const video=(videos.data?.videos||[]).filter(v=>known(v.lifetime?.views??v.metrics?.views)).sort((a,b)=>(b.lifetime?.views??b.metrics?.views??0)-(a.lifetime?.views??a.metrics?.views??0))[0];
+ const mailing=(mail.data?.groups.flatMap(g=>g.mailings)||[]).filter(m=>!m.test&&new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Zurich',year:'numeric',month:'2-digit'}).format(new Date(m.send_time))===data.month&&known(m.values.unique_clicks)).sort((a,b)=>b.values.unique_clicks!-a.values.unique_clicks!)[0];
+ const selected=signals[selection], channel=data.channels.find(c=>c.id===selected.id), fact=reportFact(data,selected.id,selected.key);
+ const seriesKey=selected.id+'.'+selected.key;
+ const trend=data.series.map(p=>({day:p.day,date:p.date,value:p[seriesKey]??null,previous:previous.data?.series.find(x=>x.day===p.day)?.[seriesKey]??null}));
+ const missing=signals.filter(s=>!known(data.channels.find(c=>c.id===s.id)?.values[s.key]));
+ const declining=signals.map(s=>({...s,fact:reportFact(data,s.id,s.key)})).filter(s=>s.fact.direction==='down'&&s.fact.change);
+ const upcoming=data.channels.find(c=>c.id==='events')?.event_summary;
+ const actions=[
+ {tag:missing.length?'Datenbasis · zuerst':'Entwicklung · zuerst',title:missing.length?'Offene Kanalwerte klären.':declining.length?`${declining[0].title} gezielt einordnen.`:'Die Entwicklung absichern.',evidence:missing.length?`Für ${missing.map(s=>s.title).join(', ')} fehlt die ausgewählte Monatskennzahl.`:declining.length?`${declining[0].label}: ${declining[0].fact.value}; ${declining[0].fact.change}.`:'Für die ausgewählten Kennzahlen ist aktuell kein belastbarer Rückgang ausgewiesen.',action:missing.length?'Zuerst bestätigen, ob in diesen Kanälen im Monat Aktivitäten liefen. Falls ja, den Abrufstatus prüfen und aktualisieren. Ohne Messwerte keine Leistung bewerten.':'Den betroffenen Kanal öffnen und Umfang der Aktivitäten sowie einzelne Inhalte mit der Vorperiode abgleichen. Eine Ursache lässt sich aus der Summe nicht ablesen.'},
+ {tag:'Inhalte · nächste Redaktion',title:page?'Das führende Thema konkret weiterführen.':'Inhaltsranking vervollständigen.',evidence:page?`«${page.title}»: ${number(page.current?.screenPageViews)} Seitenaufrufe im Monat.`:'Kein belastbares Website-Inhaltshighlight vorhanden.',action:page?'Für dieses Thema einen konkreten Folgebeitrag entwerfen. Vor Freigabe die Interaktion der Seite und den Bedarf aus Sales-Gesprächen abgleichen; Aufrufe allein belegen keine Nachfrage.':'Analytics-Seitendaten laden und erst danach ein Thema für die nächste Redaktion priorisieren.'},
+ {tag:'Distribution · nächster Test',title:post?'Die stärkste Beitragsidee aufnehmen.':'Einen messbaren Inhaltstest vorbereiten.',evidence:post?`«${readablePostTitle(post.title)}»: ${number(post.metrics.clicks)} Klicks seit Veröffentlichung.`:'Für Beiträge aus diesem Monat liegt noch kein Klickranking vor.',action:post?'Thema und Einstiegsbotschaft dieses Beitrags für einen Folgepost nutzen. Nur eine Botschaft variieren und Ergebnisse nach gleicher Laufzeit vergleichen; bestehende Lebenszeitwerte sind kein fairer A/B-Test.':'Erst die Beitragsmesswerte ergänzen. Dann einen Beitrag und eine alternative Einstiegsbotschaft als klar abgegrenzten Test auswählen.'},
+ {tag:'Aktivierung · nächster Kontakt',title:upcoming?.event_count?'Eventkommunikation mit Sales abstimmen.':'Vom Klick zum nächsten Schritt führen.',evidence:upcoming?.event_count?`${number(upcoming.event_count)} ${upcoming.event_count===1?'Event':'Events'} im Monat; ${number(upcoming.values.customers)} Kunden im erfassten Eventbestand.`:`${reportFact(data,'google_ads','clicks').value} Google-Ads-Klicks im Monat; Klicks sind noch keine Anfragen.`,action:upcoming?.event_count?'Für jedes unten aufgeführte Event Termin und aktuellen Anmeldestand abgleichen. Bei bevorstehenden Events den Reminder, bei vergangenen Events den passenden Follow-up-Inhalt mit Sales festlegen.':'Die Landingpage der klickstärksten Kampagne öffnen. Handlungsaufforderung und vorhandene Anfrage-Messung kontrollieren, bevor aus Klicks ein Erfolg abgeleitet wird.'},
+ ];
+ return <div className="marketing-report">
+ <div className="mr-intro"><div><span>Marketing im Fokus</span><h3>Resonanz sehen.<br/>Den nächsten Schritt kennen.</h3><p>Kanäle, Inhalte und konkrete Aufgaben – zusammen im Blick.</p></div><div className="mr-period"><strong>{monthName(data.month)}</strong><span>{data.partial?'Laufender Monat · Zwischenstand':'Abgeschlossener Monat'}</span><PeriodInfo label="Marketing-Hub: Datenbasis">Obere Kennzahlen und Diagramm zeigen Monatswerte. Inhaltshighlights zeigen je nach Quelle Monats- oder Gesamtwerte, direkt an der Kachel gekennzeichnet. Keine Addition unterschiedlicher Kanalmetriken. {data.demo?'Beispieldaten; keine geschützten Detailabfragen.':'Letzter geladener Datenstand, kein Echtzeitversprechen.'}</PeriodInfo></div></div>
+ <div className="mr-signals">{signals.map((s,i)=>{const f=reportFact(data,s.id,s.key),c=data.channels.find(c=>c.id===s.id);return <article key={s.id} className={selection===i?'is-selected':''}><div className="mr-signal-title"><ChannelIcon id={s.id} size={24}/><span>{s.title}</span><PeriodInfo label={`${s.title}: ${s.label} erklärt`}>{c?overviewMetricHelp(c,s.key):'Kein Kanalwert vorhanden.'} {f.note} Stand: {c?.last_success?new Date(c.last_success).toLocaleString('de-CH'):'nicht vorhanden'}.</PeriodInfo></div><button aria-pressed={selection===i} onClick={()=>{setSelection(i);setCompareChannels(false)}} aria-label={`Verlauf ${s.title}`}><span>{s.label}</span><strong>{f.value}</strong><small className={f.direction}>{f.change?.replace(' gegenüber dem vergleichbaren Vormonatszeitraum','')||'Vergleich offen'}</small></button></article>})}</div>
+ <section className="mr-chart"><header><div><small>{compareChannels?'Kanalvergleich · Tageswerte':selected.title+' · '+selected.label}</small><h3>Wie entwickelt sich die Resonanz?</h3></div><PeriodInfo label="Marketing-Verlauf erklärt">Kanal oben auswählen. Tageswerte und gleicher Kalendertag des Vormonats; keine Monatssummen. Eine Lücke bedeutet fehlende Daten. Kein Prozentvergleich bei Vorwert null, veraltetem Datenstand oder laufendem Tag.</PeriodInfo></header><div className="mr-chart-modes" role="group" aria-label="Diagrammansicht"><button aria-pressed={!compareChannels} onClick={()=>setCompareChannels(false)}>Einzelkanal & Vormonat</button><button aria-pressed={compareChannels} onClick={()=>setCompareChannels(true)}>Kanäle & Kennzahlen überlagern</button></div>{compareChannels?<MarketingChannelComparison data={data} previous={previous.data}/>:<><div className="mr-chart-legend"><span>Aktueller Monat</span><span>Vormonat</span></div><div className="mr-chart-canvas">{trend.some(p=>known(p.value))?<ResponsiveContainer width="100%" height="100%"><LineChart data={trend} margin={{left:0,right:20,top:12,bottom:8}} accessibilityLayer><CartesianGrid vertical={false} stroke="#dce5ee"/><XAxis dataKey="day" axisLine={false} tickLine={false}/><YAxis width={58} axisLine={false} tickLine={false}/><Tooltip content={({active,payload})=>{const p=payload?.[0]?.payload as typeof trend[number]|undefined;if(!active||!p)return null;const blocked=previous.isError||previous.isPending||channel?.comparisons?.[selected.key]?.stale||(data.partial&&p.date===data.period_end);const delta=dailyReportChange(p.value,p.previous,!blocked);return <div className="mr-tooltip"><b>{p.day}. {monthName(data.month)}</b><p>{selected.label}: {number(known(p.value)?p.value:null,channel?.units[selected.key])}</p><p>Vormonat, gleicher Tag: {number(known(p.previous)?p.previous:null,channel?.units[selected.key])}</p><strong className={delta!=null&&delta>0?'up':delta!=null&&delta<0?'down':''}>{delta===null?'Kein belastbarer Tagesvergleich':`${delta>0?'+':''}${number(delta)} %`}</strong></div>}}/><Line dataKey="previous" stroke="#91a2b9" strokeDasharray="5 5" dot={false} connectNulls={false}/><Line dataKey="value" stroke="#0075d9" strokeWidth={3} dot={{r:3}} connectNulls={false}/></LineChart></ResponsiveContainer>:<p>Für {selected.title} liegen keine Tageswerte vor.</p>}</div><p className="mr-chart-note">{fact.note}{previous.isError?' Vormonatsdaten konnten nicht geladen werden.':''}</p></>}</section>
+ <section className="mr-content"><header><div><small>Die Inhalte hinter den Zahlen</small><h3>Was Aufmerksamkeit gewinnt.</h3></div><PeriodInfo label="Inhaltshighlights erklärt">Je Quelle der Inhalt mit dem höchsten verfügbaren Wert in der Monatsauswahl. Website: Seitenaufrufe im Monat, erkannte Fachinhalte ohne Support / Helpdesk. LinkedIn und YouTube: im Monat veröffentlicht, aktueller Gesamtstand seit Veröffentlichung. Newsletter: im Monat versendet, Gesamtstand der Kampagne. Keine kanalübergreifende Rangliste; unterschiedliche Laufzeiten und Kennzahlen. Fehlende Werte bleiben offen.</PeriodInfo></header>
+ <div className="mr-highlights">
+ <Highlight channel="Website" title={page?.title} src={page?.image} value={page?.current?.screenPageViews} label="Seitenaufrufe" period="Aufrufe im Berichtsmonat" url={page?.url} empty={pages.isLoading?'Inhalte werden geladen …':'Kein Inhalt mit Monatswerten'} warning={pages.isError?'Abruf fehlgeschlagen':pages.data?.warning||(pages.data?.thresholded?'Daten durch Google begrenzt':undefined)}/>
+ <Highlight channel="LinkedIn Organic" title={post?readablePostTitle(post.title):undefined} src={post?.image_url} value={post?.metrics.clicks} label="LinkedIn-Klicks" period="Im Monat veröffentlicht · Gesamt seit Veröffentlichung" url={post?.url} empty={posts.isLoading?'Beiträge werden geladen …':'Keine Beiträge mit Klickwerten'} warning={posts.isError?'Abruf fehlgeschlagen':posts.data?.status!=='connected'?posts.data?.message:undefined}/>
+ <Highlight channel="YouTube" title={video?.title} src={video?.image_url} value={video?.lifetime?.views??video?.metrics?.views} label="Videoaufrufe" period="Im Monat veröffentlicht · Gesamt seit Veröffentlichung" url={video?`https://www.youtube.com/watch?v=${encodeURIComponent(video.id)}`:undefined} empty={videos.isLoading?'Videos werden geladen …':'Keine Videos mit Messwerten'} warning={videos.isError?'Abruf fehlgeschlagen':videos.data?.warning}/>
+ <Highlight channel="Newsletter" title={mailing?.subject||mailing?.title} src={mailing?.image_url} value={mailing?.values.unique_clicks} label="Klickende in dieser Kampagne" period="Im Monat versendet · Gesamtstand der Kampagne" empty={mail.isLoading?'Mailings werden geladen …':'Keine Mailings mit Klickwerten'} warning={mail.isError?'Abruf fehlgeschlagen':mail.data?.status&&mail.data.status!=='connected'?'Letzten Abrufstatus im Newsletter-Kanal prüfen':undefined}/>
+ </div>{data.demo&&<p className="mr-warning">Die öffentliche Demo enthält keine geschützten Inhaltshighlights.</p>}</section>
+ <section className="mr-actions"><header><div><small>Vom Signal zur Aufgabe</small><h3>Vier nächste Schritte.</h3></div><PeriodInfo label="Priorisierung der nächsten Schritte">Regelbasierter Arbeitsvorschlag: fehlende Daten zuerst, danach Inhalt, Distribution und Aktivierung. Keine automatisch generierte KI-Analyse und kein nachgewiesener Wirkungszusammenhang. Hinweise vor Umsetzung anhand der verlinkten Kanalinformationen validieren.</PeriodInfo></header><div className="mr-actions-grid">{actions.map((a,i)=><article key={a.tag}><span className="mr-action-order">{String(i+1).padStart(2,'0')}</span><small>{a.tag}</small><h4>{a.title}</h4><p className="mr-evidence">{a.evidence}</p><p>{a.action}</p></article>)}</div>{context&&<button className="button secondary" onClick={()=>context.onAll([])}>Alle Empfehlungen öffnen <ArrowUpRight size={16}/></button>}</section>
+ <ExecutiveEvents month={data.month} demo={data.demo}/>
+ </div>;
+}

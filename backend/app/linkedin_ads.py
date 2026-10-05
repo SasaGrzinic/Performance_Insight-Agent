@@ -125,7 +125,7 @@ def fetch(start, end, s, *, include_campaigns=False):
                 "end": {"year": last.year, "month": last.month, "day": last.day},
             },
             "accounts": [account_urn],
-            "fields": "dateRange,pivotValues,impressions,clicks,landingPageClicks,externalWebsiteConversions,costInLocalCurrency",
+            "fields": "dateRange,pivotValues,impressions,clicks,landingPageClicks,externalWebsiteConversions,costInLocalCurrency,oneClickLeads,oneClickLeadFormOpens",
         }
         data = request("GET", linkedin_url("adAnalytics", params), headers=headers).json()
         elements = data.get("elements", [])
@@ -153,6 +153,8 @@ def fetch(start, end, s, *, include_campaigns=False):
                 ("clicks", "clicks"),
                 ("landingPageClicks", "landing_page_clicks"),
                 ("externalWebsiteConversions", "conversions"),
+                ("oneClickLeads", "leads"),
+                ("oneClickLeadFormOpens", "lead_form_opens"),
                 ("costInLocalCurrency", "spend"),
             ]:
                 if raw in item:
@@ -179,12 +181,12 @@ def fetch(start, end, s, *, include_campaigns=False):
     return (records, account, known) if include_campaigns else records
 
 
-def campaign_summary(db, s, today):
+def campaign_summary(db, s, today, start=None):
     from sqlalchemy import select
 
     from .models import ChannelState, LinkedInCampaign, Metric
 
-    start = today - timedelta(days=364)
+    start = start or today - timedelta(days=364)
     account = (
         f"urn:li:sponsoredAccount:{number_id(s.linkedin_ad_account_id)}"
         if s.linkedin_ad_account_id

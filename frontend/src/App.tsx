@@ -1,3 +1,5 @@
+import {ReportPreview, ReportsHero} from './components/ReportPreview';
+import {ComparisonInfo} from "./components/ComparisonInfo";
 import { Events } from "./components/Events";
 import {SearchInsights,SearchHero} from "./components/SearchInsights";
 import { GoogleReconnect } from "./components/GoogleReconnect";
@@ -545,7 +547,7 @@ function App() {
               </section>
               <p className="marketing-pitch">Der Marketing Performance &amp; Insight Agent bündelt die Kanalzahlen, macht Entwicklungen verständlich und unterstützt bei der Priorisierung der nächsten Schritte – für weniger Reporting-Aufwand und fundierte Marketingentscheidungen.</p>
             </>
-          ) : view === "search" ? <SearchHero/> : view === "channel-directory" ? <><div className="marketing-mast"><h1>Marketingkanäle.</h1></div><section className="marketing-hero"><img src={asset("brand/sonio-blog-header.jpg")} alt="Berglandschaft mit Fahrer und Zielflagge"/><div><h2>Alle Kanäle. Klar im Blick.</h2><p>Entwicklungen erkennen. Gezielt tiefer einsteigen.</p></div></section><p className="directory-intro">Die Marketingkanäle auf einen Blick: Die wichtigsten Monatszahlen und ihre Entwicklung zeigen, wo sich ein genauerer Blick lohnt. Im jeweiligen Kanal stehen weitere Kennzahlen, Inhalte und vertiefte Auswertungen bereit.</p></> : view === "channels" && channel === "events" ? <><div className="marketing-mast"><h1>Events.</h1></div><section className="marketing-hero"><img src={asset("brand/sonio-blog-header.jpg")} alt="Sonio-Berglandschaft mit Zielflagge"/><div><h2>Begegnungen, die verbinden.</h2><p>Events und Webinare. Resonanz und Publikum im Blick.</p></div></section></> : view === "channels" && channel === "google_ads" ? <GoogleAdsHero /> : view === "channels" && channel === "mailchimp" ? <MailchimpHero /> : view === "channels" && channel === "analytics" ? <AnalyticsHero /> : view === "videos" ? <VideoInsightsHero /> : view === "channels" && channel === "linkedin_organic" ? <LinkedInHero /> : view === "channels" && channel === "linkedin" ? <LinkedInAdsHero /> : view === "channels" && channel === "youtube" ? <YouTubeHero /> : (
+          ) : view === "search" ? <SearchHero/> : view === "channel-directory" ? <><div className="marketing-mast"><h1>Marketingkanäle.</h1></div><section className="marketing-hero"><img src={asset("brand/sonio-blog-header.jpg")} alt="Berglandschaft mit Fahrer und Zielflagge"/><div><h2>Alle Kanäle. Klar im Blick.</h2><p>Entwicklungen erkennen. Gezielt tiefer einsteigen.</p></div></section><p className="directory-intro">Die Marketingkanäle auf einen Blick: Die wichtigsten Monatszahlen und ihre Entwicklung zeigen, wo sich ein genauerer Blick lohnt. Im jeweiligen Kanal stehen weitere Kennzahlen, Inhalte und vertiefte Auswertungen bereit.</p></> : view === "channels" && channel === "events" ? <><div className="marketing-mast"><h1>Events.</h1></div><section className="marketing-hero"><img src={asset("brand/sonio-blog-header.jpg")} alt="Sonio-Berglandschaft mit Zielflagge"/><div><h2>Begegnungen, die verbinden.</h2><p>Events und Webinare. Resonanz und Publikum im Blick.</p></div></section></> : view === "channels" && channel === "google_ads" ? <GoogleAdsHero /> : view === "channels" && channel === "mailchimp" ? <MailchimpHero /> : view === "channels" && channel === "analytics" ? <AnalyticsHero /> : view === "reports" ? <ReportsHero /> : view === "videos" ? <VideoInsightsHero /> : view === "channels" && channel === "linkedin_organic" ? <LinkedInHero /> : view === "channels" && channel === "linkedin" ? <LinkedInAdsHero /> : view === "channels" && channel === "youtube" ? <YouTubeHero /> : (
             <div className="page-intro photographic-intro">
               {
                 <svg
@@ -629,8 +631,6 @@ function App() {
                               ? "Empfehlungen nach Kanälen und Themenbereichen bündeln, nächste Schritte priorisieren und gezielt umsetzen."
                             : view === "insights"
                               ? "Nachvollziehbare Interpretationen. Konkrete Handlungsempfehlungen."
-                              : view === "reports"
-                                ? "Alle Kennzahlen und Empfehlungen als nachvollziehbarer Monatsstand."
                                 : view === "team"
                                   ? "Team einladen und Zugriff auf Kennzahlen verwalten."
                                   : "Kennzahlen, Datenaktualisierung und automatisches Reporting."}
@@ -683,7 +683,7 @@ function App() {
               <>
                 {view === "overview" && (
                   <>
-                    <OverviewHighlights dashboard={d} periodControl={<label className="overview-period-select"><CalendarDays size={16} aria-hidden="true"/><select aria-label="Monat der Übersicht" value={month} onChange={e=>setMonth(e.target.value)}>{Array.from({length:12},(_,i)=>{const [y,m]=currentMonth.split('-').map(Number);const value=new Date(Date.UTC(y,m-1-i,1)).toISOString().slice(0,7);return <option key={value} value={value}>{monthName(value)}</option>})}{month < new Date(Date.UTC(Number(currentMonth.slice(0,4)),Number(currentMonth.slice(5,7))-12,1)).toISOString().slice(0,7) && <option value={month}>{monthName(month)}</option>}</select><PeriodInfo>{month===currentMonth?'Aktueller Monat bis zum letzten verfügbaren Datenstand.':'Monatswerte für den ausgewählten Zeitraum.'} Kennzahlen, Vergleich und CSV folgen dieser Auswahl. Fehlende Werte werden nicht durch ältere Zahlen ersetzt.</PeriodInfo></label>} />
+                    <OverviewHighlights dashboard={d} periodControl={<label className="overview-period-select"><CalendarDays size={16} aria-hidden="true"/><select aria-label="Monat der Übersicht" value={month} onChange={e=>setMonth(e.target.value)}>{Array.from({length:12},(_,i)=>{const [y,m]=currentMonth.split('-').map(Number);const value=new Date(Date.UTC(y,m-1-i,1)).toISOString().slice(0,7);return <option key={value} value={value}>{monthName(value)}</option>})}{month < new Date(Date.UTC(Number(currentMonth.slice(0,4)),Number(currentMonth.slice(5,7))-12,1)).toISOString().slice(0,7) && <option value={month}>{monthName(month)}</option>}</select><PeriodInfo label="Monatsauswahl und Vormonatsvergleich erklärt">Die Veränderung zum Vormonat basiert auf gleich langen, verfügbaren Zeiträumen – beispielsweise 1.–3. Oktober gegenüber 1.–3. September. Der Datenstand kann je Kanal abweichen. Die angezeigte Gesamtzahl kann bereits neuere Daten enthalten. Den genauen Zeitraum und die Vergleichswerte findest du bei der jeweiligen Kennzahl. Bei Datenlücken wird die Tendenz ausgesetzt; bei einem fehlgeschlagenen Abruf bleibt der letzte erfolgreiche Stand des ausgewählten Monats sichtbar.</PeriodInfo></label>} />
                     <ChannelOverview
                       actions={
                         <div className="overview-channel-actions">
@@ -837,10 +837,11 @@ function App() {
                                     label,
                                     value: selected.values[key] ?? null,
                                     previous: selected.previous[key] ?? null,
+                                    comparison: selected.comparisons?.[key],
                                     unit: selected.units[key] || "count",
                                     target: null,
                                     change: change(
-                                      selected.values[key],
+                                      selected.comparison_values ? selected.comparison_values[key] : selected.values[key],
                                       selected.previous[key],
                                     ),
                                   }}
@@ -1128,7 +1129,7 @@ function KPICard({
       <strong className="kpi-value">{number(k.value, k.unit)}</strong>
       <div className="kpi-comparison">
         <Change value={k.change} />
-        {k.channel === "analytics" && !onClick && <AnalyticsInfo metric="comparison" label="Entwicklung zur Vorperiode" monthly/>}
+        {k.channel === "analytics" && !onClick && !k.comparison && <AnalyticsInfo metric="comparison" label="Entwicklung zur Vorperiode" monthly/>}
         <span>
           {comparisonMonth
             ? `gegenüber ${monthName(comparisonMonth)}${comparisonEnd ? ` bis ${Number(comparisonEnd.slice(8))}.` : ""}`
@@ -1138,6 +1139,7 @@ function KPICard({
           Vorperiode: {number(k.previous, k.unit)}
         </span>
       </div>
+      <ComparisonInfo comparison={k.comparison}/>
       {k.target !== null && (
         <span className="small muted">Ziel: {number(k.target, k.unit)}</span>
       )}
@@ -1727,34 +1729,14 @@ function Reports({
     : reports.data || [];
   return (
     <>
-      <div className="schedule-banner">
-        <div className="schedule-visual">
-          <CalendarDays size={27} />
-          <strong>03</strong>
-        </div>
-        <div>
-          <h2>Der Rückblick kommt automatisch.</h2>
-          <p>
-            Jeden 3. um {String(hour).padStart(2, "0")}:00 Uhr ({timezone}). Der
-            vollständige Vormonat wird vor der Reporterstellung erneut
-            abgerufen.
-          </p>
-          <span className="small muted">
-            E-Mail-Zustellung wird aktiv, sobald Empfänger und Mailversand
-            eingerichtet sind.
-          </span>
-        </div>
-        <span className="outline-tag">
-          <Clock3 size={14} />
-          Monatlich
-        </span>
-      </div>
+      <ReportPreview data={data}/>
+      <details className="report-schedule"><summary>Monatsrhythmus &amp; Zustellung</summary><p>Vorgesehen am 3. um {String(hour).padStart(2,"0")}:00 Uhr ({timezone}) für den Vormonat. Automatische Läufe benötigen den laufenden Scheduler; E-Mail-Zustellung benötigt konfigurierte Empfänger und Mailversand. Die drei neuen Perspektiven sind zunächst Inhaltsvorschauen. Das Archiv speichert weiterhin den bisherigen gemeinsamen Monatsreport.</p></details>
       <section className="panel">
         <div className="panel-heading">
           <div>
             <h2>Report-Archiv</h2>
             <p>
-              Gespeicherte Monatsstände mit Interpretation und Empfehlungen.
+              Gemeinsame Monatsstände. Die drei neuen Report-Perspektiven sind oben als Vorschau verfügbar.
             </p>
           </div>
           <button
@@ -1763,7 +1745,7 @@ function Reports({
             onClick={onCreate}
           >
             <Plus size={16} />
-            Report erstellen
+            Monatsstand speichern
           </button>
         </div>
         {reports.isError ? (

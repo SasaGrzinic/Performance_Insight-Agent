@@ -1,0 +1,9 @@
+.metric-help{margin:12px 0 20px;color:#173d62;font-size:13px;max-width:760px}
+.metric-help>summary{cursor:pointer;width:fit-content;font-weight:600;padding:8px 0}
+.metric-help>summary svg{vertical-align:middle;margin:0 6px 2px 2px}
+.metric-help>summary:focus-visible{outline:2px solid #0075d9;outline-offset:3px;border-radius:4px}
+.metric-help-content{background:#e8f3ff;border-radius:12px;padding:16px;display:grid;grid-template-columns:auto minmax(160px,1fr);gap:10px 16px;align-items:center}
+.metric-help-content label{font-weight:600}
+.metric-help-content select{font:inherit;color:inherit;background:#fff;border:1px solid #8baecb;border-radius:6px;padding:8px;min-width:0;max-width:100%}
+.metric-help-content p{grid-column:1/-1;margin:0;line-height:1.6;color:inherit}
+@media(max-width:520px){.metric-help-content{grid-template-columns:minmax(0,1fr)}}

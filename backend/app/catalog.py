@@ -80,10 +80,10 @@ CHANNELS = [
     {
         "id": "events",
         "name": "Events",
-        "type": "Word-Anmeldelisten",
+        "type": "Forms & Zoom · Event-Gesamtstände",
         "color": "#7f74c0",
         "primary": "registrations",
-        "fields": {"registrations": "Anmeldungen"},
+        "fields": {"registrations": "Bestätigte Anmeldungen", "responses": "Formularantworten", "attendees": "Zoom-Teilnahme-Einträge", "recording_views": "Aufzeichnungsaufrufe", "employees": "Sonio", "partners": "Partner / Hersteller", "customers": "Kunden"},
     },
     {
         "id": "qr",

@@ -21,7 +21,9 @@ def test_metrics_and_asset_attribution(monkeypatch):
 
     def request(*args, **kwargs):
         q = kwargs["json"]["query"]
-        if "FROM campaign " in q:
+        if "SELECT campaign.id, segments.date" in q:
+            rows = [{"campaign": {"id": "1"}, "segments": {"date": "2026-08-01"}, "customer": {"currencyCode": "CHF"}, "metrics": {"clicks": "5", "costMicros": "1000000"}}]
+        elif "FROM campaign " in q:
             rows = [
                 {
                     "campaign": {
@@ -74,6 +76,9 @@ def test_metrics_and_asset_attribution(monkeypatch):
     assert (c["spend"], c["ctr"], c["cpc"], c["cpa"], c["conversion_rate"]) == (20, 10, 2, 10, 10)
     assert len(c["creatives"]) == 1 and c["creatives"][0]["image"] == "https://example.com/a.jpg"
     assert r["start"] == "2026-09-01"
+    assert r["comparison_data"]["daily"][0]["clicks"] == 5
+    assert r["comparison_data"]["daily"][0]["conversions"] == 0
+    assert r["comparison_data"]["previous_start"] == "2026-08-01"
 
 
 def test_reject_other_account_before_network(monkeypatch):

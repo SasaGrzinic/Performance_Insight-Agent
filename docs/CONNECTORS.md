@@ -303,3 +303,26 @@ erneuert den Abruf, Fehler erhalten den letzten erfolgreichen Stand mit Warnung.
 Die öffentliche Demo ruft keine Live-Daten dieser Bereiche ab. Die UI merkt sich
 je Bereich den Veröffentlichungszeitraum und zeigt Originalbilder, Bereichsheader,
 Einzelseitenwahl sowie aufklappbare Herkunft/Geo/Aktionen im bestehenden Design.
+
+### LinkedIn Ads: Lead-Generierung und geplante Kampagnen (05.10.2026)
+
+Der Kampagnenfinder wird ohne Status-/Datumsfilter vollständig paginiert. Auch
+Entwürfe und zukünftige Kampagnen werden gespeichert und ohne Messwerte angezeigt.
+Der 365-Tage-Zeitraum begrenzt nur Messwerte. Ein zukünftiger Start bei ACTIVE wird
+als «Geplant» angezeigt; DRAFT bleibt «Entwurf». Es werden keine Kampagnen angelegt,
+aktiviert oder verändert.
+
+Ads-Reporting lädt zusätzlich `oneClickLeads` → `leads` und
+`oneClickLeadFormOpens` → `lead_form_opens`. LEAD_GENERATION-Kampagnen zeigen
+Impressionen, Leads (LinkedIn-Formular), Kosten/Lead, Formularöffnungen,
+Formular-Abschlussrate und Ausgaben. CPL = Ausgaben/Leads; Abschlussrate =
+Leads/Öffnungen × 100. Fehlende oder nicht berechenbare Werte bleiben «—»;
+echte gelieferte Nullen bleiben null. CSV-Auswahl enthält die neuen Felder.
+Website-Conversions bleiben getrennt. Keine Kontaktdaten, keine Lead-Sync-API,
+keine weiteren Berechtigungen angefordert. Leads sind noch keine qualifizierten
+Verkaufschancen. Sponsored-Messaging-Sondermetriken werden nicht hinzugerechnet.
+
+Quelle: https://learn.microsoft.com/en-us/linkedin/marketing/integrations/ads-reporting/ads-reporting-schema
+Live-Kampagnenfinder am 05.10.2026 für Sonio-Konto 514253005: fünf bekannte Kampagnen,
+noch keine LEAD_GENERATION-Kampagne, kein Entwurf mit zukünftiger Laufzeit geliefert.
+Eine neue Kampagne kann erst mit ihrer tatsächlichen API-Metadatenlieferung erscheinen.

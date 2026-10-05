@@ -5,6 +5,7 @@ import {
   X,
   ArrowUpRight,
   ArrowDownRight,
+  Minus,
   Search,
   Mail,
   Play,
@@ -92,11 +93,11 @@ export function ChannelIcon({ id, size = 18 }: { id: string; size?: number }) {
   );
 }
 export function Change({ value }: { value: number | null }) {
-  return value === null ? (
+  return value === null || !Number.isFinite(value) ? (
     <span className="muted small">Kein Vergleich</span>
   ) : (
-    <span className={"change " + (value < 0 ? "negative" : "positive")}>
-      {value < 0 ? <ArrowDownRight size={14} /> : <ArrowUpRight size={14} />}{" "}
+    <span className={"change " + (value < 0 ? "negative" : value > 0 ? "positive" : "neutral")}>
+      {value < 0 ? <ArrowDownRight size={14} /> : value > 0 ? <ArrowUpRight size={14} /> : <Minus size={14} />}{" "}
       {value > 0 ? "+" : ""}
       {number(value, "%")} %
     </span>

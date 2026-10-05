@@ -39,6 +39,10 @@ def enqueue(db, kind, payload, dedupe):
 def sync_channel(db, channel, start, end):
     if db.bind.dialect.name == "postgresql":
         db.execute(text("SELECT pg_advisory_xact_lock(hashtext(:key))"), {"key": "sync:" + channel})
+    if channel == "events":
+        from .zoom_events import configured, sync
+        if configured(get_settings()):
+            return sync(db, get_settings())["status"] == "connected"
     state = db.get(ChannelState, channel)
     if not state:
         state = ChannelState(channel=channel)
@@ -106,6 +110,17 @@ def sync_channel(db, channel, start, end):
                     db.add(MailchimpCampaign(id=item["id"], data=item))
         else:
             records = fetch_channel(channel, start, end)
+        # Daily imports must not erase previously observed days on empty/truncated responses.
+        # Explicit zero rows are valid; absence is not a zero or deletion instruction.
+        if channel in {"analytics", "youtube", "linkedin_organic", "google_ads"}:
+            old = db.scalars(select(Metric).where(Metric.channel == channel, Metric.date >= str(start), Metric.date <= str(end))).all()
+            keys = {r["key"] for r in records}
+            if channel == "linkedin_organic":
+                keys |= {"impressions", "clicks", "likes", "comments", "shares"}
+            expected = {(r.date, r.key, r.source_id) for r in old if channel != "linkedin_organic" or r.key in keys}
+            supplied = {(str(r["date"]), r["key"], r.get("source_id", "account")) for r in records}
+            if not records or not expected <= supplied:
+                raise ProviderError("Abruf unvollständig; zuletzt erfolgreich geladene Kennzahlen bleiben erhalten.")
         query = delete(Metric).where(
             Metric.channel == channel,
             Metric.date >= str(start),
@@ -221,6 +236,13 @@ def send_report(db, report):
     for channel in report.snapshot["channels"]:
         if channel["status"] != "connected":
             lines.append(f"Datenhinweis {channel['name']}: {channel['message']}")
+        summary = channel.get("event_summary")
+        if summary:
+            lines.append("Events: " + summary["notice"])
+            for key, value in summary["values"].items():
+                coverage = summary["coverage"][key]
+                lines.append(f"{channel['fields'][key]}: {value} ({coverage['known']} von {coverage['total']} Events)")
+            lines.append(f"Ältester verwendeter Datenstand: {summary['oldest_observed_at'] or 'unbekannt'}")
     for k in report.snapshot["kpis"]:
         lines.append(f"{k['label']}: {k['value'] if k['value'] is not None else 'Keine Daten'}")
     for rec in report.analysis.get("recommendations", []):
@@ -258,7 +280,7 @@ def refresh_analysis(db, month, force=False):
         "period_end": snapshot["period_end"],
         "kpis": snapshot["kpis"],
         "channels": [
-            {"id": c["id"], "values": c["values"], "previous": c["previous"], "status": c["status"]}
+            {"id": c["id"], "values": c["values"], "previous": c["previous"], "status": c["status"], "event_summary": c.get("event_summary")}
             for c in snapshot["channels"]
         ],
         "model": get_settings().openrouter_model,

@@ -25,7 +25,7 @@ def category(path):
     return None
 
 
-def fetch(s, month, today):
+def fetch(s, month, today, include_all=False):
     require(s.ga4_property_id)
     start, end = month_bounds(month)
     end = min(end, today)
@@ -74,7 +74,7 @@ def fetch(s, month, today):
         out = {}
         for r in rows:
             path = r["dimensionValues"][0]["value"]
-            if not category(path):
+            if not category(path) and not include_all:
                 continue
             v = dict(zip(names, [float(x["value"]) for x in r["metricValues"]]))
             v["engagementPerUser"] = (

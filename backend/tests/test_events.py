@@ -68,7 +68,8 @@ def test_zoom_boundary_and_partial_groups(logged_in):
     assert logged_in.put('/api/events/aggregate', json=data, headers=HEADERS).status_code == 200
     result = logged_in.get('/api/events').json()['snapshot']['events'][0]
     assert result['source'] == 'Zoom'
-    assert result['customers'] is None
+    assert result['customers'] == 9  # 14 registrations - 2 Sonio - 3 partners
+    assert result['customers_calculated'] is True
 
 
 def test_company_mapping_is_exact_and_unknown_is_not_customer():

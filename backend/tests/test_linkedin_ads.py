@@ -193,3 +193,60 @@ def test_landing_page_clicks_are_distinct_and_missing_is_not_zero():
     assert len(landing) == 1
     assert landing[0]["value"] == 4
     assert len([r for r in rows if r["key"] == "clicks"]) == 2
+
+
+def test_lead_metrics_are_separate_from_conversions_and_missing_stays_missing():
+    elements = [
+        {"pivotValues": ["urn:li:sponsoredCampaign:1"],
+         "dateRange": {"start": {"year": 2026, "month": 10, "day": day}},
+         **metrics}
+        for day, metrics in [(1, {"oneClickLeads": 0, "oneClickLeadFormOpens": 4,
+                                  "externalWebsiteConversions": 7}),
+                             (2, {"externalWebsiteConversions": 2})]
+    ]
+    with (
+        patch("app.linkedin_ads.linkedin_headers", return_value={}),
+        patch("app.linkedin_ads.campaigns", return_value=(
+            {"id": 514253005, "currency": "CHF"}, {"urn:li:sponsoredCampaign:1": {}})),
+        patch("app.linkedin_ads.request", return_value=response({"elements": elements})) as req,
+    ):
+        rows = fetch(date(2026, 10, 1), date(2026, 10, 2), settings())
+    assert "oneClickLeads" in req.call_args.args[1]
+    assert [(r["key"], r["value"]) for r in rows if r["key"] != "conversions"] == [
+        ("leads", 0), ("lead_form_opens", 4)]
+    assert sum(r["value"] for r in rows if r["key"] == "conversions") == 9
+
+
+def test_future_draft_lead_campaign_is_visible_without_metrics(db):
+    from app.linkedin_ads import campaign_summary
+    from app.models import LinkedInCampaign
+
+    db.add(LinkedInCampaign(id="urn:li:sponsoredCampaign:9",
+        account="urn:li:sponsoredAccount:514253005",
+        data={"name": "Future lead campaign", "objectiveType": "LEAD_GENERATION",
+              "status": "DRAFT", "currency": "CHF", "runSchedule": {"start": 1793491200000}}))
+    db.commit()
+    s = settings()
+    s.report_timezone = "Europe/Zurich"
+    campaign = campaign_summary(db, s, date(2026, 10, 5))["campaigns"][0]
+    assert campaign["status"] == "DRAFT"
+    assert campaign["objective"] == "LEAD_GENERATION"
+    assert campaign["start"] > "2026-10-05"
+    assert campaign["values"] == {}
+    assert campaign["first_activity"] is None
+
+
+def test_sales_summary_limits_campaign_clicks_to_selected_month(db):
+    from app.linkedin_ads import campaign_summary
+    from app.models import LinkedInCampaign, Metric
+
+    urn = 'urn:li:sponsoredCampaign:1'
+    db.add(LinkedInCampaign(id=urn, account='urn:li:sponsoredAccount:514253005', data={'name': 'Monthly', 'currency': 'CHF'}))
+    for day, value in [('2026-09-30', 900), ('2026-10-01', 5), ('2026-10-05', 8), ('2026-10-06', 100)]:
+        db.add(Metric(channel='linkedin', date=day, key='clicks', value=value, source_id=urn))
+    db.commit()
+    s = settings()
+    s.report_timezone = 'Europe/Zurich'
+    result = campaign_summary(db, s, date(2026, 10, 5), start=date(2026, 10, 1))
+    assert result['campaigns'][0]['values']['clicks'] == 13
+    assert result['start'] == '2026-10-01'

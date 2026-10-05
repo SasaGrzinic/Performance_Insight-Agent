@@ -1,6 +1,7 @@
 """Read-only campaign report. No writes to Google Ads or account totals."""
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 from .connectors import google_token, number_id, request, require
 
@@ -54,6 +55,28 @@ def fetch(s, start, end):
                 "creatives": [],
             }
         )
+    # Fetch daily evidence separately; never derive a campaign comparison from account totals.
+    from .analytics import month_bounds, previous_month
+
+    previous_start, previous_end = month_bounds(previous_month(start.strftime("%Y-%m")))
+    compare_end = min(end, datetime.now(ZoneInfo("Europe/Zurich")).date() - timedelta(days=1))
+    daily = None
+    comparison_warning = None
+    try:
+        daily = []
+        seen = set()
+        for r in query(f"SELECT campaign.id, segments.date, customer.currency_code, metrics.impressions, metrics.clicks, metrics.conversions, metrics.cost_micros FROM campaign WHERE segments.date BETWEEN '{previous_start}' AND '{end}'"):
+            cid, day = str(r["campaign"]["id"]), r["segments"]["date"]
+            if not str(previous_start) <= day <= str(end) or (cid, day) in seen:
+                raise ValueError("Invalid daily report")
+            seen.add((cid, day))
+            m = r.get("metrics", {})
+            daily.append({"id": cid, "date": day, "currency": r["customer"]["currencyCode"],
+                          "clicks": int(m.get("clicks", 0)), "impressions": int(m.get("impressions", 0)),
+                          "conversions": float(m.get("conversions", 0)), "spend": float(m.get("costMicros", 0)) / 1e6})
+    except Exception:
+        daily = None
+        comparison_warning = "Vergleichsdaten konnten nicht vollständig geladen werden; keine Vormonatstendenz."
     warning = None
     import httpx
 
@@ -118,6 +141,9 @@ def fetch(s, start, end):
         warning = "Anzeigenmotive konnten nicht geladen werden. Kampagnenkennzahlen sind verfügbar."
     return {
         "campaigns": campaigns,
+        "comparison_data": {"daily": daily, "start": str(start), "end": str(compare_end),
+                            "previous_start": str(previous_start), "previous_end": str(previous_end),
+                            "warning": comparison_warning},
         "start": str(start),
         "end": str(end),
         "updated_at": datetime.now(timezone.utc).isoformat(),
