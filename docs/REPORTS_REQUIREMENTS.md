@@ -163,3 +163,67 @@ Live September 2026: 260 Formularübermittlungen + 6,832938 Download-Conversions
 + 0 weitere Zielaktionen = 266,832938 Kampagnen-Conversions. Kontoabfrage vom
 01.–06.10.2026: 31 Formular-Conversions; keine Download-Berichtszeile. Diese
 Momentaufnahmen sind keine unveränderlichen historischen Referenzwerte.
+
+### Kontakt- und Health-Check-Prüfung – 07.10.2026
+
+Die vorhandenen Google-Ads-Definitionen wurden erneut rein lesend über die API
+geprüft. `ads_conversion_Kontakt_1` ist eine aktivierte, primäre importierte
+GA4-Aktion der Kategorie `PAGE_VIEW`; «IT Health Check für Ihre Infrastruktur»
+ist ebenfalls aktiviert und primär, verwendet jedoch die Kategorie `DEFAULT`.
+Beide zählen mehrmals pro Anzeigeninteraktion und sind technisch
+`GOOGLE_ANALYTICS_4_CUSTOM`. Diese Metadaten belegen weder eine Formularsendung
+noch eine bestätigte Anfrage.
+
+Die GA4 Data API lieferte für 1.1.–7.10.2026 insgesamt 16 tatsächlich gemeldete
+Ereignisnamen, aber keine Zeile mit Kontakt-, Contact- oder Health-Bezug. Das ist
+kein Beleg, dass die Aktionen nie konfiguriert oder ausserhalb dieses Zeitraums
+ausgelöst wurden; im geprüften Zeitraum fehlt lediglich eine beobachtete
+Ereigniszeile. Die Analytics Admin API ist im bestehenden Google-Projekt nicht
+aktiviert, daher konnten die zugrunde liegenden Ereignisregeln nicht programmatisch
+gelesen werden. Keine API aktiviert und keine Google-Konfiguration verändert.
+
+Folgerung: Beide Aktionen bleiben unter «weitere Zielaktionen» und dürfen ohne
+verifizierte GA4-Auslösebedingung nicht als Anfrage oder Lead bezeichnet werden.
+
+### KPI-Auswahl der Übersicht – 07.10.2026
+
+Die Startübersicht verwendet nun die unter «Wichtigste Kennzahlen» gespeicherte
+Auswahl in derselben Reihenfolge und mit der dort gepflegten Bezeichnung. Ein
+vorhandenes Monatsziel wird neutral an der Kennzahl ausgewiesen; daraus wird noch
+keine automatische Zielerreichung oder positive/negative Bewertung abgeleitet.
+Fehlende Messwerte bleiben als fehlend sichtbar.
+
+Die visuellen GL-, Sales- und Marketing-Reports behalten ihre separat bestätigten,
+zielgruppenspezifischen Kennzahlen. Archiv, E-Mail-Report und eine spätere Analyse
+verwenden weiterhin den gemeinsamen KPI-Snapshot. Zielrichtung, Zielversionierung
+und eine kanalübergreifende Kampagnenzuordnung sind noch nicht fachlich definiert.
+
+### Kampagnen & Massnahmen – Ergebnis- und Zuordnungsansicht 07.10.2026
+
+Ein eigener Navigationspunkt «Kampagnen» führt in eine konsolidierte Sicht für
+bereits ausserhalb von Sonio Insights geplante und umgesetzte 360°-Kampagnen. In
+diesem Bereich werden keine Kampagnen erstellt. Die Ansicht führt Sichtbarkeit,
+Reaktion, Website/QR und Zielhandlungen zusammen und weist darunter jede Massnahme
+mit eigener Erkennung und eigenem Resultat aus. Provider- und Website-Zielaktionen
+können dieselbe Handlung beschreiben und dürfen nicht ungeprüft addiert werden.
+
+Vorgesehene Massnahmen sind Google Ads, LinkedIn Ads, LinkedIn Organic, Landingpage,
+E-Mail-Mailing, YouTube-Video, Direct Mailing, Fachartikel sowie Event oder Webinar.
+Vorhandene Grundlagen sind Kampagnen-, Beitrags-, Mailing-, Video- und Event-IDs.
+Analytics benötigt zusätzlich einen bestätigten `utm_campaign`-Schlüssel oder eine
+explizite Zuordnung. Direct Mailing und Fachartikel erhalten voneinander getrennte
+QR-/Redirect-IDs, `utm_source`-Werte und `utm_content`-Werte. Der QR-Code allein
+belegt die Herkunft nicht; Redirect-Zählung und GA4-Sitzung bleiben getrennt.
+
+Die geschützte Live-Ansicht zeigt bis zur bestätigten ersten Zuordnung einen
+ehrlichen Leerzustand. Die öffentliche Demo zeigt eine klar gekennzeichnete
+illustrative Beispielkampagne und ruft keine geschützten Kampagnendaten ab. Ähnliche
+Titel, derselbe Monat, dieselbe Zielseite ohne Parameter oder thematische Nähe sind
+kein Zuordnungsbeleg. Der vorhandene geschützte Kampagnenstamm bleibt vorläufige
+technische Grundlage, ist aber nicht als Erfassungsformular Teil dieser Sicht.
+
+Als erster fachlicher Referenzfall wird am 9. Oktober die neu gestartete echte
+Kampagne gemeinsam aufgenommen. Dabei werden Kampagnenschlüssel, tatsächliche
+Massnahmen, Provider-/Content-IDs, Landingpage, UTM-Links und QR-Redirects bestätigt.
+Vorher werden keine Live-Ergebnisse zusammengeführt und keine Empfehlung oder
+Agentenlogik daraus erzeugt.

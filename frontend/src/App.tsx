@@ -10,6 +10,7 @@ import {AnalyticsHero} from './components/AnalyticsHero';
 import {EditorialQuote} from './components/EditorialQuote';
 import {AnalyticsInfo} from './components/AnalyticsInfo';
 import { ChannelDirectory } from "./components/ChannelDirectory";
+import { CampaignHero, CampaignWorkspace } from "./components/CampaignWorkspace";
 import { LinkedInHero, LinkedInOrganic } from "./components/LinkedInOrganic";
 import {ChannelRecommendations} from "./components/ChannelRecommendations";
 import {recommendationAreas} from './recommendationContent';
@@ -72,6 +73,7 @@ import {
   LoaderCircle,
   SlidersHorizontal,
   Copy,
+  Workflow,
 } from "lucide-react";
 import * as Tabs from "@radix-ui/react-tabs";
 import { api, number, monthName, refreshChannelDetails } from "./api";
@@ -94,6 +96,7 @@ type View =
   | "posts"
   | "overview"
   | "channel-directory"
+  | "campaigns"
   | "channels"
   | "recommendations"
   | "insights"
@@ -105,6 +108,7 @@ const navigation: { id: View; label: string; icon: typeof LayoutDashboard }[] =
   [
     { id: "overview", label: "Übersicht", icon: LayoutDashboard },
     { id: "channel-directory", label: "Kanäle", icon: ChartNoAxesCombined },
+    { id: "campaigns", label: "Kampagnen", icon: Workflow },
     { id: "search", label: "Suchbegriffe & Potenziale", icon: ChartNoAxesCombined },
     { id: "videos", label: "Video Insights", icon: Play },
     { id: "recommendations", label: "Empfehlungen", icon: Lightbulb },
@@ -121,6 +125,7 @@ const titles: Record<View, string> = {
   audience: "Entwicklung der Community.",
   posts: "Wirkung der Beiträge.",
   overview: "Marketing-Überblick",
+  campaigns: "Kampagnen und Massnahmen eindeutig zuordnen.",
   channels: "Jeder Kanal. Seine Wirkung.",
   "channel-directory": "Alle Kanäle. Klar im Blick.",
   insights: "Aus Zahlen werden nächste Schritte.",
@@ -549,7 +554,7 @@ function App() {
               </section>
               <p className="marketing-pitch">Der Marketing Performance &amp; Insight Agent bündelt die Kanalzahlen, macht Entwicklungen verständlich und unterstützt bei der Priorisierung der nächsten Schritte – für weniger Reporting-Aufwand und fundierte Marketingentscheidungen.</p>
             </>
-          ) : view === "search" ? <SearchHero/> : view === "channel-directory" ? <><div className="marketing-mast"><h1>Marketingkanäle.</h1></div><section className="marketing-hero"><img src={asset("brand/sonio-blog-header.jpg")} alt="Berglandschaft mit Fahrer und Zielflagge"/><div><h2>Alle Kanäle. Klar im Blick.</h2><p>Entwicklungen erkennen. Gezielt tiefer einsteigen.</p></div></section><p className="directory-intro">Die Marketingkanäle auf einen Blick: Die wichtigsten Monatszahlen und ihre Entwicklung zeigen, wo sich ein genauerer Blick lohnt. Im jeweiligen Kanal stehen weitere Kennzahlen, Inhalte und vertiefte Auswertungen bereit.</p></> : view === "channels" && channel === "events" ? <><div className="marketing-mast"><h1>Events.</h1></div><section className="marketing-hero"><img src={asset("brand/sonio-blog-header.jpg")} alt="Sonio-Berglandschaft mit Zielflagge"/><div><h2>Begegnungen, die verbinden.</h2><p>Events und Webinare. Resonanz und Publikum im Blick.</p></div></section></> : view === "channels" && channel === "google_ads" ? <GoogleAdsHero /> : view === "channels" && channel === "mailchimp" ? <MailchimpHero /> : view === "channels" && channel === "analytics" ? <AnalyticsHero /> : view === "reports" ? <ReportsHero /> : view === "videos" ? <VideoInsightsHero /> : view === "channels" && channel === "linkedin_organic" ? <LinkedInHero /> : view === "channels" && channel === "linkedin" ? <LinkedInAdsHero /> : view === "channels" && channel === "youtube" ? <YouTubeHero /> : (
+          ) : view === "search" ? <SearchHero/> : view === "campaigns" ? <CampaignHero/> : view === "channel-directory" ? <><div className="marketing-mast"><h1>Marketingkanäle.</h1></div><section className="marketing-hero"><img src={asset("brand/sonio-blog-header.jpg")} alt="Berglandschaft mit Fahrer und Zielflagge"/><div><h2>Alle Kanäle. Klar im Blick.</h2><p>Entwicklungen erkennen. Gezielt tiefer einsteigen.</p></div></section><p className="directory-intro">Die Marketingkanäle auf einen Blick: Die wichtigsten Monatszahlen und ihre Entwicklung zeigen, wo sich ein genauerer Blick lohnt. Im jeweiligen Kanal stehen weitere Kennzahlen, Inhalte und vertiefte Auswertungen bereit.</p></> : view === "channels" && channel === "events" ? <><div className="marketing-mast"><h1>Events.</h1></div><section className="marketing-hero"><img src={asset("brand/sonio-blog-header.jpg")} alt="Sonio-Berglandschaft mit Zielflagge"/><div><h2>Begegnungen, die verbinden.</h2><p>Events und Webinare. Resonanz und Publikum im Blick.</p></div></section></> : view === "channels" && channel === "google_ads" ? <GoogleAdsHero /> : view === "channels" && channel === "mailchimp" ? <MailchimpHero /> : view === "channels" && channel === "analytics" ? <AnalyticsHero /> : view === "reports" ? <ReportsHero /> : view === "videos" ? <VideoInsightsHero /> : view === "channels" && channel === "linkedin_organic" ? <LinkedInHero /> : view === "channels" && channel === "linkedin" ? <LinkedInAdsHero /> : view === "channels" && channel === "youtube" ? <YouTubeHero /> : (
             <div className="page-intro photographic-intro">
               {
                 <svg
@@ -770,6 +775,9 @@ function App() {
                 {view === "audience" && <Audience month={month} demo={demo} />}
                 {view === "posts" && (
                   <PostCollection key={month} month={month} demo={demo} />
+                )}
+                {view === "campaigns" && (
+                  <CampaignWorkspace data={d} />
                 )}
                 {view === "channel-directory" && <ChannelDirectory data={d} onSelect={c => {setChannel(c.id); changeView("channels");}}/>}
                 {view === "channels" && (

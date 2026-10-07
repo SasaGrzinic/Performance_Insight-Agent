@@ -174,17 +174,56 @@ Sicherung und keine Aktualisierung der öffentlichen GitHub-Pages-Demo.
 
 ## Nächster sinnvoller Schritt – noch nicht pauschal freigegeben
 
-Zuerst dem Nutzer den letzten abgeschlossenen Schritt (Google-Ads-Zielaktionen)
-kurz zeigen und gemeinsam den nächsten Review-Punkt auswählen. Naheliegend ist
-bei weiterer Leadbewertung die Prüfung der Kontakt-/Health-Check-Auslöser; alternativ
-die Übertragung der bestätigten Empfehlungssystematik auf noch nicht abgedeckte
-Kanäle. Nicht voraussetzen, dass dies bereits zur Umsetzung beauftragt wurde.
+Der Nutzer hat die Fortsetzung der schrittweisen Review-Arbeit freigegeben. Die
+Kontakt-/Health-Check-Aktionen wurden am 7. Oktober rein lesend geprüft: Google Ads
+führt beide als aktivierte primäre GA4-Ziele, aber nicht als bestätigte Leads;
+GA4 lieferte 2026 keine entsprechende Ereigniszeile. Die konkreten Auslöseregeln
+bleiben ungeprüft, weil die Analytics Admin API im bestehenden Projekt nicht
+aktiviert ist. Keine API oder Google-Einstellung wurde verändert. Beide Aktionen
+bleiben daher unter «weitere Zielaktionen».
+
+F03 wurde am 7. Oktober konkretisiert und teilweise umgesetzt: Die Startübersicht
+verwendet jetzt Auswahl, Reihenfolge, Bezeichnung und optionales Monatsziel aus
+`dashboard.kpis`. Fehlende Werte bleiben sichtbar. Archiv, E-Mail-Report und eine
+spätere Analyse verwenden diesen gemeinsamen Snapshot bereits. Die visuellen GL-,
+Sales- und Marketing-Reports behalten ihre separat bestätigten Rollenkennzahlen;
+sie wurden nicht pauschal überschrieben. Zielrichtung und Zielversionierung sind
+noch nicht fachlich definiert.
+
+F05 wurde am 7. Oktober als eigener Navigationspunkt «Kampagnen» begonnen und nach
+der Nutzerkorrektur als Ergebnisansicht für bestehende 360°-Kampagnen ausgerichtet.
+Der Bereich erstellt keine Kampagne. Er zeigt eine gemeinsame Wirkungskette und
+darunter jede Massnahme mit technischer Erkennung, Datenquelle und vorgesehenen
+Resultaten. Die geschützte Live-Ansicht bleibt ohne Kampagnenwerte, bis eine echte
+Zuordnung bestätigt ist; die öffentliche Demo zeigt deutlich gekennzeichnete
+illustrative Werte und ruft keine geschützten Kampagnendaten ab.
+
+Die Ansicht führt neun Massnahmentypen: Google Ads, LinkedIn Ads, LinkedIn Organic,
+Landingpage, E-Mail-Mailing, YouTube-Video, Direct Mailing, Fachartikel sowie Event
+oder Webinar. Direct Mailing und Fachartikel benötigen eigene QR-/Redirect-IDs und
+getrennte Quellenwerte (`utm_source=direct_mail` bzw. `utm_source=fachartikel`).
+Ein QR-Code belegt die Herkunft nur, wenn Zieladresse oder Redirect-Zuordnung diese
+Information trägt. QR-Weiterleitungen und GA4-Sitzungen bleiben getrennte Messpunkte.
+Titelähnlichkeit, gleicher Monat oder dieselbe Zielseite ohne bestätigte Parameter
+gelten weiterhin nicht als Zuordnungsbeleg.
+
+Migration `005_marketing_campaigns.py`, Modell `MarketingCampaign` und geschützte
+Endpoints `/api/campaign-registry` bleiben als vorläufige technische Grundlage
+erhalten, werden in der Ergebnisansicht aber nicht als Formular angeboten. Es wurde
+kein Kampagneneintrag angelegt. Am Freitag, 9. Oktober, soll die soeben gestartete
+echte Kampagne gemeinsam als erster Referenzfall abgebildet werden: ein verbindlicher
+Kampagnenschlüssel, konkrete Provider-/Content-IDs, Landingpage und alle UTM-/QR-
+Links werden dabei bestätigt. Erst danach dürfen Resultate zusammengeführt werden.
+Noch keinen KI-Agenten erstellen oder aktivieren.
 
 Offen bleiben insbesondere:
-- Kontakt-/Health-Check-Definition und spätere Leadqualifizierung.
+- Verifizierte GA4-Auslöseregeln für Kontakt/Health Check und spätere
+  Leadqualifizierung; aktuelle Google-Ads-Metadaten allein reichen nicht.
 - Vollständiger Abgleich Review-PDF gegen Umsetzung; kein Gesamtabschluss behaupten.
 - Weitere Empfehlungspiloten/alte Teaser konsistent abgleichen.
-- Forms-Automatisierung später; Crossmedia-Zuordnung und Agent ausdrücklich später.
+- Forms-Automatisierung später; persistente Crossmedia-Massnahmenzuordnung erst am
+  echten Referenzfall definieren und einen Agenten ausdrücklich erst nach separater
+  fachlicher Freigabe erwägen.
 - Optional CSV-Erweiterung für Conversion-Aufschlüsselung.
 - GitHub-CI-Status des gesicherten Commits prüfen, falls erneut thematisiert.
 

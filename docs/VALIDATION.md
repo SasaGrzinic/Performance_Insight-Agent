@@ -789,3 +789,91 @@ Vier neue Frontend-Logiktests und sechs GA4-Backendtests bestanden, TypeScript/V
   .env und .local bleiben ignoriert und werden nicht eingecheckt.
 - Dies ist lokale Validierung, kein Nachweis eines GitHub-CI- oder Docker-Laufs.
   Sicherung auf design/sonio-dashboard-login; keine GitHub-Pages-Publikation.
+
+## 07.10.2026 – Kontakt-/Health-Check-Zielaktionen, nur lesend
+- Google Ads API: `ads_conversion_Kontakt_1` ist aktiviert, primär,
+  `GOOGLE_ANALYTICS_4_CUSTOM`, Kategorie `PAGE_VIEW`, Zählung mehrfach pro Klick.
+  «IT Health Check für Ihre Infrastruktur» ist aktiviert, primär, ebenfalls
+  `GOOGLE_ANALYTICS_4_CUSTOM`, Kategorie `DEFAULT`, Zählung mehrfach pro Klick.
+- GA4 Data API 1.1.–7.10.2026: 16 gemeldete Ereignisnamen; keine Zeile mit
+  Kontakt-, Contact- oder Health-Bezug. Fehlende Zeile bleibt fehlend und wird
+  nicht als beobachtete Null oder als Nachweis einer fehlenden Konfiguration gewertet.
+- Analytics Admin API antwortet mit `PERMISSION_DENIED`, weil sie im bestehenden
+  Google-Projekt nicht aktiviert ist. Sie wurde nicht aktiviert; Ereignisregeln
+  und konkrete Auslösebedingungen bleiben deshalb ungeprüft.
+- Keine Google-Ads-/GA4-Einstellung geändert, keine Rohkontakte abgerufen und
+  kein KI-Agent aktiviert. Die bestehende Einordnung als «weitere Zielaktionen»
+  bleibt fachlich korrekt.
+
+## 07.10.2026 – Gespeicherte KPI-Auswahl in der Startübersicht
+
+- Zwei neue Frontend-Regressionstests bestätigen Reihenfolge, individuelle
+  Bezeichnung, Monatsziel, fehlende Werte und eine veraltete Kanalreferenz.
+- Gesamte Frontend-Suite: 59 Tests bestanden. TypeScript-Projektprüfung und
+  Vite-Produktionsbuild erfolgreich; bestehender Chunkgrössenhinweis bleibt.
+- Geschützte lokale Ansicht zeigt die vier gespeicherten LinkedIn-Kennzahlen statt
+  der früheren Kanal-Standardauswahl. Desktop visuell geprüft.
+- Mobile 390 px: zweispaltige KPI-Karten, kein horizontaler Seitenüberlauf
+  (`innerWidth` 390, `clientWidth` = `scrollWidth` = 383).
+- Rollenreports, KPI-Einstellungen und externe Plattformkonfigurationen nicht
+  verändert. Kein KI-Agent erstellt oder aktiviert, kein Deployment.
+
+## 07.10.2026 – Navigationspunkt Kampagnen & Massnahmen
+
+- Zwei neue Regressionstests bestätigen, dass jeder Dashboard-Kanal in der
+  Identifikationsgrundlage erscheint und neue unbekannte Kanäle offen bleiben.
+- Gesamte Frontend-Suite: 61 Tests bestanden. TypeScript-Projektprüfung,
+  Vite-Produktionsbuild und diff-check erfolgreich; bestehender
+  Chunkgrössenhinweis bleibt.
+- Geschützte lokale Ansicht: neuer Navigationspunkt «Kampagnen», Bergbild-Hero,
+  Guardrail gegen automatische Zuordnungen sowie alle acht Kanalzeilen sichtbar.
+- Desktop ohne Seitenüberlauf (`innerWidth` 1074, `clientWidth` = `scrollWidth`
+  1067). Mobile 390 px ebenfalls ohne Seitenüberlauf (`clientWidth` =
+  `scrollWidth` = 383); Kanalzeilen lesbar einspaltig.
+- Öffentliche Demo separat geprüft: «Methodenvorschau» und «Demo – keine
+  Live-Kennung» sichtbar; keine geschützten Detailendpoints oder Live-Kennungen.
+- Keine Kampagne gespeichert, keine Massnahme zugeordnet, keine Kennzahlen
+  zusammengeführt, kein KI-Agent erstellt oder aktiviert und kein Deployment.
+
+## 07.10.2026 – Geschützter Kampagnenstamm
+
+- Migration `005_marketing_campaigns.py` lokal auf die Vorschau angewendet. Der
+  Kampagnenstamm speichert Name, kontrolliertes fachliches Ziel, Start, Abschluss
+  und Verantwortung; das Ziel ist keine Behauptung eines gemessenen Ergebnisses.
+- Vier neue Backend-Regressionstests prüfen Anmeldepflicht, Admin-Schreibrechte,
+  Viewer-Leserechte, Anlegen, Korrigieren sowie ungültige Ziele und Datumsbereiche.
+  Gesamte Backend-Suite: 149 Tests bestanden; Ruff ohne Fehler. Zwei bestehende
+  Testclient-Deprecation-Hinweise bleiben.
+- Gesamte Frontend-Suite: 61 Tests bestanden. TypeScript-Projektprüfung,
+  Vite-Produktionsbuild und diff-check erfolgreich; bestehender
+  Chunkgrössenhinweis bleibt.
+- Geschützte lokale Ansicht zeigt das leere Formular und den ehrlichen Leerzustand.
+  Es wurde bei der Browserprüfung kein Beispiel- oder Live-Eintrag gespeichert.
+  Desktop 1074 px und Mobile 390 px ohne horizontalen Seitenüberlauf geprüft
+  (`scrollWidth` 1067 beziehungsweise 383).
+- Öffentliche Demo separat geprüft: kein Speicherformular und kein
+  «Kampagne speichern»-Button, nur die gekennzeichnete Methodenvorschau. Live- und
+  Demo-Konsole ohne Fehler oder Warnungen. API, Worker und Scheduler nach der
+  Migration kontrolliert neu gestartet.
+- Noch keine Massnahmenzuordnung, keine kanalübergreifende Summe oder Empfehlung,
+  kein KI-Agent und kein Deployment.
+
+## 07.10.2026 – Kampagnen als konsolidierte Ergebnisansicht
+
+- Die zuvor sichtbare Kampagnenerfassung wurde nach Nutzerkorrektur aus dem
+  Arbeitsbereich entfernt. «Kampagnen & Massnahmen» erstellt keine Kampagnen,
+  sondern zeigt eine Wirkungskette und neun einzeln nachvollziehbare Massnahmen.
+- Direct Mailing und Fachartikel sind separate Massnahmen mit getrennten
+  QR-/Redirect- und UTM-Herkünften. Ein eigener Regressionstest verhindert ihre
+  Zusammenlegung; ein weiterer prüft alle neun Messpläne und Ergebnisarten.
+- Gesamte Frontend-Suite: 63 Tests bestanden. TypeScript-Projektprüfung und
+  Vite-Produktionsbuild erfolgreich; bestehender Chunkgrössenhinweis bleibt.
+- Geschützte lokale Ansicht zeigt den ehrlichen Leerzustand ohne Live-Ersatzwerte.
+  Öffentliche Demo zeigt ausschliesslich deutlich markierte illustrative Werte.
+  Live- und Demo-Browserkonsole ohne Fehler oder Warnungen.
+- Responsive Prüfung: bei schmaler Desktopbreite den Resultatbereich einspaltig
+  korrigiert; anschliessend kein horizontaler Seitenüberlauf. Mobile 390 px:
+  `innerWidth` 390 und `scrollWidth` 383. Temporärer Viewport zurückgesetzt.
+- Es wurde kein Kampagneneintrag gespeichert, keine externe Kampagne verändert,
+  kein KI-Agent erstellt und kein Deployment ausgeführt. Die neu gestartete echte
+  Kampagne ist für den gemeinsamen Referenzabgleich am 9. Oktober vorgesehen.

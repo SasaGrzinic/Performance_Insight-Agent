@@ -37,6 +37,7 @@ from .models import (
     Invite,
     Job,
     LoginSession,
+    MarketingCampaign,
     Metric,
     Preference,
     Report,
@@ -463,6 +464,99 @@ def save_kpis(body: KPIBody, user=Depends(admin), db=Depends(get_db)):
     db.execute(delete(Preference).where(Preference.key.like("analysis:%")))
     db.commit()
     return {"ok": True}
+
+
+CAMPAIGN_OBJECTIVES = {
+    "awareness",
+    "website_visits",
+    "engagement",
+    "event_registrations",
+    "lead_generation",
+    "other",
+}
+
+
+class MarketingCampaignBody(BaseModel):
+    name: str = Field(min_length=1, max_length=160)
+    objective: str = Field(min_length=1, max_length=40)
+    start_date: date
+    end_date: date
+    owner: str = Field(min_length=1, max_length=120)
+
+
+def validate_campaign(body: MarketingCampaignBody):
+    name = body.name.strip()
+    owner = body.owner.strip()
+    if not name:
+        raise HTTPException(422, "Bitte einen Kampagnennamen eingeben.")
+    if not owner:
+        raise HTTPException(422, "Bitte eine verantwortliche Person oder ein Team eingeben.")
+    if body.objective not in CAMPAIGN_OBJECTIVES:
+        raise HTTPException(422, "Bitte ein gültiges Kampagnenziel auswählen.")
+    if body.end_date < body.start_date:
+        raise HTTPException(422, "Das Enddatum darf nicht vor dem Startdatum liegen.")
+    return name, owner
+
+
+def marketing_campaign_json(campaign):
+    return {
+        "id": campaign.id,
+        "name": campaign.name,
+        "objective": campaign.objective,
+        "start_date": campaign.start_date.isoformat(),
+        "end_date": campaign.end_date.isoformat(),
+        "owner": campaign.owner,
+        "created_at": campaign.created_at.isoformat(),
+        "updated_at": campaign.updated_at.isoformat(),
+    }
+
+
+@app.get("/api/campaign-registry")
+def campaign_registry(user=Depends(current_user), db=Depends(get_db)):
+    campaigns = db.scalars(
+        select(MarketingCampaign).order_by(
+            MarketingCampaign.start_date.desc(), MarketingCampaign.created_at.desc()
+        )
+    ).all()
+    return [marketing_campaign_json(campaign) for campaign in campaigns]
+
+
+@app.post("/api/campaign-registry", status_code=201)
+def create_marketing_campaign(
+    body: MarketingCampaignBody, user=Depends(admin), db=Depends(get_db)
+):
+    name, owner = validate_campaign(body)
+    campaign = MarketingCampaign(
+        name=name,
+        objective=body.objective,
+        start_date=body.start_date,
+        end_date=body.end_date,
+        owner=owner,
+    )
+    db.add(campaign)
+    db.commit()
+    return marketing_campaign_json(campaign)
+
+
+@app.put("/api/campaign-registry/{campaign_id}")
+def update_marketing_campaign(
+    campaign_id: str,
+    body: MarketingCampaignBody,
+    user=Depends(admin),
+    db=Depends(get_db),
+):
+    campaign = db.get(MarketingCampaign, campaign_id)
+    if not campaign:
+        raise HTTPException(404, "Kampagne nicht gefunden.")
+    name, owner = validate_campaign(body)
+    campaign.name = name
+    campaign.objective = body.objective
+    campaign.start_date = body.start_date
+    campaign.end_date = body.end_date
+    campaign.owner = owner
+    campaign.updated_at = now()
+    db.commit()
+    return marketing_campaign_json(campaign)
 
 
 @app.post("/api/import/events")

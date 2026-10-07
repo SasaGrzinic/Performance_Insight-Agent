@@ -9,6 +9,7 @@ import { useId, useState, type ReactNode } from "react";
 
 import { ArrowRight, Info } from "lucide-react";
 import { number, monthName } from "../api";
+import { overviewKpis } from "../overviewKpis";
 import type { Analysis, Channel, Dashboard, Recommendation } from "../types";
 export function channelMetricLabel(c: Channel, key: string) {
   const labels: Record<string, string> = {
@@ -52,10 +53,7 @@ export function overviewSecondaryMetric(c: Channel) {
   return [...(choices[c.id] || []),...Object.keys(c.fields)].find(k => k !== c.primary && k in c.fields);
 }
 export function OverviewHighlights({ dashboard: d, periodControl }: { dashboard: Dashboard; periodControl?: ReactNode }) {
-  const selected = d.channels.filter(c => c.status === "connected" || Object.values(c.values).some(v => Number.isFinite(v))).map(c => {
-    const k=c.primary, v=c.values[k], p=c.previous[k], compared=c.comparison_values ? c.comparison_values[k] : v;
-    return {c,k,v,p,change:p>0&&Number.isFinite(compared)?(compared-p)/p*100:null,positive:compared>p};
-  });
+  const selected = overviewKpis(d);
   return (
     <section className="marketing-developments">
       <div className="section-heading">
@@ -75,22 +73,25 @@ export function OverviewHighlights({ dashboard: d, periodControl }: { dashboard:
       {selected.length ? (
         <div className="marketing-highlights">
           {selected.map((t) => (
-            <article key={t.c.id}>
+            <article key={`${t.channel.id}.${t.key}`}>
               <span className="highlight-channel">
                 <i
                   className={t.change == null || t.change === 0 ? "neutral" : t.positive ? "positive" : "negative"}
                   aria-hidden="true"
                 />
-                {t.c.name}
+                {t.channel.name}
               </span>
               <strong>
-                {number(t.v)}
+                {number(t.value, t.unit)}
               </strong>
-              <span>{channelMetricLabel(t.c, t.k)} <PeriodInfo label={`${channelMetricLabel(t.c,t.k)} erklärt`}>{overviewMetricHelp(t.c,t.k)}</PeriodInfo></span>
+              <span>{t.label} <PeriodInfo label={`${t.label} erklärt`}>{overviewMetricHelp(t.channel,t.key)}</PeriodInfo></span>
               <small data-trend={t.change==null||t.change===0?"neutral":t.change>0?"up":"down"}>
-                {t.c.event_summary ? `Event-Gesamtstand · ${t.c.event_summary.coverage[t.k]?.known ?? 0} von ${t.c.event_summary.event_count} Events` : t.change == null ? "Kein Vorperiodenvergleich" : t.change === 0 ? "Unverändert zum Vormonat" : `${number(Math.abs(t.change))} % ${t.positive ? "mehr" : "weniger"} als in der Vorperiode`}
+                {t.channel.event_summary ? `Event-Gesamtstand · ${t.channel.event_summary.coverage[t.key]?.known ?? 0} von ${t.channel.event_summary.event_count} Events` : t.change == null ? "Kein Vorperiodenvergleich" : t.change === 0 ? "Unverändert zum Vormonat" : `${number(Math.abs(t.change))} % ${t.positive ? "mehr" : "weniger"} als in der Vorperiode`}
               </small>
-              {!t.c.event_summary&&<ComparisonInfo comparison={t.c.comparisons?.[t.k]}/>}
+              {t.target !== null && <small>Monatsziel: {number(t.target, t.unit)}</small>}
+              {!t.channel.event_summary && (
+                <ComparisonInfo comparison={t.comparison} />
+              )}
             </article>
           ))}
         </div>

@@ -84,3 +84,15 @@ export type Settings = {
   model: string;
   channels: Record<string, boolean>;
 };
+export type MarketingCampaignInput = {
+  name: string;
+  objective: string;
+  start_date: string;
+  end_date: string;
+  owner: string;
+};
+export type MarketingCampaign = MarketingCampaignInput & {
+  id: string;
+  created_at: string;
+  updated_at: string;
+};
