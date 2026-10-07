@@ -1,15 +1,18 @@
 """Property-wide monthly session sources; no per-page sum or publication filter."""
 
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
 from .analytics import month_bounds
 from .connectors import ProviderError, google_token, number_id, request, require
 from .ga4_ai_sources import summarize
 
 
-def fetch(s, month, today):
+def fetch(s, month, today, annual=False):
     require(s.ga4_property_id)
     start, end = month_bounds(month)
+    if annual:
+        start, end = date(start.year, 1, 1), date(start.year, 12, 31)
+    period_end = end
     end = min(end, today)
     if start > end:
         raise ValueError("Zukünftiger Monat")
@@ -60,7 +63,7 @@ def fetch(s, month, today):
         "ai": ai,
         "start": str(start),
         "end": str(end),
-        "partial": end < month_bounds(month)[1],
+        "partial": end < period_end,
         "thresholded": thresholded,
         "data_loss": data_loss,
         "updated_at": datetime.now(timezone.utc).isoformat(),

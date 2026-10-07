@@ -910,18 +910,19 @@ def analytics_area_traffic(
     today = datetime.now(ZoneInfo(s.report_timezone)).date()
     if page.get("published_at") and page["published_at"] > str(today):
         raise HTTPException(422, "Die Seite liegt in der Zukunft.")
-    key = "ga4:traffic:v2:" + sha256(path.encode()).hexdigest()[:40]
+    key = "ga4:traffic:v3:" + sha256(path.encode()).hexdigest()[:40]
     return ga4_cached(db, key, lambda: traffic(s, page, today), refresh=refresh)
 
 
 @app.get('/api/analytics/monthly-sources')
-def analytics_monthly_sources(month=Depends(month_param), refresh: bool = False,
+def analytics_monthly_sources(month=Depends(month_param), refresh: bool = False, annual: bool = False,
                               user=Depends(current_user), db=Depends(get_db)):
     from .ga4_monthly_sources import fetch
     today = datetime.now(ZoneInfo(s.report_timezone)).date()
     if month > today.strftime('%Y-%m'):
         raise HTTPException(422, 'Bitte einen aktuellen oder vergangenen Monat wählen.')
-    return ga4_cached(db, 'ga4:monthly-sources:v3:'+month, lambda: fetch(s, month, today), refresh=refresh)
+    key = 'ga4:annual-sources:v4:' + month[:4] if annual else 'ga4:monthly-sources:v4:' + month
+    return ga4_cached(db, key, lambda: fetch(s, month, today, annual=annual), refresh=refresh)
 
 
 @app.get('/api/google-ads/campaigns')

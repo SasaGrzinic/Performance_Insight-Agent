@@ -1,7 +1,7 @@
 import {BenchmarkNote} from './BenchmarkNote';
 import {linkedinAdsBenchmark} from '../benchmarks';
 import {MetricHelp} from './MetricHelp';
-import {RecommendationTeaser} from "./RecommendationTeaser";
+import {AdsRecommendations} from "./AdsRecommendations";
 import "../linkedin-ads.css";
 import { PeriodInfo } from "./PeriodInfo";
 import { KpiExplainer } from "./KpiExplainer";
@@ -13,7 +13,7 @@ import { Download } from "lucide-react";
 import { api, number } from "../api";
 import { saveCSV } from "../csv";
 
-type Campaign = {
+export type Campaign = {
   image_url?: string | null;
   example?: boolean;
   id: string;
@@ -29,7 +29,7 @@ type Campaign = {
   first_activity: string | null;
   last_activity: string | null;
 };
-type Data = {
+export type Data = {
   start: string;
   end: string;
   campaigns: Campaign[];
@@ -301,7 +301,7 @@ export function AdsCampaigns({ demo, actions }: { demo: boolean; actions?: React
                 <p>Website-Zielaktionen sind die von LinkedIn zugerechneten Website-Conversions. Die konkrete Aktion ist noch nicht verifiziert; deshalb werden sie nicht als Anmeldungen oder Leads bezeichnet. Landingpage-Klicks sind keine nachgewiesenen Website-Sitzungen.</p>
                 <p>
                   {c.objective === "LEAD_GENERATION"
-                    ? "Leads sind abgesendete LinkedIn-Formulare, nicht automatisch qualifizierte Kundenanfragen. Formularöffnungen und Abschlussrate zeigen, wo Interessierte aussteigen; Kosten pro Lead ordnen den Werbeaufwand ein. Website-Zielaktionen bleiben separat."
+                    ? "Leads sind abgesendete LinkedIn-Formulare, nicht automatisch qualifizierte Kundenanfragen. Formularöffnungen und Abschlussrate zeigen, wie viele Öffnungen zu Einsendungen führen; sie erklären nicht die Ursache fehlender Einsendungen; Kosten pro Lead ordnen den Werbeaufwand ein. Website-Zielaktionen bleiben separat."
                     : c.objective === "BRAND_AWARENESS"
                     ? "Das Ziel ist Markenbekanntheit. Impressionen zeigen die Ausspielung; Klicks und CPC sind ergänzende Signale. Ohne Reichweite und Häufigkeit lässt sich die Bekanntheitswirkung nicht abschliessend beurteilen."
                     : c.objective === "WEBSITE_CONVERSION"
@@ -332,7 +332,7 @@ export function AdsCampaigns({ demo, actions }: { demo: boolean; actions?: React
           ? `Letzter erfolgreicher Abruf: ${new Date(d.last_success).toLocaleString("de-CH")}`
           : "Noch kein erfolgreicher Abruf."}
       </p>
-      <RecommendationTeaser/>
+      <AdsRecommendations demo={demo}/>
       <EditorialQuote portrait={asset('brand/portraits/steve-jobs-v1.png')} text="You’ve got to start with the customer experience and work backwards to the technology." author="Steve Jobs" role="Apple-Mitgründer" source="https://allaboutstevejobs.com/videos/misc/wwdc_1997_closing_chat"/>
     </section>
   );

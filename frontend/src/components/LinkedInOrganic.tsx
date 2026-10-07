@@ -1,7 +1,7 @@
 import {BenchmarkNote} from './BenchmarkNote';
 import {organicBenchmark, ownPostMedian} from '../benchmarks';
 import {comparisonText} from "./ComparisonInfo";
-import {RecommendationTeaser} from "./RecommendationTeaser";
+import {OrganicRecommendations} from "./OrganicRecommendations";
 import { EditorialQuote } from './EditorialQuote';
 import { asset } from '../staticDemo';
 import { useState, useId, type ReactNode } from "react";
@@ -499,7 +499,7 @@ export function LinkedInOrganic({
           <Tile label="Davon engagierte Sitzungen" value="—" help="Anzahl und Anteil an den zugeordneten Besuchen. Die notwendige Zuordnung ist noch offen."/>
         </div><p className="li-note">Nach verifizierter GA4-/UTM-Zuordnung. <Help>Für eine belastbare Zuordnung benötigen wir GA4-Sitzungen mit konsistenten LinkedIn-UTM-Parametern. Bis dahin keine Schätzwerte.</Help></p></div>
       </section>
-      <RecommendationTeaser/><EditorialQuote portrait={asset('brand/portraits/maya-angelou-v1.png')} text="You can’t use up creativity. The more you use, the more you have." author="Maya Angelou" role="Schriftstellerin und Bürgerrechtlerin" source="https://www.themarginalian.org/2013/09/06/what-is-creativity/"/>
+      <OrganicRecommendations data={data}/><EditorialQuote portrait={asset('brand/portraits/maya-angelou-v1.png')} text="You can’t use up creativity. The more you use, the more you have." author="Maya Angelou" role="Schriftstellerin und Bürgerrechtlerin" source="https://www.themarginalian.org/2013/09/06/what-is-creativity/"/>
     </div>
   );
 }

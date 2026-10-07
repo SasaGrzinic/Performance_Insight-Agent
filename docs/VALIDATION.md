@@ -756,3 +756,36 @@ Marketing-Überlagerung: TypeScript erfolgreich. Browserauswahl aller drei Kanä
 
 ### GitHub-Sicherung 05.10.2026
 Vor Commit: vollständige Backend-Suite auf separater temporärer Testdatenbank 139 bestanden; Frontend 35 bestanden; TypeScript, Vite-Build, Ruff und git diff --check erfolgreich. Bekannte Hinweise: Bundlegrösse und zwei Testclient-Deprecations. Geänderte Dateien auf bekannte Secret-Muster geprüft; .env und .local bleiben ignoriert. Sicherung auf bestehendem Design-Branch, kein Pages-Deployment.
+
+### 06.10.2026 — LinkedIn-Empfehlungspilot
+40 Frontend-Tests bestanden, darunter fünf neue Datenlogik-Prüfungen (fehlende/echte Nullwerte, veraltete Daten, konkrete Postreferenz, Videodurchschnitt, vergleichbare Impressionen). TypeScript und Vite-Build bestanden; bestehende Warnung zu Bundlegrössen >500 KB bleibt. Nach Text-/Layoutkorrektur fünf Pilottests und TypeScript erneut bestanden. Browser: Organic-Teaser, aufklappbare Details und LinkedIn-Filter der Empfehlungsseite mit echten Daten geprüft; Video mit 341 Aufrufen/Ø18,1 Sekunden als beobachtete Momentaufnahme. Mobil 390 px: einspaltig, kein horizontaler Überlauf (scrollWidth383). Kein Agent aktiviert, keine Veröffentlichung.
+
+### 06.10.2026 — LinkedIn-Ads-Empfehlungen
+Sechs neue Regressionstests bestanden: Demo-/Fehlerausschluss, Planung, fehlende vs. null Leads, plausible Abschlussrate, Awareness-/CTR-Kontext und historische Kampagnen ohne Messwerte. TypeScript, Vite-Build und diff-check bestanden; bestehende Bundlewarnung bleibt. Live-Browser: zwei Kanalhinweise, Weiterleitung in gefilterte Empfehlungsseite, fünf echte Kampagnenhinweise und aufklappbare Einordnung geprüft. 390px-Prüfung ohne horizontalen Überlauf (scrollWidth383). Keine Veröffentlichung, kein Agent aktiviert.
+
+### 06.10.2026 — Google-Ads-Empfehlungspilot
+Sieben Regressionstests bestanden (fehlende/Nullwerte, Warnungen, Anzeigentyp, CTR-Kontext, Suchanfragen und Ausschluss von Sonio-Markensuchen aus Ausschluss-Prüfhinweisen). TypeScript und Vite-Build bestanden vor abschliessendem Markenfilter; bestehende Bundlewarnung bleibt. Browser: echte Oktober-Kampagnen und Suchanfrage geladen, Filter Google Ads und aufklappbare Details visuell geprüft. 390px ohne horizontalen Überlauf (scrollWidth383). Keine Kampagnenänderungen, kein Agent, kein Deployment.
+
+### 06.10.2026 — Analytics-Pilot / KI-Jahresstand
+Vier neue Frontend-Logiktests und sechs GA4-Backendtests bestanden, TypeScript/Vite-Build/Ruff/diff-check bestanden (bestehende Bundlewarnung). Live GA4-Jahresabgleich und August–Oktober lesend geprüft. Copilot-Alias korrigiert und Caches versioniert. Dienste kontrolliert neugestartet, keine Zugangsdaten geändert. Browser bestätigt Jahresstand62 mit ChatGPT52/Copilot8/Perplexity2/Claude— sowie echte monatliche Analytics-Hinweise. Mobil390: kein Seitenüberlauf (scrollWidth383). Keine Publikation und kein Agent.
+
+## 07.10.2026 – Google Ads Conversion-Aufschlüsselung
+- Sechs gezielte Backendtests erfolgreich: Kampagnenbericht sowie Aufteilung,
+  andere/ungeprüfte Aktionen, All-Conversions-Abgrenzung, Summenabweichungen und
+  Duplikate/fehlende Zeilen. Disposable Tests ohne TEST_DATABASE_URL.
+- Ruff für die geänderten Backenddateien, TypeScript, Vite-Build und diff-check
+  bestanden. Bestehender Chunkgrössenhinweis im Build.
+- Echter September-Abruf: 260 + 6,832938 = 266,832938, keine Aufschlüsselungswarnung.
+- Browser September: 260 / 6.83 / 0; Filter Suche: 0 / 1.6 / 0; Details geprüft.
+  Desktop und 390px-Mobilansicht geprüft; scrollWidth 383 bei innerWidth 390.
+- Lokale API/Worker/Scheduler geordnet neu gestartet. Keine Veröffentlichung.
+
+## 07.10.2026 – Prüfung vor GitHub-Sicherung
+- Gesamte lokale Backend-Suite: 145 Tests bestanden, zwei Deprecation-Hinweise.
+  TEST_DATABASE_URL war für den Testlauf entfernt; keine Vorschau-Datenbank als Testziel.
+- Gesamte Frontend-Suite: 57 Tests bestanden. TypeScript, Vite-Build,
+  Ruff für backend und git diff --check bestanden; bestehender Bundlegrössenhinweis.
+- Geänderte/neue Dateien auf typische Geheimnismuster geprüft, keine Treffer.
+  .env und .local bleiben ignoriert und werden nicht eingecheckt.
+- Dies ist lokale Validierung, kein Nachweis eines GitHub-CI- oder Docker-Laufs.
+  Sicherung auf design/sonio-dashboard-login; keine GitHub-Pages-Publikation.

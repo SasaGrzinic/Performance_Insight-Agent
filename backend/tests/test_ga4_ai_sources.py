@@ -27,3 +27,13 @@ def test_aggregate_explicit_sources_once():
     assert result["sessions"] == 6
     assert result["providers"] == [{"label": "ChatGPT", "value": 6}]
     assert len(result["evidence"]) == 2
+
+
+def test_copilot_alias_and_claude_are_precise():
+    assert ai_provider('copilot.com') == 'Microsoft Copilot'
+    assert ai_provider('https://copilot.microsoft.com/') == 'Microsoft Copilot'
+    assert ai_provider('claude.ai') == 'Claude'
+    assert ai_provider('copilot.com.evil.test') is None
+    assert ai_provider('bing') is None
+    result = summarize([{'source': 'copilot.com', 'sessions': 8}, {'source': 'copilot.microsoft.com', 'sessions': 2}])
+    assert result['providers'] == [{'label': 'Microsoft Copilot', 'value': 10}]

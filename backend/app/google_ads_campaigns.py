@@ -55,6 +55,15 @@ def fetch(s, start, end):
                 "creatives": [],
             }
         )
+    from .google_ads_conversions import breakdown
+
+    conversion_warning = None
+    try:
+        conversion_rows = breakdown(query, campaigns, start, end)
+        for campaign in campaigns:
+            campaign["conversion_actions"] = conversion_rows[campaign["id"]]
+    except Exception:
+        conversion_warning = "Formularübermittlungen und Downloads konnten nicht verlässlich aufgeschlüsselt werden. Die bisherigen Zielaktionen bleiben erhalten; bitte erneut aktualisieren."
     # Fetch daily evidence separately; never derive a campaign comparison from account totals.
     from .analytics import month_bounds, previous_month
 
@@ -141,6 +150,7 @@ def fetch(s, start, end):
         warning = "Anzeigenmotive konnten nicht geladen werden. Kampagnenkennzahlen sind verfügbar."
     return {
         "campaigns": campaigns,
+        "conversion_warning": conversion_warning,
         "comparison_data": {"daily": daily, "start": str(start), "end": str(compare_end),
                             "previous_start": str(previous_start), "previous_end": str(previous_end),
                             "warning": comparison_warning},

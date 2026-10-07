@@ -1,3 +1,4 @@
+import {AnalyticsRecommendations} from './components/AnalyticsRecommendations';
 import {ReportPreview, ReportsHero} from './components/ReportPreview';
 import {ComparisonInfo} from "./components/ComparisonInfo";
 import { Events } from "./components/Events";
@@ -288,6 +289,7 @@ function App() {
       client.invalidateQueries({ queryKey: ["mailchimp-campaigns"] });
       client.invalidateQueries({ queryKey: ["mailchimp-insights"] });
       client.invalidateQueries({ queryKey: ["analytics-monthly-sources"] });
+      client.invalidateQueries({ queryKey: ["analytics-annual-sources"] });
     }
   }, [progress.data, client]);
   function changeView(v: View) {
@@ -921,12 +923,12 @@ function App() {
                           )}
                           {selected.id === "qr" && <EditorialQuote portrait={asset("brand/portraits/neil-armstrong-v2.png")} text="That’s one small step for [a] man, one giant leap for mankind." author="Neil Armstrong" role="Astronaut" source="https://www.nasa.gov/history/SP-4225/documentation/brief-history/history.htm"/>}
                           {selected.id === "events" && <EditorialQuote portrait={asset("brand/portraits/tina-turner-v1.png")} text="It’s for the people and it’s for the song and it’s for the moment." author="Tina Turner" role="Sängerin und Bühnenikone" source="https://www.cbsnews.com/news/proud-tina-a-life-well-lived/"/>}
-                          {selected.id === "analytics" && <><RecommendationTeaser/><EditorialQuote portrait={asset('brand/portraits/michelle-obama-v1.png')} text="Success isn’t about how much money you make, it’s about the difference you make in people’s lives." author="Michelle Obama" role="Autorin und ehemalige First Lady" source="https://obamawhitehouse.archives.gov/the-press-office/2012/09/05/remarks-first-lady-democratic-national-convention/"/></>}
+                          {selected.id === "analytics" && <><AnalyticsRecommendations month={month} demo={d.demo}/><EditorialQuote portrait={asset('brand/portraits/michelle-obama-v1.png')} text="Success isn’t about how much money you make, it’s about the difference you make in people’s lives." author="Michelle Obama" role="Autorin und ehemalige First Lady" source="https://obamawhitehouse.archives.gov/the-press-office/2012/09/05/remarks-first-lady-democratic-national-convention/"/></>}
                         </>
                       )}
                   </>
                 )}
-                {view === "recommendations" && <><ChannelRecommendations onOpenArea={changeView} initialChannels={recommendationScope} channels={d.channels} items={recommendationAnalysis?.recommendations||[]} onSelect={setRec}/><EditorialQuote portrait={asset('brand/portraits/roger-federer-v1.png')} text="When you lose every second point, on average, you learn not to dwell on every shot." author="Roger Federer" role="Tennislegende und Unternehmer" source="https://home.dartmouth.edu/news/2024/06/2024-commencement-address-roger-federer"/></>}
+                {view === "recommendations" && <><ChannelRecommendations data={d} onOpenArea={changeView} initialChannels={recommendationScope} channels={d.channels} items={recommendationAnalysis?.recommendations||[]} onSelect={setRec}/><EditorialQuote portrait={asset('brand/portraits/roger-federer-v1.png')} text="When you lose every second point, on average, you learn not to dwell on every shot." author="Roger Federer" role="Tennislegende und Unternehmer" source="https://home.dartmouth.edu/news/2024/06/2024-commencement-address-roger-federer"/></>}
                 {view === "insights" && (
                   <>
                     <div className="analysis-summary">

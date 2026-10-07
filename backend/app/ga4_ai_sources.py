@@ -9,6 +9,7 @@ DOMAINS = {
     "gemini.google.com": "Gemini",
     "bard.google.com": "Gemini",
     "claude.ai": "Claude",
+    "copilot.com": "Microsoft Copilot",
     "copilot.microsoft.com": "Microsoft Copilot",
     "chat.deepseek.com": "DeepSeek",
     "grok.com": "Grok",

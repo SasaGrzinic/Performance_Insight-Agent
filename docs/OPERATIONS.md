@@ -65,3 +65,7 @@ Der Google-Testmodus bleibt unverändert. Dessen siebentägige Tokenbegrenzung w
 nicht umgangen; Widerruf/MFA erfordern weiterhin eine persönliche Google-Freigabe.
 Diese Funktion stellt kein Produktionshosting oder externen Benachrichtigungsdienst
 bereit. In einer produktiven Installation ist der lokale Helfer deaktiviert.
+
+## Aktualisierungs-Audit 06.10.2026
+Lokaler Sync alle60Minuten; nur bei laufenden Diensten. Scheduler prüft alle30Sekunden, Worker alle2Sekunden, UI liest gespeicherte Daten meist alle60Sekunden. Diese Prüfintervalle sind keine Provider-Abrufintervalle. Monats-Sync berücksichtigt Monat und Vormonat, LinkedInAds365Tage, Mailchimp gesendete Kampagnen ab2026. Detailabfragen (GA4/YouTube/GoogleAds/Suche) erfolgen beim Öffnen/Refresh, meist1Stunde Cache; GA4-Seitenkatalog24Stunden.
+Forms hat keinen automatischen Connector. Zoom-Sync aktualisiert Forms nicht. Eventkarten zeigen eigenen Datenstand; bevorstehende Forms-Events mit Stand >24Stunden erhalten Abgleichhinweis. Keine zusätzliche Automation eingerichtet. VCF manuell abgeglichen:12Antworten,6Sonio,1Partner,5Kunden abgeleitet; nur Aggregate gespeichert. Sechs weitere Forms-Gesamtzahlen unverändert mit Portal abgeglichen, Gruppierungen dort nicht erneut geprüft. Vorheriger Snapshot geschützt in.local gesichert.

@@ -1,0 +1,12 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {googleAdsAdvice} from '../src/googleAdsRecommendations.ts';
+const campaign={id:'1',name:'Cloud',type:'SEARCH',impressions:10,clicks:2,ctr:20,conversions:1};
+const report=c=>({campaigns:[{...campaign,...c}],updated_at:'2026-10-06'});
+test('untrusted and missing traffic cannot invent advice',()=>{assert.deepEqual(googleAdsAdvice({...report({}),warning:'stale'}),[]);assert.deepEqual(googleAdsAdvice(report({clicks:null})),[]);});
+test('non-search never receives search CTR judgement',()=>{assert.match(googleAdsAdvice(report({type:'VIDEO',clicks:0}))[0].title,/Kampagnenziel/);});
+test('missing and zero conversions remain distinct',()=>{assert.match(googleAdsAdvice(report({conversions:null}))[0].context,/nicht verfügbar/);assert.match(googleAdsAdvice(report({conversions:0}))[0].context,/null Zielaktionen/);});
+test('observed zero clicks triggers intent review, not performance claim',()=>{assert.match(googleAdsAdvice(report({clicks:0}))[0].title,/Suchabsicht/);});
+test('CTR is contextualised without unsupported winner ranking',()=>{assert.match(googleAdsAdvice(report({}))[0].context,/wenigen Impressionen/);});
+test('search terms need confirmed zero conversions and no warning',()=>{const s={updated_at:'2026-10-06',rows:[{term:'cloud',clicks:5,conversions:0}]};assert.match(googleAdsAdvice(report({}),s)[0].title,/Suchanfrage/);assert.equal(googleAdsAdvice(report({}),{...s,warning:'stale'}).length,1);assert.match(googleAdsAdvice(report({}),s)[0].action,/Nur bei bestätigter/);});
+test('brand queries are not nominated for exclusion review',()=>{assert.equal(googleAdsAdvice(report({}),{updated_at:'2026-10-06',rows:[{term:'Sonio AG',clicks:14,conversions:0}]}).length,1);});

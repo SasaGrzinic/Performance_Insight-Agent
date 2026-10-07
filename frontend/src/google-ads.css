@@ -60,3 +60,13 @@
 .gad-ranking-context>strong{display:block;margin-bottom:5px;color:#064e87}
 .gad-summary>.gad-metric:last-child .period-info>button{color:#fff}
 .gad-summary .gad-tendency { margin-top:10px; font-size:12px; color:#173d62; font-weight:500; }
+
+.gad-conversion-breakdown{margin:16px 0 28px;padding:18px 20px;background:var(--blue-surface,#e8f3ff);border-radius:14px;color:#17334e}
+.gad-conversion-breakdown h3{margin:0 0 14px;font-size:18px}
+.gad-conversion-breakdown>dl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:0 0 14px}
+.gad-conversion-breakdown dt{font-weight:700;display:flex;align-items:center;gap:6px;min-height:44px}
+.gad-conversion-breakdown dd{margin:4px 0 0;font-size:25px;font-weight:750;font-variant-numeric:tabular-nums}
+.gad-conversion-breakdown summary{cursor:pointer;font-weight:650}
+.gad-conversion-breakdown summary:focus-visible{outline:2px solid #0075d9;outline-offset:4px}
+.gad-conversion-breakdown p,.gad-conversion-breakdown li{font-size:13px;line-height:1.6;max-width:75ch;overflow-wrap:anywhere}
+@media(max-width:600px){.gad-conversion-breakdown>dl{grid-template-columns:1fr}.gad-conversion-breakdown dt{min-height:0}.gad-conversion-breakdown>dl>div{display:flex;justify-content:space-between;gap:12px;align-items:center}.gad-conversion-breakdown dd{flex-shrink:0}}
